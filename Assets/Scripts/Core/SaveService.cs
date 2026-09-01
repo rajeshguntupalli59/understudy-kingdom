@@ -36,9 +36,16 @@ namespace UnderstudyKingdom.Core
                 return new RulerState();
             }
 
+            string raw = File.ReadAllText(SavePath);
+            string trimmed = raw.TrimStart();
+            if (trimmed.Length == 0 || trimmed[0] != '{')
+            {
+                return new RulerState();
+            }
+
             try
             {
-                var data = JsonUtility.FromJson<RulerSaveData>(File.ReadAllText(SavePath));
+                var data = JsonUtility.FromJson<RulerSaveData>(raw);
                 return new RulerState
                 {
                     Mood = data.Mood,
