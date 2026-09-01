@@ -22,11 +22,12 @@ describe('tokens', () => {
 
   it('rejects a token with the correct refresh secret but wrong type claim', () => {
     // Signed with the SAME secret verifyRefreshToken checks against (tokens.js's
-    // fallback default, since JWT_REFRESH_SECRET is unset here) but type:'access'
-    // instead of type:'refresh' -- this isolates the type-check itself as the
-    // thing doing the rejecting, unlike the existing cross-type test which
-    // passes only because of a signature mismatch (see backend-task-2 review).
-    const wrongTypeToken = jwt.sign({ userId: 'user-123', type: 'access' }, 'dev-refresh-secret');
+    // NODE_ENV==='test' fallback, since JWT_REFRESH_SECRET is unset here) but
+    // type:'access' instead of type:'refresh' -- this isolates the type-check
+    // itself as the thing doing the rejecting, unlike the existing cross-type
+    // test which passes only because of a signature mismatch (see
+    // backend-task-2 review).
+    const wrongTypeToken = jwt.sign({ userId: 'user-123', type: 'access' }, 'test-refresh-secret', { algorithm: 'HS256' });
     expect(() => verifyRefreshToken(wrongTypeToken)).toThrow();
   });
 });
