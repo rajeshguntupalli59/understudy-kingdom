@@ -9,14 +9,25 @@ namespace UnderstudyKingdom.Npc
     /// </summary>
     public static class DialogueTemplateEngine
     {
-        /// <summary>
-        /// TODO(FR-05): look up a template line for the given mood/context tag,
-        /// substitute the provided variable slots, and return the resolved string.
-        /// Templates should live as data (ScriptableObjects or JSON), not code.
-        /// </summary>
+        private static readonly Dictionary<string, string> Templates = new Dictionary<string, string>
+        {
+            { "ruler_accept", "The ruler nods. \"A wise allocation.\" (mood {mood}, loyalty {loyalty})" },
+            { "ruler_override", "The ruler waves a hand. \"I have other plans.\" (mood {mood}, loyalty {loyalty})" }
+        };
+
         public static string Resolve(string templateTag, IReadOnlyDictionary<string, string> variables)
         {
-            throw new System.NotImplementedException("FR-05: template resolution not yet implemented");
+            if (!Templates.TryGetValue(templateTag, out string template))
+            {
+                return $"[missing template: {templateTag}]";
+            }
+
+            string result = template;
+            foreach (var pair in variables)
+            {
+                result = result.Replace("{" + pair.Key + "}", pair.Value);
+            }
+            return result;
         }
     }
 }
