@@ -144,7 +144,10 @@ FR-15 Acceptance:
 ```sql
 users:            id (UUID PK), device_id, email (nullable), created_at, country_code
 
-kingdoms:         id (UUID PK), user_id (FK -> users), ruler_npc_id (FK -> ruler_npcs), founded_at
+kingdoms:         id (UUID PK), user_id (FK -> users), founded_at
+                  -- 1:1 with ruler_npcs; the FK lives on ruler_npcs.kingdom_id
+                  -- (single direction, no redundant back-reference -- see
+                  -- backend Task 1 review, 2026-09-01)
 
 ruler_npcs:       id (UUID PK), kingdom_id (FK -> kingdoms), mood (int), loyalty (int),
                   agenda (enum), trait_seed (int)
