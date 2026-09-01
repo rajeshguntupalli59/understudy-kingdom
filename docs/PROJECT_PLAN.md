@@ -102,11 +102,12 @@ $17.5B/yr + RPG $16.8B/yr) without competing on raw production budget.
 
 ```
 FR-02 Acceptance:
-  Given: player has submitted a recommendation and ruler loyalty < 40
+  Given: player has submitted a recommendation and ruler loyalty < 20
   When:  the decision cycle resolves
-  Then:  system has a defined probability of ruler override, weighted by mood
+  Then:  system has a defined probability of ruler override, weighted by
+         loyalty and agenda alignment (see FR-02 note on mood)
   And:   the override outcome is narrated with a templated line referencing
-         the specific mood state
+         the current mood state
 
 FR-11 Acceptance:
   Given: a live-ops event is active
