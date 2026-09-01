@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { describe, it, expect } from 'vitest';
 import { issueTokenPair, verifyAccessToken, verifyRefreshToken } from '../../src/auth/tokens.js';
 
@@ -17,5 +18,15 @@ describe('tokens', () => {
   it('rejects an access token passed to verifyRefreshToken', () => {
     const { accessToken } = issueTokenPair('user-123');
     expect(() => verifyRefreshToken(accessToken)).toThrow();
+  });
+
+  it('rejects a token with the correct refresh secret but wrong type claim', () => {
+    // Signed with the SAME secret verifyRefreshToken checks against (tokens.js's
+    // fallback default, since JWT_REFRESH_SECRET is unset here) but type:'access'
+    // instead of type:'refresh' -- this isolates the type-check itself as the
+    // thing doing the rejecting, unlike the existing cross-type test which
+    // passes only because of a signature mismatch (see backend-task-2 review).
+    const wrongTypeToken = jwt.sign({ userId: 'user-123', type: 'access' }, 'dev-refresh-secret');
+    expect(() => verifyRefreshToken(wrongTypeToken)).toThrow();
   });
 });
