@@ -66,5 +66,38 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(narration.Contains("other plans"));
             Assert.AreEqual(40, ruler.State.Mood);
         }
+
+        [Test]
+        public void Awake_WithRulerAlreadyAssigned_LoadsPersistedState()
+        {
+            // Pre-populate a save file with known non-default values.
+            var savedState = new RulerState { Mood = 66, Loyalty = 44, Agenda = RulerState.AgendaType.Isolationist };
+            SaveService.Save(savedState);
+
+            // Build inactive so AddComponent does NOT run Awake() yet.
+            var freshRulerObject = new GameObject("FreshRuler");
+            freshRulerObject.SetActive(false);
+            var freshRuler = freshRulerObject.AddComponent<RulerNpcController>();
+
+            var freshManagerObject = new GameObject("FreshManager");
+            freshManagerObject.SetActive(false);
+            var freshManager = freshManagerObject.AddComponent<DecisionCycleManager>();
+            freshManager.Ruler = freshRuler;
+
+            // Now activate -- this is what triggers Awake() with Ruler already assigned.
+            freshManagerObject.SetActive(true);
+
+            try
+            {
+                Assert.AreEqual(66, freshRuler.State.Mood);
+                Assert.AreEqual(44, freshRuler.State.Loyalty);
+                Assert.AreEqual(RulerState.AgendaType.Isolationist, freshRuler.State.Agenda);
+            }
+            finally
+            {
+                Object.DestroyImmediate(freshManagerObject);
+                Object.DestroyImmediate(freshRulerObject);
+            }
+        }
     }
 }
