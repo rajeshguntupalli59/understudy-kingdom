@@ -31,9 +31,30 @@ export function registerAuthRoutes(app) {
     }
 
     const hash = await hashDeviceSecret(secret);
-    const [user] = await knex('users')
-      .insert({ device_id: deviceId, device_secret_hash: hash })
-      .returning('id');
+    let user;
+    try {
+      const [inserted] = await knex('users')
+        .insert({ device_id: deviceId, device_secret_hash: hash })
+        .returning('id');
+      user = inserted;
+    } catch (err) {
+      if (err.code === '23505') {
+        // Lost a race to create this device_id -- another concurrent request won.
+        // Fall back to the login path against whichever row won.
+        const winner = await knex('users').where({ device_id: deviceId }).first();
+        if (!winner) throw err; // shouldn't happen, but don't swallow a genuinely different error
+        const valid = await verifyDeviceSecret(secret, winner.device_secret_hash);
+        if (!valid) {
+          reply.code(401).send({ error: 'INVALID_DEVICE_SECRET' });
+          return;
+        }
+        const tokens = issueTokenPair(winner.id);
+        reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+        return;
+      }
+      throw err;
+    }
+
     const tokens = issueTokenPair(user.id);
     reply.code(200).send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
   });

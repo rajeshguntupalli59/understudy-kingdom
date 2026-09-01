@@ -38,6 +38,9 @@ describe('POST /api/v1/auth/device', () => {
       payload: { device_id: 'device-xyz', secret: 'correct-secret' },
     });
     expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.access_token).toBeTruthy();
+    expect(body.refresh_token).toBeTruthy();
 
     const users = await knex('users').where({ device_id: 'device-xyz' });
     expect(users).toHaveLength(1); // no duplicate created on second call
@@ -63,5 +66,23 @@ describe('POST /api/v1/auth/device', () => {
       payload: { secret: 'only-secret' },
     });
     expect(response.statusCode).toBe(400);
+  });
+
+  it('handles two concurrent requests for the same new device_id without a 500', async () => {
+    const app = buildServer();
+    const payload = { device_id: 'device-race', secret: 'race-secret' };
+
+    const [response1, response2] = await Promise.all([
+      app.inject({ method: 'POST', url: '/api/v1/auth/device', payload }),
+      app.inject({ method: 'POST', url: '/api/v1/auth/device', payload }),
+    ]);
+
+    expect(response1.statusCode).toBe(200);
+    expect(response2.statusCode).toBe(200);
+    expect(response1.json().access_token).toBeTruthy();
+    expect(response2.json().access_token).toBeTruthy();
+
+    const users = await knex('users').where({ device_id: 'device-race' });
+    expect(users).toHaveLength(1); // only one user row created despite the race
   });
 });
