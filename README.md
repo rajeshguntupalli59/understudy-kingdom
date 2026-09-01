@@ -46,12 +46,30 @@ This repo has three Claude Code project-scoped skills/integrations wired in:
 
 ## Status
 
-**Pre-production — docs only, no code yet.** Open decisions before
-engineering starts are tracked in `docs/PROJECT_PLAN.md` §9 (Open Questions).
+**Pre-production — Unity project skeleton only, no gameplay logic yet.**
+Script stubs under `Assets/Scripts/` map 1:1 to the functional requirements
+in `docs/PROJECT_PLAN.md` (each has a `TODO(FR-xx)` comment). Open decisions
+before real implementation starts are tracked in `docs/PROJECT_PLAN.md` §9.
+
+## Getting Started (Unity)
+
+1. Clone this repo.
+2. Open Unity Hub, add the project folder. It should prompt for **Unity 6
+   LTS (6000.3.23f1)** — the version pinned in `ProjectSettings/ProjectVersion.txt`.
+   Install that editor version if you don't have it.
+3. On first open, Unity will generate `Library/`, additional
+   `ProjectSettings/` files, and resolve packages from `Packages/manifest.json`
+   — all gitignored, this is expected and can take a few minutes.
+
+> **Note:** this scaffold was hand-built (folder structure, manifest, script
+> stubs) in an environment without a Unity Editor available, so it has *not*
+> been opened or compiled in-editor yet. Treat the first local open as the
+> real verification step — if Unity reports any issue with the manifest or
+> project structure, that's the first thing to fix.
 
 ## Proposed Stack
 
-- Client: Unity 2023 LTS (C#), ASTC texture compression, Addressables
+- Client: Unity 6 LTS (6000.3) (C#), ASTC texture compression, Addressables
 - Backend: Node.js + PostgreSQL + Redis
 - Target floor: 4GB-RAM-class Android devices (Google Play's Feb 2027
   enforcement caps foreground RSS+Swap at 2GB on that tier)

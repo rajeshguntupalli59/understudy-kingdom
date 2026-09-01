@@ -164,7 +164,7 @@ kingdom → many pvp_duels as challenger or defender.
 ## 7. Engineering Handoff Spec
 
 **Tech Stack**
-- Client: Unity 2023 LTS (C#), ASTC texture compression, Addressables for
+- Client: Unity 6 LTS (6000.3) (C#), ASTC texture compression, Addressables for
   asset streaming.
   *(Source: https://unity.com/blog/games/optimize-your-mobile-game-performance-expert-tips-on-graphics-and-assets)*
 - Backend: Node.js + Express/Fastify, PostgreSQL, Redis for session/queue state
