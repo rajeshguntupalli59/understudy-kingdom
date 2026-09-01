@@ -142,7 +142,9 @@ FR-15 Acceptance:
 ## 6. Data Model
 
 ```sql
-users:            id (UUID PK), device_id, email (nullable), created_at, country_code
+users:            id (UUID PK), device_id (unique, nullable), device_secret_hash (nullable),
+                  google_sub (unique, nullable), apple_sub (unique, nullable),
+                  email (nullable), created_at, country_code
 
 kingdoms:         id (UUID PK), user_id (FK -> users), founded_at
                   -- 1:1 with ruler_npcs; the FK lives on ruler_npcs.kingdom_id
