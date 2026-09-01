@@ -40,7 +40,7 @@ pain points this design counters.
 
 This repo has three Claude Code project-scoped skills/integrations wired in:
 
-- **[superpowers](https://github.com/obra/superpowers)** (MIT, vendored under `.claude/skills/`) — TDD, systematic debugging, planning, and code-review workflow skills. License at `.claude/skills/SUPERPOWERS_LICENSE`.
+- **[superpowers](https://github.com/obra/superpowers)** (MIT) — TDD, systematic debugging, planning, and code-review workflow skills. Registered as a proper plugin marketplace in `.claude/settings.json` (`extraKnownMarketplaces` + `enabledPlugins`), so it loads through Claude Code's plugin system on a fresh session/restart. Also vendored under `.claude/skills/` as a working fallback for sessions that predate the marketplace registration. License at `.claude/skills/SUPERPOWERS_LICENSE`.
 - **[codegraph](https://github.com/colbymchenry/codegraph)** — local semantic code index (MCP server, config in `.mcp.json`). Run `codegraph init` after cloning to build the index (gitignored, not checked in).
 - **[graphify](https://github.com/graphify-dev/graphify)** — codebase knowledge graph (`.claude/skills/graphify/`). Run `graphify .` to build it; add an LLM API key (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) to also index the markdown docs, or pass `--code-only` to skip that. Output is gitignored.
 
