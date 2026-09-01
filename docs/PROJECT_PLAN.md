@@ -195,9 +195,15 @@ kingdom → many pvp_duels as challenger or defender.
 Method:   POST
 Path:     /api/v1/decisions
 Auth:     Bearer token required
-Request:  { kingdom_id: uuid, cycle_number: int, recommendation: object }
+Request:  { kingdom_id: uuid, cycle_number: int, recommendation: object,
+            ruler_outcome: object, overridden: bool }
+          -- ruler_outcome/overridden are client-reported, not server-computed:
+          -- the client stays authoritative for the decision cycle in this pass
+          -- (see docs/superpowers/specs/2026-09-01-auth-decisions-backend-design.md
+          -- Scope Decisions). Server-authoritative scoring is a Future Phase item.
 Response: { decision_id: uuid, ruler_outcome: object, overridden: bool }
-Errors:   400 (invalid cycle), 401 (auth), 409 (cycle already resolved)
+Errors:   400 (malformed request, incl. non-UUID kingdom_id), 401 (auth),
+          403 (kingdom not owned by caller), 409 (cycle already resolved)
 ```
 
 ```
