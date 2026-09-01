@@ -85,10 +85,21 @@ export function registerAuthRoutes(app, options = {}) {
 
     let user = await knex('users').where({ google_sub: profile.sub }).first();
     if (!user) {
-      const [inserted] = await knex('users')
-        .insert({ google_sub: profile.sub, email: profile.email })
-        .returning('id');
-      user = inserted;
+      try {
+        const [inserted] = await knex('users')
+          .insert({ google_sub: profile.sub, email: profile.email })
+          .returning('id');
+        user = inserted;
+      } catch (err) {
+        if (err.code === '23505') {
+          // Lost a race to create this google_sub -- another concurrent
+          // sign-in for the same account won. Fall back to it.
+          user = await knex('users').where({ google_sub: profile.sub }).first();
+          if (!user) throw err; // shouldn't happen, don't swallow a genuinely different error
+        } else {
+          throw err;
+        }
+      }
     }
     const tokens = issueTokenPair(user.id);
     reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
@@ -107,10 +118,21 @@ export function registerAuthRoutes(app, options = {}) {
 
     let user = await knex('users').where({ apple_sub: profile.sub }).first();
     if (!user) {
-      const [inserted] = await knex('users')
-        .insert({ apple_sub: profile.sub, email: profile.email })
-        .returning('id');
-      user = inserted;
+      try {
+        const [inserted] = await knex('users')
+          .insert({ apple_sub: profile.sub, email: profile.email })
+          .returning('id');
+        user = inserted;
+      } catch (err) {
+        if (err.code === '23505') {
+          // Lost a race to create this apple_sub -- another concurrent
+          // sign-in for the same account won. Fall back to it.
+          user = await knex('users').where({ apple_sub: profile.sub }).first();
+          if (!user) throw err; // shouldn't happen, don't swallow a genuinely different error
+        } else {
+          throw err;
+        }
+      }
     }
     const tokens = issueTokenPair(user.id);
     reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
