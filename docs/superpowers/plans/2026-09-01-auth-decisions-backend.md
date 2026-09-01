@@ -95,7 +95,10 @@ TEST_DATABASE_URL=postgres://understudy_kingdom:devpassword@localhost:5432/under
 JWT_ACCESS_SECRET=change-me-in-production
 JWT_REFRESH_SECRET=change-me-too
 GOOGLE_CLIENT_ID=your-google-oauth-client-id
+APPLE_CLIENT_ID=your-apple-service-id
 ```
+(`APPLE_CLIENT_ID` added post-review, 2026-09-01 — see the Step 2 note above;
+without it Apple ID token verification cannot check audience at all.)
 
 - [ ] **Step 4: Create backend/src/db/knex.js**
 
@@ -284,6 +287,18 @@ Run: `cd backend && npx vitest run test/auth/tokens.test.js`
 Expected: fails — `tokens.js` doesn't exist yet.
 
 - [ ] **Step 2: Implement tokens.js**
+
+> **Superseded, 2026-09-01 (final whole-branch review, round 1):** the
+> `process.env.X || 'dev-...'` fallback pattern below fails open in
+> production if the env var is unset — a deploy missing `JWT_ACCESS_SECRET`
+> silently signs/verifies with a secret published in this repo. The shipped
+> code instead uses a `requireEnv(name, testFallback)` guard
+> (`backend/src/config/requireEnv.js`) that throws at import time unless
+> the var is set or `NODE_ENV === 'test'`. Do not reintroduce this pattern
+> if re-executing this plan; use `requireEnv` for any new required secret.
+> The same review found `GOOGLE_CLIENT_ID` needed the same guard, plus a
+> new `APPLE_CLIENT_ID` (missing from Step 3's `.env.example` below) to
+> actually enforce Apple ID token audience checking.
 
 ```javascript
 import jwt from 'jsonwebtoken';
