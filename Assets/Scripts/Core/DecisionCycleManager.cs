@@ -1,37 +1,51 @@
-using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnderstudyKingdom.Npc;
 
 namespace UnderstudyKingdom.Core
 {
     /// <summary>
-    /// Drives the core prep -> ruler-decision loop for a single kingdom.
-    /// See docs/PROJECT_PLAN.md FR-01, FR-02, FR-03.
+    /// Thin orchestrator for the prep -> ruler-decision loop (FR-01, FR-02, FR-03).
+    /// Holds no decision logic itself -- that lives in OverrideEvaluator (pure,
+    /// testable) so this class stays a coordinator. See
+    /// docs/superpowers/specs/2026-09-01-core-decision-cycle-design.md.
     /// </summary>
     public class DecisionCycleManager : MonoBehaviour
     {
-        [SerializeField]
+        public RulerNpcController Ruler;
+
         private int currentCycleNumber;
 
-        /// <summary>
-        /// Submits the player's recommendation for the current decision cycle.
-        /// TODO(FR-01): accept a structured recommendation (resource allocation,
-        /// army move, or diplomatic choice) and hand it to the ruler NPC for resolution.
-        /// </summary>
-        public void SubmitRecommendation(object recommendation)
+        private void Awake()
         {
-            throw new NotImplementedException("FR-01: recommendation submission not yet implemented");
+            if (Ruler != null)
+            {
+                Ruler.State = SaveService.Load();
+            }
         }
 
         /// <summary>
-        /// Resolves the current cycle: asks the ruler NPC whether it accepts or
-        /// overrides the player's recommendation, then narrates the outcome.
-        /// TODO(FR-02): probability of override must be weighted by ruler mood/loyalty
-        /// (see RulerNpcController), never by purchase history (PROJECT_PLAN.md BL-03).
-        /// TODO(FR-03): persist the resulting mood/loyalty/trust delta.
+        /// Submits a resource-allocation recommendation and resolves the cycle
+        /// immediately. `roll` is caller-supplied (not read from UnityEngine.Random
+        /// internally) so this method is testable without Play Mode; the real UI
+        /// call site passes UnityEngine.Random.value.
         /// </summary>
-        public void ResolveCycle()
+        public string SubmitRecommendation(ResourceAllocation recommendation, double roll)
         {
-            throw new NotImplementedException("FR-02/FR-03: cycle resolution not yet implemented");
+            currentCycleNumber++;
+
+            OverrideResult result = OverrideEvaluator.Evaluate(Ruler.State, recommendation, roll);
+            Ruler.State.ApplyDelta(result.MoodDelta, result.LoyaltyDelta);
+            SaveService.Save(Ruler.State);
+
+            string templateTag = result.Overridden ? "ruler_override" : "ruler_accept";
+            var variables = new Dictionary<string, string>
+            {
+                { "mood", Ruler.State.Mood.ToString() },
+                { "loyalty", Ruler.State.Loyalty.ToString() }
+            };
+
+            return DialogueTemplateEngine.Resolve(templateTag, variables);
         }
     }
 }
