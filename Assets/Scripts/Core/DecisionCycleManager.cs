@@ -18,7 +18,7 @@ namespace UnderstudyKingdom.Core
 
         private void Awake()
         {
-            if (Ruler != null)
+            if (Ruler != null && SaveService.HasSave())
             {
                 Ruler.State = SaveService.Load();
             }

@@ -18,6 +18,12 @@ namespace UnderstudyKingdom.Core
 
         public static string SavePath => Path.Combine(Application.persistentDataPath, FileName);
 
+        /// <summary>True if a save file currently exists on disk.</summary>
+        public static bool HasSave()
+        {
+            return File.Exists(SavePath);
+        }
+
         public static void Save(RulerState state)
         {
             var data = new RulerSaveData
@@ -36,22 +42,39 @@ namespace UnderstudyKingdom.Core
                 return new RulerState();
             }
 
-            string raw = File.ReadAllText(SavePath);
-            string trimmed = raw.TrimStart();
-            if (trimmed.Length == 0 || trimmed[0] != '{')
-            {
-                return new RulerState();
-            }
-
             try
             {
+                string raw = File.ReadAllText(SavePath);
+                string trimmed = raw.TrimStart();
+
+                // JsonUtility's own behavior on malformed input is not something we can
+                // verify without a real Unity runtime (see task-4-report.md), so this
+                // pre-check makes corruption detection deterministic instead of relying
+                // on it: anything that doesn't even start a JSON object is treated as
+                // corrupt before JsonUtility is ever invoked.
+                if (trimmed.Length == 0 || trimmed[0] != '{')
+                {
+                    return new RulerState();
+                }
+
                 var data = JsonUtility.FromJson<RulerSaveData>(raw);
-                return new RulerState
+
+                var agenda = Enum.IsDefined(typeof(RulerState.AgendaType), data.Agenda)
+                    ? (RulerState.AgendaType)data.Agenda
+                    : RulerState.AgendaType.Expansionist;
+
+                var loaded = new RulerState
                 {
                     Mood = data.Mood,
                     Loyalty = data.Loyalty,
-                    Agenda = (RulerState.AgendaType)data.Agenda
+                    Agenda = agenda
                 };
+
+                // Clamp Mood/Loyalty into [0,100] in case the file was corrupted with an
+                // out-of-range value; ApplyDelta(0, 0) applies no change but still clamps.
+                loaded.ApplyDelta(0, 0);
+
+                return loaded;
             }
             catch (Exception)
             {

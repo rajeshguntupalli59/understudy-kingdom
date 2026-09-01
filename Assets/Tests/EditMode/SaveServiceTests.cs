@@ -53,5 +53,28 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual(50, state.Mood);
             Assert.AreEqual(50, state.Loyalty);
         }
+
+        [Test]
+        public void Load_OutOfRangeValues_ClampsMoodAndLoyalty()
+        {
+            var corrupted = new RulerSaveData { Mood = 500, Loyalty = -50, Agenda = 0 };
+            System.IO.File.WriteAllText(SaveService.SavePath, UnityEngine.JsonUtility.ToJson(corrupted));
+
+            var state = SaveService.Load();
+
+            Assert.AreEqual(100, state.Mood);
+            Assert.AreEqual(0, state.Loyalty);
+        }
+
+        [Test]
+        public void Load_OutOfRangeAgenda_FallsBackToExpansionist()
+        {
+            var corrupted = new RulerSaveData { Mood = 50, Loyalty = 50, Agenda = 99 };
+            System.IO.File.WriteAllText(SaveService.SavePath, UnityEngine.JsonUtility.ToJson(corrupted));
+
+            var state = SaveService.Load();
+
+            Assert.AreEqual(RulerState.AgendaType.Expansionist, state.Agenda);
+        }
     }
 }

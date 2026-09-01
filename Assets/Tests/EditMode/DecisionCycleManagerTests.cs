@@ -99,5 +99,39 @@ namespace UnderstudyKingdom.Tests
                 Object.DestroyImmediate(freshRulerObject);
             }
         }
+
+        [Test]
+        public void Awake_NoSaveFile_PreservesAuthoredState()
+        {
+            // No SaveService.Save() call -- simulates first launch, no save file exists.
+            if (System.IO.File.Exists(SaveService.SavePath))
+            {
+                System.IO.File.Delete(SaveService.SavePath);
+            }
+
+            var authoredRulerObject = new GameObject("AuthoredRuler");
+            authoredRulerObject.SetActive(false);
+            var authoredRuler = authoredRulerObject.AddComponent<RulerNpcController>();
+            authoredRuler.State = new RulerState { Mood = 70, Loyalty = 60, Agenda = RulerState.AgendaType.Pious };
+
+            var authoredManagerObject = new GameObject("AuthoredManager");
+            authoredManagerObject.SetActive(false);
+            var authoredManager = authoredManagerObject.AddComponent<DecisionCycleManager>();
+            authoredManager.Ruler = authoredRuler;
+
+            authoredManagerObject.SetActive(true); // triggers Awake()
+
+            try
+            {
+                Assert.AreEqual(70, authoredRuler.State.Mood);
+                Assert.AreEqual(60, authoredRuler.State.Loyalty);
+                Assert.AreEqual(RulerState.AgendaType.Pious, authoredRuler.State.Agenda);
+            }
+            finally
+            {
+                Object.DestroyImmediate(authoredManagerObject);
+                Object.DestroyImmediate(authoredRulerObject);
+            }
+        }
     }
 }
