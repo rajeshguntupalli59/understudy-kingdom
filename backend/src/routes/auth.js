@@ -1,6 +1,7 @@
 import knex from '../db/knex.js';
 import { hashDeviceSecret, verifyDeviceSecret } from '../auth/deviceAuth.js';
 import { issueTokenPair, verifyRefreshToken } from '../auth/tokens.js';
+import { verifyGoogleIdToken, verifyAppleIdToken } from '../auth/oauthVerify.js';
 
 const deviceAuthSchema = {
   body: {
@@ -13,7 +14,7 @@ const deviceAuthSchema = {
   },
 };
 
-export function registerAuthRoutes(app) {
+export function registerAuthRoutes(app, options = {}) {
   app.post('/api/v1/auth/device', { schema: deviceAuthSchema }, async (request, reply) => {
     const { device_id: deviceId, secret } = request.body;
 
@@ -69,5 +70,49 @@ export function registerAuthRoutes(app) {
     } catch {
       reply.code(401).send({ error: 'INVALID_REFRESH_TOKEN' });
     }
+  });
+
+  app.post('/api/v1/auth/google', {
+    schema: { body: { type: 'object', required: ['id_token'], properties: { id_token: { type: 'string' } } } },
+  }, async (request, reply) => {
+    let profile;
+    try {
+      profile = await verifyGoogleIdToken(request.body.id_token, options.googleVerifier);
+    } catch {
+      reply.code(401).send({ error: 'INVALID_TOKEN' });
+      return;
+    }
+
+    let user = await knex('users').where({ google_sub: profile.sub }).first();
+    if (!user) {
+      const [inserted] = await knex('users')
+        .insert({ google_sub: profile.sub, email: profile.email })
+        .returning('id');
+      user = inserted;
+    }
+    const tokens = issueTokenPair(user.id);
+    reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+  });
+
+  app.post('/api/v1/auth/apple', {
+    schema: { body: { type: 'object', required: ['id_token'], properties: { id_token: { type: 'string' } } } },
+  }, async (request, reply) => {
+    let profile;
+    try {
+      profile = await verifyAppleIdToken(request.body.id_token, options.appleVerifier);
+    } catch {
+      reply.code(401).send({ error: 'INVALID_TOKEN' });
+      return;
+    }
+
+    let user = await knex('users').where({ apple_sub: profile.sub }).first();
+    if (!user) {
+      const [inserted] = await knex('users')
+        .insert({ apple_sub: profile.sub, email: profile.email })
+        .returning('id');
+      user = inserted;
+    }
+    const tokens = issueTokenPair(user.id);
+    reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
   });
 }

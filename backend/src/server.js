@@ -1,8 +1,8 @@
 import Fastify from 'fastify';
 import { registerAuthRoutes } from './routes/auth.js';
 
-export function buildServer() {
+export function buildServer(options = {}) {
   const app = Fastify({ logger: false });
-  registerAuthRoutes(app);
+  registerAuthRoutes(app, options);
   return app;
 }
