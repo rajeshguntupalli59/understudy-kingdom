@@ -93,6 +93,21 @@ describe('POST /api/v1/decisions', () => {
     expect(response.statusCode).toBe(400);
   });
 
+  it('returns 400 (not 500) for a non-UUID kingdom_id', async () => {
+    const { user } = await seedUserAndKingdom();
+    const { accessToken } = issueTokenPair(user.id);
+    const app = buildServer();
+    const response = await app.inject({
+      method: 'POST', url: '/api/v1/decisions',
+      headers: { authorization: `Bearer ${accessToken}` },
+      payload: {
+        kingdom_id: 'not-a-uuid-at-all', cycle_number: 1,
+        recommendation: {}, ruler_outcome: {}, overridden: false,
+      },
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
   it('handles two concurrent submissions for the same kingdom_id + cycle_number without a 500', async () => {
     const { user, kingdom } = await seedUserAndKingdom();
     const { accessToken } = issueTokenPair(user.id);

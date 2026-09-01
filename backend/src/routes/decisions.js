@@ -6,7 +6,7 @@ const decisionSchema = {
     type: 'object',
     required: ['kingdom_id', 'cycle_number', 'recommendation', 'ruler_outcome', 'overridden'],
     properties: {
-      kingdom_id: { type: 'string' },
+      kingdom_id: { type: 'string', format: 'uuid' },
       cycle_number: { type: 'integer' },
       recommendation: { type: 'object' },
       ruler_outcome: { type: 'object' },
