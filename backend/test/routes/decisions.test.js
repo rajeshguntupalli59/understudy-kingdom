@@ -108,6 +108,38 @@ describe('POST /api/v1/decisions', () => {
     expect(response.statusCode).toBe(400);
   });
 
+  it('returns 400 (not 500) for a cycle_number outside the Postgres integer range', async () => {
+    const { user, kingdom } = await seedUserAndKingdom();
+    const { accessToken } = issueTokenPair(user.id);
+    const app = buildServer();
+    const response = await app.inject({
+      method: 'POST', url: '/api/v1/decisions',
+      headers: { authorization: `Bearer ${accessToken}` },
+      payload: {
+        kingdom_id: kingdom.id, cycle_number: 9999999999,
+        recommendation: {}, ruler_outcome: {}, overridden: false,
+      },
+    });
+    expect(response.statusCode).toBe(400);
+    const body = response.json();
+    expect(body.error).toBe('VALIDATION_FAILED');
+    // Never leak raw driver/SQL error text (e.g. Postgres code '22003').
+    expect(JSON.stringify(body)).not.toMatch(/22003/);
+  });
+
+  it('returns 401 (not 400) for no Bearer token even with a malformed body', async () => {
+    const { kingdom } = await seedUserAndKingdom();
+    const app = buildServer();
+    const response = await app.inject({
+      method: 'POST', url: '/api/v1/decisions',
+      // No authorization header, AND the body is missing required fields --
+      // auth must be checked (and win with a 401) before schema validation
+      // runs, so this must not come back as a 400.
+      payload: { kingdom_id: kingdom.id },
+    });
+    expect(response.statusCode).toBe(401);
+  });
+
   it('handles two concurrent submissions for the same kingdom_id + cycle_number without a 500', async () => {
     const { user, kingdom } = await seedUserAndKingdom();
     const { accessToken } = issueTokenPair(user.id);

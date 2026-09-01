@@ -7,7 +7,7 @@ const decisionSchema = {
     required: ['kingdom_id', 'cycle_number', 'recommendation', 'ruler_outcome', 'overridden'],
     properties: {
       kingdom_id: { type: 'string', format: 'uuid' },
-      cycle_number: { type: 'integer' },
+      cycle_number: { type: 'integer', minimum: 0, maximum: 2147483647 },
       recommendation: { type: 'object' },
       ruler_outcome: { type: 'object' },
       overridden: { type: 'boolean' },
@@ -16,7 +16,7 @@ const decisionSchema = {
 };
 
 export function registerDecisionsRoutes(app) {
-  app.post('/api/v1/decisions', { preHandler: authMiddleware, schema: decisionSchema }, async (request, reply) => {
+  app.post('/api/v1/decisions', { onRequest: authMiddleware, schema: decisionSchema }, async (request, reply) => {
     const { kingdom_id: kingdomId, cycle_number: cycleNumber, recommendation, ruler_outcome: rulerOutcome, overridden } = request.body;
 
     const kingdom = await knex('kingdoms').where({ id: kingdomId }).first();
