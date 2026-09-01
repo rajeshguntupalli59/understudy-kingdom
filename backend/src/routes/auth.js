@@ -1,6 +1,6 @@
 import knex from '../db/knex.js';
 import { hashDeviceSecret, verifyDeviceSecret } from '../auth/deviceAuth.js';
-import { issueTokenPair } from '../auth/tokens.js';
+import { issueTokenPair, verifyRefreshToken } from '../auth/tokens.js';
 
 const deviceAuthSchema = {
   body: {
@@ -57,5 +57,17 @@ export function registerAuthRoutes(app) {
 
     const tokens = issueTokenPair(user.id);
     reply.code(200).send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+  });
+
+  app.post('/api/v1/auth/refresh', {
+    schema: { body: { type: 'object', required: ['refresh_token'], properties: { refresh_token: { type: 'string' } } } },
+  }, async (request, reply) => {
+    try {
+      const { userId } = verifyRefreshToken(request.body.refresh_token);
+      const tokens = issueTokenPair(userId);
+      reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+    } catch {
+      reply.code(401).send({ error: 'INVALID_REFRESH_TOKEN' });
+    }
   });
 }
