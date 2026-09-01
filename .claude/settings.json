@@ -1,4 +1,15 @@
 {
+  "extraKnownMarketplaces": {
+    "superpowers-dev": {
+      "source": {
+        "source": "github",
+        "repo": "rajeshguntupalli59/superpowers"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-dev": true
+  },
   "permissions": {
     "allow": [
       "mcp__codegraph__*"
