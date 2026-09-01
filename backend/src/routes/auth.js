@@ -1,0 +1,40 @@
+import knex from '../db/knex.js';
+import { hashDeviceSecret, verifyDeviceSecret } from '../auth/deviceAuth.js';
+import { issueTokenPair } from '../auth/tokens.js';
+
+const deviceAuthSchema = {
+  body: {
+    type: 'object',
+    required: ['device_id', 'secret'],
+    properties: {
+      device_id: { type: 'string', minLength: 1 },
+      secret: { type: 'string', minLength: 1 },
+    },
+  },
+};
+
+export function registerAuthRoutes(app) {
+  app.post('/api/v1/auth/device', { schema: deviceAuthSchema }, async (request, reply) => {
+    const { device_id: deviceId, secret } = request.body;
+
+    const existing = await knex('users').where({ device_id: deviceId }).first();
+
+    if (existing) {
+      const valid = await verifyDeviceSecret(secret, existing.device_secret_hash);
+      if (!valid) {
+        reply.code(401).send({ error: 'INVALID_DEVICE_SECRET' });
+        return;
+      }
+      const tokens = issueTokenPair(existing.id);
+      reply.send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+      return;
+    }
+
+    const hash = await hashDeviceSecret(secret);
+    const [user] = await knex('users')
+      .insert({ device_id: deviceId, device_secret_hash: hash })
+      .returning('id');
+    const tokens = issueTokenPair(user.id);
+    reply.code(200).send({ access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+  });
+}
