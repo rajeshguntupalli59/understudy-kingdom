@@ -36,6 +36,14 @@ pain points this design counters.
 | [`docs/GAME_CONCEPTS.md`](docs/GAME_CONCEPTS.md) | The 18-concept brainstorm this design was selected from, and why |
 | [`docs/NPC_PERFORMANCE_NOTES.md`](docs/NPC_PERFORMANCE_NOTES.md) | Google Play's Feb 2027 memory rules and how to hit realistic NPCs within budget |
 
+## Dev Tooling
+
+This repo has three Claude Code project-scoped skills/integrations wired in:
+
+- **[superpowers](https://github.com/obra/superpowers)** (MIT, vendored under `.claude/skills/`) — TDD, systematic debugging, planning, and code-review workflow skills. License at `.claude/skills/SUPERPOWERS_LICENSE`.
+- **[codegraph](https://github.com/colbymchenry/codegraph)** — local semantic code index (MCP server, config in `.mcp.json`). Run `codegraph init` after cloning to build the index (gitignored, not checked in).
+- **[graphify](https://github.com/graphify-dev/graphify)** — codebase knowledge graph (`.claude/skills/graphify/`). Run `graphify .` to build it; add an LLM API key (`GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) to also index the markdown docs, or pass `--code-only` to skip that. Output is gitignored.
+
 ## Status
 
 **Pre-production — docs only, no code yet.** Open decisions before
