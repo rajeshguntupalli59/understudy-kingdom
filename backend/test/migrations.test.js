@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, afterEach, afterAll } from 'vitest';
 import knex from '../src/db/knex.js';
 
 describe('migrations', () => {
+  afterEach(async () => {
+    await knex.raw('TRUNCATE TABLE decisions, ruler_npcs, kingdoms, users RESTART IDENTITY CASCADE');
+  });
+
   afterAll(async () => {
     await knex.destroy();
   });
