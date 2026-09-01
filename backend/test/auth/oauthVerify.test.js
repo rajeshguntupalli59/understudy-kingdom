@@ -18,4 +18,9 @@ describe('oauthVerify', () => {
     const result = await verifyAppleIdToken('fake-id-token', fakeVerifier);
     expect(result).toEqual({ sub: 'apple-user-1', email: 'b@example.com' });
   });
+
+  it('verifyAppleIdToken propagates a verifier rejection', async () => {
+    const failingVerifier = async () => { throw new Error('invalid token'); };
+    await expect(verifyAppleIdToken('bad-token', failingVerifier)).rejects.toThrow();
+  });
 });
