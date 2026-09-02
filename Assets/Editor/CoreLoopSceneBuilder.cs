@@ -40,6 +40,17 @@ namespace UnderstudyKingdom.EditorTools
             var canvas = canvasObject.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
+            // Scale the whole canvas to fit whatever window/screen exists, matching
+            // height, so the vertically-stacked UI (content extends to y=-420 from
+            // center) never gets clipped regardless of the actual viewport size --
+            // it was previously "Constant Pixel Size", which clipped the lower
+            // elements (labels, button) on any viewport shorter than ~900px tall.
+            var canvasScaler = canvasObject.GetComponent<CanvasScaler>();
+            canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasScaler.referenceResolution = new Vector2(800f, 1000f);
+            canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            canvasScaler.matchWidthOrHeight = 1f;
+
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
             Slider armySlider = CreateSlider(canvasObject.transform, "ArmySlider", 40f, 40f);
@@ -56,6 +67,10 @@ namespace UnderstudyKingdom.EditorTools
             var buttonRect = buttonObject.GetComponent<RectTransform>();
             buttonRect.anchoredPosition = new Vector2(0f, -420f);
             buttonRect.sizeDelta = new Vector2(220f, 44f);
+            // Default Image color is white; the button label text is also white
+            // (see CreateLabel) -- give the button a distinct background so its
+            // own label isn't invisible white-on-white.
+            buttonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
             var button = buttonObject.GetComponent<Button>();
             TextMeshProUGUI buttonLabel = CreateLabel(buttonObject.transform, "Text", 0f, "Submit Recommendation");
             var buttonLabelRect = buttonLabel.GetComponent<RectTransform>();
