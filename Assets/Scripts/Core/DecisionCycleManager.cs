@@ -18,6 +18,17 @@ namespace UnderstudyKingdom.Core
 
         private void Awake()
         {
+            LoadPersistedStateIfPresent();
+        }
+
+        /// <summary>
+        /// Loads persisted RulerState from disk into Ruler.State if a save file exists.
+        /// Called from Awake(); also exposed publicly because EditMode tests run outside
+        /// Play Mode, where Unity does not invoke Awake() on GameObject.SetActive(true)
+        /// for plain (non-[ExecuteAlways]) MonoBehaviours.
+        /// </summary>
+        public void LoadPersistedStateIfPresent()
+        {
             if (Ruler != null && SaveService.HasSave())
             {
                 Ruler.State = SaveService.Load();

@@ -84,8 +84,11 @@ namespace UnderstudyKingdom.Tests
             var freshManager = freshManagerObject.AddComponent<DecisionCycleManager>();
             freshManager.Ruler = freshRuler;
 
-            // Now activate -- this is what triggers Awake() with Ruler already assigned.
             freshManagerObject.SetActive(true);
+
+            // EditMode tests run outside Play Mode, where Unity does not invoke Awake()
+            // for plain MonoBehaviours -- exercise the load logic directly instead.
+            freshManager.LoadPersistedStateIfPresent();
 
             try
             {
