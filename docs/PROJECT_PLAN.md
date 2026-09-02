@@ -21,11 +21,19 @@ $17.5B/yr + RPG $16.8B/yr) without competing on raw production budget.
 **Core Loop**
 - FR-01: The user can prep a strategic recommendation (resource allocation,
   army move, diplomatic choice) for the ruler NPC each decision cycle.
-- FR-02: When the ruler NPC's mood/trait state conflicts with the player's
-  recommendation, the system shall probabilistically override the player's
-  choice and narrate the consequence.
-- FR-03: The system shall persist ruler mood, loyalty, and trust as numeric
-  state that evolves from player choices and event outcomes.
+- FR-02: When the ruler NPC's loyalty/agenda state conflicts with the
+  player's recommendation, the system shall probabilistically override the
+  player's choice and narrate the consequence. (Narrowed from an earlier
+  "mood or trait" phrasing during design: the shipped decision table
+  weights on loyalty and agenda-alignment only, not mood. Mood is still
+  tracked and narrated but does not currently influence the override
+  probability — see `docs/superpowers/specs/2026-09-01-core-decision-cycle-design.md`
+  approach B. Revisit if mood-weighting becomes a real gameplay need.)
+- FR-03: The system shall persist ruler mood, loyalty, and agenda as
+  numeric/enum state that evolves from player choices and event outcomes.
+  (Dropped "trust" as a separate stat during design — no distinct trust
+  mechanic was ever designed; loyalty serves that role. Revisit if a
+  distinct trust stat is designed later.)
 
 **Advisor/Ruler AI**
 - FR-04: The system shall drive ruler behavior via a lightweight
@@ -94,11 +102,12 @@ $17.5B/yr + RPG $16.8B/yr) without competing on raw production budget.
 
 ```
 FR-02 Acceptance:
-  Given: player has submitted a recommendation and ruler loyalty < 40
+  Given: player has submitted a recommendation and ruler loyalty < 20
   When:  the decision cycle resolves
-  Then:  system has a defined probability of ruler override, weighted by mood
+  Then:  system has a defined probability of ruler override, weighted by
+         loyalty and agenda alignment (see FR-02 note on mood)
   And:   the override outcome is narrated with a templated line referencing
-         the specific mood state
+         the current mood state
 
 FR-11 Acceptance:
   Given: a live-ops event is active
@@ -164,7 +173,7 @@ kingdom → many pvp_duels as challenger or defender.
 ## 7. Engineering Handoff Spec
 
 **Tech Stack**
-- Client: Unity 2023 LTS (C#), ASTC texture compression, Addressables for
+- Client: Unity 6 LTS (6000.3) (C#), ASTC texture compression, Addressables for
   asset streaming.
   *(Source: https://unity.com/blog/games/optimize-your-mobile-game-performance-expert-tips-on-graphics-and-assets)*
 - Backend: Node.js + Express/Fastify, PostgreSQL, Redis for session/queue state
@@ -204,8 +213,10 @@ BL-01: Every live-ops event must define a non-null f2p_reward_tier reachable
        without purchases (FR-11)
 BL-02: Purchase grants only apply after server-side receipt verification
        succeeds
-BL-03: Ruler override probability is a function of loyalty and mood only —
-       never influenced by purchase history (no pay-to-avoid-override)
+BL-03: Ruler override probability is a function of loyalty and agenda
+       alignment only (mood is tracked/narrated but not currently a
+       weighting input — see FR-02 note) — never influenced by purchase
+       history (no pay-to-avoid-override)
 BL-04: Async PvP duels resolve via scenario scoring server-side; the client
        never computes the winner
 ```
