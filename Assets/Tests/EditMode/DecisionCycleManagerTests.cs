@@ -45,7 +45,7 @@ namespace UnderstudyKingdom.Tests
         {
             var allocation = new ResourceAllocation(20, 60, 20); // aligned with Mercantile
 
-            string narration = manager.SubmitRecommendation(allocation, roll: 0.99); // baseline 0.10, no override
+            string narration = manager.SubmitRecommendation(allocation, roll: 0.99); // high loyalty + neutral mood -> low probability (clamped), no override
 
             Assert.IsTrue(narration.Contains("wise allocation"));
             Assert.AreEqual(55, ruler.State.Mood);
@@ -58,7 +58,7 @@ namespace UnderstudyKingdom.Tests
         [Test]
         public void SubmitRecommendation_Overridden_ReturnsOverrideNarration()
         {
-            ruler.State.Loyalty = 10; // forces near-certain override
+            ruler.State.Loyalty = 10; // low loyalty alone -> probability 0.58, comfortably above roll 0.50
 
             var allocation = new ResourceAllocation(20, 60, 20);
             string narration = manager.SubmitRecommendation(allocation, roll: 0.50);
