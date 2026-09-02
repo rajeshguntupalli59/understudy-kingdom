@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
+using UnderstudyKingdom.Backend;
 using UnderstudyKingdom.Core;
 using UnderstudyKingdom.Npc;
 using UnderstudyKingdom.UI;
@@ -35,6 +36,13 @@ namespace UnderstudyKingdom.EditorTools
             var managerObject = new GameObject("Manager");
             var manager = managerObject.AddComponent<DecisionCycleManager>();
             manager.Ruler = ruler;
+
+            var backendCoordinatorObject = new GameObject("BackendSyncCoordinator");
+            var backendCoordinator = backendCoordinatorObject.AddComponent<BackendSyncCoordinator>();
+            backendCoordinator.SupabaseUrl = "https://kszwkvxtnzbbndclpbbe.supabase.co";
+            backendCoordinator.SupabaseAnonKey = "sb_publishable_R277yUhT4qK5yTdZwamiuQ_3MD-gdvw";
+            backendCoordinator.BackendBaseUrl = "http://localhost:3000";
+            backendCoordinator.DecisionCycleManager = manager;
 
             var canvasObject = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasObject.GetComponent<Canvas>();
