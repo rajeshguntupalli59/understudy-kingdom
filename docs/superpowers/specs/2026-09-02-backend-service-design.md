@@ -76,12 +76,37 @@ proxy over Supabase's.
 
 **Auth verification:** Supabase Auth issues a JWT on sign-in (handled
 entirely client-side by whatever eventually calls this API — out of scope
-here). Our Fastify service verifies that JWT's signature and expiry using
-Supabase's JWT secret on every protected route (an `onRequest` hook
-reads `Authorization: Bearer <token>`, verifies it, and attaches the
-verified `sub` claim — the Supabase user id — to the request). No
-sign-in/OAuth flow is implemented in this service; it only ever *verifies*
-tokens someone else obtained.
+here). Our Fastify service verifies that JWT's signature and expiry on
+every protected route (an `onRequest` hook reads `Authorization: Bearer
+<token>`, verifies it, and attaches the verified `sub` claim — the
+Supabase user id — to the request). No sign-in/OAuth flow is implemented
+in this service; it only ever *verifies* tokens someone else obtained.
+
+Verification method (revised from this doc's original plan — see "Design
+Correction" below): Supabase signs tokens asymmetrically (ES256), resolved
+via the project's JWKS endpoint
+(`{SUPABASE_URL}/auth/v1/.well-known/jwks.json`), not a shared HS256
+secret. The auth plugin constructs a `jose` `createRemoteJWKSet` once at
+module load (it caches fetched keys internally) and passes it to
+`verifySupabaseJwt` on each request. `SUPABASE_JWT_SECRET` is not used.
+
+### Design Correction (found during Task 5 implementation)
+
+This document originally specified HS256 verification against a shared
+`SUPABASE_JWT_SECRET` — based on Supabase's older "Legacy JWT Secret"
+mechanism, which this project's Supabase instance *has available in its
+dashboard* but does not actually use to sign tokens. Empirically decoding
+a real token issued by `signInAnonymously()` showed `alg: "ES256"` with a
+`kid`, and JWKS-based verification against
+`{SUPABASE_URL}/auth/v1/.well-known/jwks.json` succeeds where HS256
+verification against the dashboard's "Legacy JWT Secret" value fails. This
+is exactly the ambiguity flagged as a risk during this document's original
+authoring (newer Supabase projects can default to asymmetric signing keys
+even when a legacy secret is still visible/copyable in the dashboard) —
+confirmed in practice rather than caught in design review. The fix
+(JWKS-based verification) is a net simplification: no secret to provision,
+store, or rotate; `jose`'s `createRemoteJWKSet` handles key rotation
+automatically.
 
 Rejected alternative: implementing Google/Apple OAuth by hand in Fastify.
 Rejected because Supabase Auth already solves this correctly and securely;

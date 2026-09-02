@@ -1,4 +1,7 @@
+import 'dotenv/config';
 import Fastify, { FastifyInstance } from 'fastify';
+import authPlugin from './auth/authPlugin';
+import kingdomsRoutes from './routes/kingdoms';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: false });
@@ -22,6 +25,11 @@ export function buildApp(): FastifyInstance {
 
   app.get('/health', async () => {
     return { status: 'ok' };
+  });
+
+  app.register(async (protectedRoutes) => {
+    await protectedRoutes.register(authPlugin);
+    await protectedRoutes.register(kingdomsRoutes);
   });
 
   return app;
