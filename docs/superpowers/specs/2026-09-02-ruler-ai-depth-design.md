@@ -163,3 +163,25 @@ leaving it as a surprise test failure to debug later.
   only.
 - Council/rival-ruler AI, or any behavior-tree-requiring branching logic —
   still only one decision point; revisit if that changes.
+
+## Known Tuning Debt (Recorded, Not Fixed)
+
+A final whole-branch review (101x101 grid sweep over Loyalty/Mood, plus a
+hand-traced accept-cycle trajectory) found that with the shipped constants
+(`Baseline=0.10`, `LoyaltyWeight=0.012`, `MoodWeight=0.005`,
+`MinProbability=0.02`), an aligned ruler at neutral mood saturates to the flat
+2% floor as soon as `Loyalty >= 57` -- reachable after only about two accepted
+recommendation cycles from a fresh ruler (`Loyalty=50, Mood=50` ->
+`Loyalty=56, Mood=60` after one accept, past the floor after a second). This
+happens because `Baseline` only has 0.08 of headroom down to `MinProbability`,
+while loyalty alone can swing the formula by up to ±0.60 (`50 * 0.012`); once
+loyalty pushes past that floor, mood's much smaller swing can no longer move
+the probability at all. The formula satisfies the design doc's literal
+directional constraints (loyalty stays dominant, mood is a real lever in
+general), but along the game's most common play path it undercuts the
+milestone's headline goal of "mood becomes a genuine gameplay lever." This is
+a candidate for a future tuning pass -- e.g. widening the Baseline-to-floor
+gap, lowering `MinProbability` further, or reducing `LoyaltyWeight`'s
+per-point swing -- not something this milestone attempted to fix, since
+re-tuning constants would require re-deriving and re-verifying every existing
+test's expected values.

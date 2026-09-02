@@ -27,6 +27,8 @@ namespace UnderstudyKingdom.Npc
     /// </summary>
     public static class OverrideEvaluator
     {
+        // Must match RulerState's Mood/Loyalty field defaults -- this is the
+        // point at which each factor contributes zero to the probability.
         private const int Neutral = 50;
         private const double Baseline = 0.10;
         private const double LoyaltyWeight = 0.012;

@@ -132,5 +132,26 @@ namespace UnderstudyKingdom.Tests
 
             Assert.AreEqual(0.02, probability, 0.0001);
         }
+
+        [Test]
+        public void LoyaltyOutweighsMood_ForEqualDeviationFromNeutral()
+        {
+            var allocation = new ResourceAllocation(50, 30, 20); // aligned for Expansionist
+            var loyaltyDropState = new RulerState { Mood = 50, Loyalty = 20, Agenda = RulerState.AgendaType.Expansionist };
+            var moodDropState    = new RulerState { Mood = 20, Loyalty = 50, Agenda = RulerState.AgendaType.Expansionist };
+
+            Assert.Greater(
+                OverrideEvaluator.OverrideProbability(loyaltyDropState, allocation),
+                OverrideEvaluator.OverrideProbability(moodDropState, allocation));
+        }
+
+        [Test]
+        public void NeutralRuler_Aligned_SitsAtBaseline()
+        {
+            var state = new RulerState { Mood = 50, Loyalty = 50, Agenda = RulerState.AgendaType.Expansionist };
+            var allocation = new ResourceAllocation(50, 30, 20); // aligned
+
+            Assert.AreEqual(0.10, OverrideEvaluator.OverrideProbability(state, allocation), 0.0001);
+        }
     }
 }
