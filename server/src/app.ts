@@ -2,6 +2,7 @@ import 'dotenv/config';
 import Fastify, { FastifyInstance } from 'fastify';
 import authPlugin from './auth/authPlugin';
 import kingdomsRoutes from './routes/kingdoms';
+import decisionsRoutes from './routes/decisions';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: false });
@@ -30,6 +31,7 @@ export function buildApp(): FastifyInstance {
   app.register(async (protectedRoutes) => {
     await protectedRoutes.register(authPlugin);
     await protectedRoutes.register(kingdomsRoutes);
+    await protectedRoutes.register(decisionsRoutes);
   });
 
   return app;
