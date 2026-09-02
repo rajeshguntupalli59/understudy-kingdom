@@ -30,3 +30,8 @@ crashlytics-build.properties
 graphify-out/
 *.graphify-bak
 .graphify_version
+
+# === Backend service (server/) ===
+server/node_modules/
+server/.env
+server/dist/
