@@ -15,6 +15,13 @@
       "when": 1788365379593,
       "tag": "0001_dazzling_korvac",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788390507183,
+      "tag": "0002_tense_kid_colt",
+      "breakpoints": true
     }
   ]
 }

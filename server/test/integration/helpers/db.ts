@@ -19,5 +19,5 @@ export async function truncateTables(): Promise<void> {
     );
   }
 
-  await db.execute(sql`TRUNCATE TABLE decisions, ruler_npcs, kingdoms RESTART IDENTITY CASCADE`);
+  await db.execute(sql`TRUNCATE TABLE pvp_duels, decisions, ruler_npcs, kingdoms RESTART IDENTITY CASCADE`);
 }

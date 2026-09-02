@@ -39,3 +39,25 @@ export const decisions = pgTable(
   },
   (table) => [unique().on(table.kingdomId, table.cycleNumber)],
 );
+
+// No scenario_id (this milestone's confirmed mechanic uses the challenger's
+// own submitted allocation, not a fixed scenario) and no separate
+// winner_kingdom_id column (derivable from `overridden`; nothing reads duel
+// history back yet to need it precomputed). defenderRulerSnapshot captures
+// the defender's mood/loyalty/agenda AT DUEL TIME -- their kingdom keeps
+// changing afterward, and the duel record should stay a fair, reproducible
+// historical fact rather than silently drifting. See
+// docs/superpowers/specs/2026-09-02-async-pvp-design.md.
+export const pvpDuels = pgTable('pvp_duels', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  challengerKingdomId: uuid('challenger_kingdom_id')
+    .notNull()
+    .references(() => kingdoms.id),
+  defenderKingdomId: uuid('defender_kingdom_id')
+    .notNull()
+    .references(() => kingdoms.id),
+  challengerRecommendation: jsonb('challenger_recommendation').notNull(),
+  defenderRulerSnapshot: jsonb('defender_ruler_snapshot').notNull(),
+  overridden: boolean('overridden').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
