@@ -26,6 +26,9 @@ namespace UnderstudyKingdom.EditorTools
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
+            var cameraObject = new GameObject("Main Camera", typeof(Camera));
+            cameraObject.tag = "MainCamera";
+
             var rulerObject = new GameObject("Ruler");
             var ruler = rulerObject.AddComponent<RulerNpcController>();
 
@@ -66,11 +69,38 @@ namespace UnderstudyKingdom.EditorTools
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, button);
 
+            canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
+
             Directory.CreateDirectory("Assets/Scenes");
             EditorSceneManager.SaveScene(scene, ScenePath);
+            NormalizeCanvasLocalScaleInSavedScene();
             AssetDatabase.Refresh();
 
             Debug.Log($"CoreLoopSceneBuilder: saved scene to {ScenePath}");
+        }
+
+        /// <summary>
+        /// The Canvas root's RectTransform.localScale is recomputed by Unity's
+        /// ScreenSpaceOverlay Canvas from screen dimensions that don't exist in
+        /// -nographics batch mode, so it always serializes as {0, 0, 0} no
+        /// matter what is set on the live object beforehand -- confirmed
+        /// harmless at runtime (it resolves correctly the moment a real
+        /// screen/window exists), but it makes future diffs of this
+        /// generated scene file look alarming. Patch it back to {1, 1, 1} in
+        /// the just-saved YAML directly, since setting it programmatically
+        /// before SaveScene does not survive the save.
+        /// </summary>
+        private static void NormalizeCanvasLocalScaleInSavedScene()
+        {
+            const string zeroScale = "m_LocalScale: {x: 0, y: 0, z: 0}";
+            const string oneScale = "m_LocalScale: {x: 1, y: 1, z: 1}";
+
+            string sceneText = File.ReadAllText(ScenePath);
+            string patched = sceneText.Replace(zeroScale, oneScale);
+            if (patched != sceneText)
+            {
+                File.WriteAllText(ScenePath, patched);
+            }
         }
 
         [MenuItem("Understudy Kingdom/Add Core Loop Scene To Build Settings")]
@@ -90,21 +120,26 @@ namespace UnderstudyKingdom.EditorTools
             }
         }
 
-        [MenuItem("Understudy Kingdom/Verify Core Loop Scene")]
+        /// <summary>
+        /// Scene-integrity sanity check: opens the scene and confirms a
+        /// CoreLoopScreenController is present. This does NOT drive Play Mode
+        /// or verify persistence across a stop/restart — it is a batch-mode
+        /// tool only, reachable via -executeMethod, not the Editor menu, since
+        /// EditorApplication.Exit(1) on failure would otherwise kill the
+        /// Editor and discard unsaved work if someone ran it from the GUI.
+        /// </summary>
         public static void Verify()
         {
             EditorSceneManager.OpenScene(ScenePath);
-
-            if (File.Exists(UnderstudyKingdom.Core.SaveService.SavePath))
-            {
-                File.Delete(UnderstudyKingdom.Core.SaveService.SavePath);
-            }
 
             var controller = Object.FindFirstObjectByType<CoreLoopScreenController>();
             if (controller == null)
             {
                 Debug.LogError("CoreLoopSceneBuilder.Verify: no CoreLoopScreenController found in the scene.");
-                EditorApplication.Exit(1);
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
                 return;
             }
 

@@ -859,26 +859,26 @@ Claude-Session: https://claude.ai/code/session_017JNi1ThZutdGUt6toaGBmq"
 
 **Files:** none (verification only — no code changes in this task).
 
-- [ ] **Step 1: Verify persistence across a Play Mode stop/restart, driven headlessly via an Editor script**
+- [ ] **Step 1: Scene-integrity sanity check, driven headlessly via an Editor script**
 
-This automates the spec's "manual verification" checkpoint without requiring a human to click through the Editor, by driving `EditorApplication.isPlaying` from a `-executeMethod` script and asserting on `SaveService`'s on-disk file between runs. Add this method to `Assets/Editor/CoreLoopSceneBuilder.cs`:
+This is a batch-mode sanity check, not a persistence test: it opens the built scene and confirms a `CoreLoopScreenController` is present, catching the case where the scene fails to load or the controller wiring is missing. It does **not** drive `EditorApplication.isPlaying` and does **not** verify persistence across a Play Mode stop/restart — that check is still manual, and is exactly what the human checkpoint in Step 2 below is for. Add this method to `Assets/Editor/CoreLoopSceneBuilder.cs`:
 
 ```csharp
-        [MenuItem("Understudy Kingdom/Verify Core Loop Scene")]
+        // Reachable only via -executeMethod, not the Editor menu: on failure in
+        // batch mode it calls EditorApplication.Exit(1), which would kill the
+        // Editor and discard unsaved work if it were exposed as a MenuItem.
         public static void Verify()
         {
             EditorSceneManager.OpenScene(ScenePath);
-
-            if (File.Exists(UnderstudyKingdom.Core.SaveService.SavePath))
-            {
-                File.Delete(UnderstudyKingdom.Core.SaveService.SavePath);
-            }
 
             var controller = Object.FindFirstObjectByType<CoreLoopScreenController>();
             if (controller == null)
             {
                 Debug.LogError("CoreLoopSceneBuilder.Verify: no CoreLoopScreenController found in the scene.");
-                EditorApplication.Exit(1);
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
                 return;
             }
 
