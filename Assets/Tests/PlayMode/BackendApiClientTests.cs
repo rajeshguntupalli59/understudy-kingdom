@@ -80,7 +80,7 @@ namespace UnderstudyKingdom.Tests
 
             bool succeeded = false;
             string error = null;
-            apiClient.PostDecision(accessToken, dto, () => succeeded = true, err => error = err);
+            apiClient.PostDecision(accessToken, dto, _ => succeeded = true, err => error = err);
             yield return new WaitUntil(() => succeeded || error != null);
 
             Assert.IsNull(error, $"Expected success, got error: {error}");
@@ -98,16 +98,28 @@ namespace UnderstudyKingdom.Tests
             var dto = DecisionSyncRequestFactory.From(record);
 
             bool firstSucceeded = false;
-            apiClient.PostDecision(accessToken, dto, () => firstSucceeded = true, err => Assert.Fail($"First post failed: {err}"));
+            bool firstWasAlreadyRecorded = true; // starts wrong so the assertion below actually proves it flipped
+            apiClient.PostDecision(accessToken, dto, wasAlreadyRecorded =>
+            {
+                firstSucceeded = true;
+                firstWasAlreadyRecorded = wasAlreadyRecorded;
+            }, err => Assert.Fail($"First post failed: {err}"));
             yield return new WaitUntil(() => firstSucceeded);
 
             bool secondSucceeded = false;
+            bool secondWasAlreadyRecorded = false;
             string secondError = null;
-            apiClient.PostDecision(accessToken, dto, () => secondSucceeded = true, err => secondError = err);
+            apiClient.PostDecision(accessToken, dto, wasAlreadyRecorded =>
+            {
+                secondSucceeded = true;
+                secondWasAlreadyRecorded = wasAlreadyRecorded;
+            }, err => secondError = err);
             yield return new WaitUntil(() => secondSucceeded || secondError != null);
 
             Assert.IsNull(secondError, $"Expected 409 to be treated as success, got error: {secondError}");
             Assert.IsTrue(secondSucceeded);
+            Assert.IsFalse(firstWasAlreadyRecorded, "First post should have created the decision (2xx), not collided.");
+            Assert.IsTrue(secondWasAlreadyRecorded, "Second post should have collided with the first (409, already recorded).");
         }
     }
 }

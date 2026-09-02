@@ -35,3 +35,7 @@ graphify-out/
 server/node_modules/
 server/.env
 server/dist/
+
+# === Manual test run artifacts (repo root) ===
+test-results-*.xml
+*.log

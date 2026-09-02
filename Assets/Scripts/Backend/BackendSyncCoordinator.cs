@@ -48,7 +48,12 @@ namespace UnderstudyKingdom.Backend
 
             if (stored != null && !string.IsNullOrEmpty(stored.RefreshToken))
             {
-                authClient.RefreshSession(stored.RefreshToken, HandleSessionObtained, HandleSessionError);
+                authClient.RefreshSession(stored.RefreshToken, HandleSessionObtained, error =>
+                {
+                    Debug.LogWarning($"BackendSyncCoordinator: bootstrap refresh failed, clearing stale session and signing in fresh: {error}");
+                    SessionStore.Clear();
+                    authClient.SignInAnonymously(HandleSessionObtained, HandleSessionError);
+                });
                 return;
             }
 
@@ -79,42 +84,59 @@ namespace UnderstudyKingdom.Backend
             }
         }
 
+        // Defense-in-depth: OnDecisionRecorded is invoked synchronously from
+        // DecisionCycleManager.SubmitRecommendation, so any uncaught exception here
+        // would propagate into gameplay code and violate this milestone's core
+        // "never blocks gameplay" contract.
         private void HandleDecisionRecorded(DecisionRecord record)
         {
-            if (currentSession == null)
+            try
             {
-                Debug.LogWarning("BackendSyncCoordinator: no session available, dropping decision sync.");
-                return;
-            }
-
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (currentSession.IsExpired(now))
-            {
-                if (string.IsNullOrEmpty(currentSession.RefreshToken))
+                if (currentSession == null)
                 {
-                    Debug.LogWarning("BackendSyncCoordinator: session expired with no refresh token, dropping decision sync.");
+                    Debug.LogWarning("BackendSyncCoordinator: no session available, dropping decision sync.");
                     return;
                 }
 
-                authClient.RefreshSession(currentSession.RefreshToken,
-                    onSuccess: refreshed =>
+                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                if (currentSession.IsExpired(now))
+                {
+                    if (string.IsNullOrEmpty(currentSession.RefreshToken))
                     {
-                        currentSession = refreshed;
-                        SessionStore.Save(refreshed);
-                        SyncDecision(record);
-                    },
-                    onError: err => Debug.LogWarning($"BackendSyncCoordinator: session refresh failed, dropping decision sync: {err}"));
-                return;
-            }
+                        Debug.LogWarning("BackendSyncCoordinator: session expired with no refresh token, dropping decision sync.");
+                        return;
+                    }
 
-            SyncDecision(record);
+                    authClient.RefreshSession(currentSession.RefreshToken,
+                        onSuccess: refreshed =>
+                        {
+                            currentSession = refreshed;
+                            SessionStore.Save(refreshed);
+                            SyncDecision(record);
+                        },
+                        onError: err => Debug.LogWarning($"BackendSyncCoordinator: session refresh failed, dropping decision sync: {err}"));
+                    return;
+                }
+
+                SyncDecision(record);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"BackendSyncCoordinator: unexpected exception during decision sync for cycle {record.CycleNumber}, dropping: {ex.Message}");
+            }
         }
 
         private void SyncDecision(DecisionRecord record)
         {
             DecisionSyncRequest dto = DecisionSyncRequestFactory.From(record);
             apiClient.PostDecision(currentSession.AccessToken, dto,
-                onSuccess: () => { },
+                onSuccess: wasAlreadyRecorded =>
+                {
+                    if (wasAlreadyRecorded)
+                    {
+                        Debug.LogWarning($"BackendSyncCoordinator: cycle {record.CycleNumber} was already recorded server-side (409) — if this wasn't an intentional re-sync, the local cycle counter may have reset independently of the persisted session, and this decision was NOT newly recorded.");
+                    }
+                },
                 onError: err => Debug.LogWarning($"BackendSyncCoordinator: decision sync failed for cycle {record.CycleNumber}: {err}"));
         }
 

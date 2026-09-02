@@ -66,6 +66,7 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual(signInResult.UserId, refreshResult.UserId);
             Assert.AreNotEqual(signInResult.RefreshToken, refreshResult.RefreshToken,
                 "Supabase rotates the refresh token on every use -- storing the old one would break the next refresh.");
+            Assert.Greater(refreshResult.ExpiresAtUnixSeconds, 0);
         }
     }
 }

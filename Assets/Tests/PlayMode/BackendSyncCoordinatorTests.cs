@@ -70,5 +70,59 @@ namespace UnderstudyKingdom.Tests
             // to complete before the test (and its teardown) ends.
             yield return new WaitForSeconds(2f);
         }
+
+        /// <summary>
+        /// Proves persisted sessions survive an app restart: a second coordinator,
+        /// standing in for a second app launch, must reuse the same identity that the
+        /// first coordinator's bootstrap persisted to disk -- not sign in as a new
+        /// anonymous user. Also exercises EnsureKingdom's 200-already-exists path,
+        /// since the second coordinator's kingdom already exists from the first.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator SecondCoordinator_WithPersistedSession_ReusesSameIdentity()
+        {
+            yield return new WaitForSeconds(2f);
+
+            SessionData firstSession = SessionStore.Load();
+            Assert.IsNotNull(firstSession, "First coordinator should have persisted a session after bootstrap.");
+            string firstUserId = firstSession.UserId;
+            Assert.IsFalse(string.IsNullOrEmpty(firstUserId));
+
+            // Simulate the app closing: tear down the first coordinator's GameObject,
+            // but deliberately do NOT clear the session file -- that's the whole point.
+            Object.DestroyImmediate(coordinatorObject);
+            coordinatorObject = null; // avoid a double-destroy in the class TearDown below
+
+            var secondRulerObject = new GameObject("Ruler2");
+            var secondRuler = secondRulerObject.AddComponent<RulerNpcController>();
+
+            var secondManagerObject = new GameObject("Manager2");
+            var secondManager = secondManagerObject.AddComponent<DecisionCycleManager>();
+            secondManager.Ruler = secondRuler;
+
+            var secondCoordinatorObject = new GameObject("Coordinator2");
+            var secondCoordinator = secondCoordinatorObject.AddComponent<BackendSyncCoordinator>();
+            secondCoordinator.SupabaseUrl = "https://kszwkvxtnzbbndclpbbe.supabase.co";
+            secondCoordinator.SupabaseAnonKey = "sb_publishable_R277yUhT4qK5yTdZwamiuQ_3MD-gdvw";
+            secondCoordinator.BackendBaseUrl = "http://localhost:3000";
+            secondCoordinator.DecisionCycleManager = secondManager;
+
+            try
+            {
+                yield return new WaitForSeconds(2f);
+
+                SessionData secondSession = SessionStore.Load();
+                Assert.IsNotNull(secondSession, "Second coordinator should have a session after bootstrap.");
+                Assert.AreEqual(firstUserId, secondSession.UserId,
+                    "Second coordinator should have reused the persisted session's identity, not signed in fresh.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(secondCoordinatorObject);
+                Object.DestroyImmediate(secondManagerObject);
+                Object.DestroyImmediate(secondRulerObject);
+                SessionStore.Clear();
+            }
+        }
     }
 }
