@@ -1,0 +1,129 @@
+using System;
+using UnityEngine;
+using UnderstudyKingdom.Core;
+
+namespace UnderstudyKingdom.Backend
+{
+    /// <summary>
+    /// Orchestrates session bootstrap and best-effort background decision sync.
+    /// Local SaveService/OverrideEvaluator remain authoritative; every sync call here
+    /// is fire-and-forget -- failure is logged and dropped, never surfaced to the
+    /// player, never retried. See
+    /// docs/superpowers/specs/2026-09-02-client-backend-integration-design.md.
+    /// </summary>
+    public class BackendSyncCoordinator : MonoBehaviour
+    {
+        public string SupabaseUrl;
+        public string SupabaseAnonKey;
+        public string BackendBaseUrl;
+        public DecisionCycleManager DecisionCycleManager;
+
+        private SupabaseAuthClient authClient;
+        private BackendApiClient apiClient;
+        private SessionData currentSession;
+
+        private void Start()
+        {
+            authClient = gameObject.AddComponent<SupabaseAuthClient>();
+            authClient.SupabaseUrl = SupabaseUrl;
+            authClient.SupabaseAnonKey = SupabaseAnonKey;
+
+            apiClient = gameObject.AddComponent<BackendApiClient>();
+            apiClient.BackendBaseUrl = BackendBaseUrl;
+
+            BootstrapSession();
+        }
+
+        private void BootstrapSession()
+        {
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            SessionData stored = SessionStore.Load();
+
+            if (stored != null && !stored.IsExpired(now))
+            {
+                currentSession = stored;
+                OnSessionReady();
+                return;
+            }
+
+            if (stored != null && !string.IsNullOrEmpty(stored.RefreshToken))
+            {
+                authClient.RefreshSession(stored.RefreshToken, HandleSessionObtained, HandleSessionError);
+                return;
+            }
+
+            authClient.SignInAnonymously(HandleSessionObtained, HandleSessionError);
+        }
+
+        private void HandleSessionObtained(SessionData session)
+        {
+            currentSession = session;
+            SessionStore.Save(session);
+            OnSessionReady();
+        }
+
+        private void HandleSessionError(string error)
+        {
+            Debug.LogWarning($"BackendSyncCoordinator: session bootstrap failed, sync disabled for this launch: {error}");
+        }
+
+        private void OnSessionReady()
+        {
+            apiClient.EnsureKingdom(currentSession.AccessToken,
+                onSuccess: () => { },
+                onError: err => Debug.LogWarning($"BackendSyncCoordinator: EnsureKingdom failed: {err}"));
+
+            if (DecisionCycleManager != null)
+            {
+                DecisionCycleManager.OnDecisionRecorded += HandleDecisionRecorded;
+            }
+        }
+
+        private void HandleDecisionRecorded(DecisionRecord record)
+        {
+            if (currentSession == null)
+            {
+                Debug.LogWarning("BackendSyncCoordinator: no session available, dropping decision sync.");
+                return;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (currentSession.IsExpired(now))
+            {
+                if (string.IsNullOrEmpty(currentSession.RefreshToken))
+                {
+                    Debug.LogWarning("BackendSyncCoordinator: session expired with no refresh token, dropping decision sync.");
+                    return;
+                }
+
+                authClient.RefreshSession(currentSession.RefreshToken,
+                    onSuccess: refreshed =>
+                    {
+                        currentSession = refreshed;
+                        SessionStore.Save(refreshed);
+                        SyncDecision(record);
+                    },
+                    onError: err => Debug.LogWarning($"BackendSyncCoordinator: session refresh failed, dropping decision sync: {err}"));
+                return;
+            }
+
+            SyncDecision(record);
+        }
+
+        private void SyncDecision(DecisionRecord record)
+        {
+            DecisionSyncRequest dto = DecisionSyncRequestFactory.From(record);
+            apiClient.PostDecision(currentSession.AccessToken, dto,
+                onSuccess: () => { },
+                onError: err => Debug.LogWarning($"BackendSyncCoordinator: decision sync failed for cycle {record.CycleNumber}: {err}"));
+        }
+
+        private void OnDestroy()
+        {
+            if (DecisionCycleManager != null)
+            {
+                DecisionCycleManager.OnDecisionRecorded -= HandleDecisionRecorded;
+            }
+        }
+    }
+}
