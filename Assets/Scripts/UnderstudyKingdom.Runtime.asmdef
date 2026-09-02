@@ -1,7 +1,10 @@
 {
     "name": "UnderstudyKingdom.Runtime",
     "rootNamespace": "UnderstudyKingdom",
-    "references": [],
+    "references": [
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
