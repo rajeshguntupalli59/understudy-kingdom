@@ -23,6 +23,21 @@ interface CreateDecisionBody {
   overridden: boolean;
 }
 
+const listDecisionsSchema = {
+  querystring: {
+    type: 'object',
+    properties: {
+      cursor: { type: 'string', format: 'date-time' },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+    },
+  },
+} as const;
+
+interface ListDecisionsQuery {
+  cursor?: string;
+  limit: number;
+}
+
 const decisionsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Body: CreateDecisionBody }>(
     '/api/v1/decisions',
@@ -65,32 +80,36 @@ const decisionsRoutes: FastifyPluginAsync = async (fastify) => {
     },
   );
 
-  fastify.get<{ Querystring: { cursor?: string; limit?: string } }>('/api/v1/decisions', async (request, reply) => {
-    const limit = Math.min(Math.max(parseInt(request.query.limit ?? '20', 10) || 20, 1), 100);
+  fastify.get<{ Querystring: ListDecisionsQuery }>(
+    '/api/v1/decisions',
+    { schema: listDecisionsSchema },
+    async (request, reply) => {
+      const { limit } = request.query;
 
-    const kingdomRows = await db.select().from(kingdoms).where(eq(kingdoms.userId, request.userId)).limit(1);
-    if (kingdomRows.length === 0) {
-      reply.code(404);
-      return { error: 'No kingdom found for this user' };
-    }
-    const kingdom = kingdomRows[0];
+      const kingdomRows = await db.select().from(kingdoms).where(eq(kingdoms.userId, request.userId)).limit(1);
+      if (kingdomRows.length === 0) {
+        reply.code(404);
+        return { error: 'No kingdom found for this user' };
+      }
+      const kingdom = kingdomRows[0];
 
-    const conditions = [eq(decisions.kingdomId, kingdom.id)];
-    if (request.query.cursor) {
-      conditions.push(lt(decisions.createdAt, new Date(request.query.cursor)));
-    }
+      const conditions = [eq(decisions.kingdomId, kingdom.id)];
+      if (request.query.cursor) {
+        conditions.push(lt(decisions.createdAt, new Date(request.query.cursor)));
+      }
 
-    const rows = await db
-      .select()
-      .from(decisions)
-      .where(and(...conditions))
-      .orderBy(desc(decisions.createdAt))
-      .limit(limit);
+      const rows = await db
+        .select()
+        .from(decisions)
+        .where(and(...conditions))
+        .orderBy(desc(decisions.createdAt))
+        .limit(limit);
 
-    const nextCursor = rows.length === limit ? rows[rows.length - 1].createdAt.toISOString() : null;
+      const nextCursor = rows.length === limit ? rows[rows.length - 1].createdAt.toISOString() : null;
 
-    return { decisions: rows, nextCursor };
-  });
+      return { decisions: rows, nextCursor };
+    },
+  );
 };
 
 export default decisionsRoutes;

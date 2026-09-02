@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import Fastify, { FastifyInstance } from 'fastify';
+import Fastify, { FastifyError, FastifyInstance } from 'fastify';
 import authPlugin from './auth/authPlugin';
 import kingdomsRoutes from './routes/kingdoms';
 import decisionsRoutes from './routes/decisions';
@@ -14,7 +14,7 @@ export function buildApp(): FastifyInstance {
   // leak internals (query text, stack traces) to the client. See
   // docs/superpowers/specs/2026-09-02-backend-service-design.md's Error
   // Handling section.
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler<FastifyError>((error, _request, reply) => {
     if (error.statusCode && error.statusCode < 500) {
       reply.code(error.statusCode).send({ error: error.message });
       return;

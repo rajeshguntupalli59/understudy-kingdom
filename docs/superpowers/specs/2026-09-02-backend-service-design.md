@@ -185,11 +185,20 @@ Client (out of scope) obtains a Supabase JWT via Supabase Auth
 
 - Missing/invalid/expired JWT → `401`, generic message (no detail on
   *why* verification failed, to avoid giving an attacker useful signal).
+  JWT verification pins `algorithms: ['ES256']` explicitly and validates
+  the `issuer`/`audience` claims (added during Task 5's security
+  hardening — see the "Design Correction" section above and
+  `server/src/auth/verifyToken.ts`).
 - Malformed request body → `400`, via Fastify's built-in schema
   validation (no hand-written validation code).
 - `POST /decisions` with an already-recorded `cycle_number` for that
   kingdom → `409`.
 - `GET /kingdoms/me` with no kingdom yet → `404`.
+- The JWKS endpoint being unreachable, timing out, or returning an
+  unparseable document (an infrastructure-class failure, distinct from a
+  bad token) → `503 Authentication service unavailable` (see
+  `server/src/auth/verifyToken.ts`'s `isInfrastructureError` and
+  `server/src/auth/authPlugin.ts`).
 - Any unexpected/database error → `500`, generic message, full detail
   logged server-side only — never leak internals (query text, stack
   traces) to the client.

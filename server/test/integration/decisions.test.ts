@@ -161,4 +161,78 @@ describe('decisions routes', () => {
     expect(body.decisions[0].cycleNumber).toBe(3);
     expect(body.decisions[2].cycleNumber).toBe(1);
   });
+
+  // Fix I-3: an unparseable cursor used to reach `new Date(request.query.cursor)`
+  // unvalidated, and a garbage date string sorts fine but produces an
+  // "Invalid Date" whose downstream use as a query bound throws a RangeError
+  // -- an uncaught exception in the handler, which Fastify surfaces as a 500.
+  // A JSON Schema `format: 'date-time'` on the querystring rejects this
+  // before the handler ever runs, so it should now come back as a clean 400.
+  it('GET /api/v1/decisions returns 400 for a malformed cursor', async () => {
+    await createKingdom();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/decisions?cursor=not-a-date',
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+
+    expect(response.statusCode).toBe(400);
+  });
+
+  it('GET /api/v1/decisions?limit=2 returns exactly 2 results and a non-null nextCursor', async () => {
+    await createKingdom();
+    for (let cycle = 1; cycle <= 3; cycle++) {
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/decisions',
+        headers: { authorization: `Bearer ${jwt}` },
+        payload: { cycle_number: cycle, player_recommendation: {}, ruler_outcome: {}, overridden: false },
+      });
+    }
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/decisions?limit=2',
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.decisions).toHaveLength(2);
+    expect(body.decisions[0].cycleNumber).toBe(3);
+    expect(body.decisions[1].cycleNumber).toBe(2);
+    expect(body.nextCursor).not.toBeNull();
+  });
+
+  it('paginates using nextCursor to fetch the remaining decision(s)', async () => {
+    await createKingdom();
+    for (let cycle = 1; cycle <= 3; cycle++) {
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/decisions',
+        headers: { authorization: `Bearer ${jwt}` },
+        payload: { cycle_number: cycle, player_recommendation: {}, ruler_outcome: {}, overridden: false },
+      });
+    }
+
+    const firstPage = await app.inject({
+      method: 'GET',
+      url: '/api/v1/decisions?limit=2',
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+    const firstBody = firstPage.json();
+
+    const secondPage = await app.inject({
+      method: 'GET',
+      url: `/api/v1/decisions?limit=2&cursor=${encodeURIComponent(firstBody.nextCursor)}`,
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+
+    expect(secondPage.statusCode).toBe(200);
+    const secondBody = secondPage.json();
+    expect(secondBody.decisions).toHaveLength(1);
+    expect(secondBody.decisions[0].cycleNumber).toBe(1);
+    expect(secondBody.nextCursor).toBeNull();
+  });
 });

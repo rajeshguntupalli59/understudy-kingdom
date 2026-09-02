@@ -119,6 +119,23 @@ describe('kingdoms routes', () => {
     expect(response.statusCode).toBe(401);
   });
 
+  // Fix I-4: exercises all 4 protected routes, not just one, so a future
+  // route accidentally registered outside the auth-hooked scope in
+  // src/app.ts would fail this test (it'd come back with something other
+  // than 401 -- e.g. a 200/404/400 from the handler itself running without
+  // request.userId ever being set). Uses the real buildApp() from
+  // beforeAll above, same as every other test in this file.
+  it.each([
+    ['POST', '/api/v1/kingdoms'],
+    ['GET', '/api/v1/kingdoms/me'],
+    ['POST', '/api/v1/decisions'],
+    ['GET', '/api/v1/decisions'],
+  ] as const)('rejects %s %s with no Authorization header', async (method, url) => {
+    const response = await app.inject({ method, url });
+
+    expect(response.statusCode).toBe(401);
+  });
+
   it('rejects requests with a malformed Authorization header', async () => {
     const response = await app.inject({
       method: 'GET',

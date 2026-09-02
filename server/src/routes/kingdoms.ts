@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
 import { eq } from 'drizzle-orm';
-import type { NodePgTransaction } from 'drizzle-orm/node-postgres';
 import { db } from '../db/client';
 import { kingdoms, rulerNpcs } from '../db/schema';
 
@@ -8,7 +7,10 @@ import { kingdoms, rulerNpcs } from '../db/schema';
 // callback -- both expose the same query-builder surface (`.select()`,
 // `.insert()`, ...), so the helpers below can run either standalone
 // (GET /me) or as part of a multi-statement transaction (POST, see below).
-type TxExecutor = NodePgTransaction<Record<string, never>, Record<string, never>>;
+// Derived directly from `db.transaction`'s own signature (rather than
+// hand-rolled against `NodePgTransaction`'s generics) so it can't silently
+// drift out of sync with the real callback parameter type.
+type TxExecutor = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Executor = typeof db | TxExecutor;
 
 // A kingdoms row should never exist without a matching ruler_npcs row --

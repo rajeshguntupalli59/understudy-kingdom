@@ -126,6 +126,8 @@ dist/
 drizzle/
 ```
 
+> **Historical note:** the `drizzle/` line above is wrong and was not carried into the shipped `.gitignore`. Migrations under `server/drizzle/` need to be committed (they're the source of truth applied via `drizzle-kit migrate`), so ignoring that directory would silently drop them from version control. See the shipped `server/.gitignore`.
+
 Create `server/.env` (NOT committed — copy from `.env.example` and fill in the three real values from Step 1):
 
 ```bash
@@ -891,6 +893,8 @@ npm test
 
 Expected: exit code 0, all tests across `test/unit/` and `test/integration/` pass (5 + 1 + 6 = 12 at this point).
 
+> **Historical note:** "12" was the count at the time this plan was written. It's historical/approximate, not a target to keep matching -- later fix rounds added more tests (and a new test file). Trust `npm test`'s own reported total over any hardcoded number in this doc.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -1201,6 +1205,8 @@ npm test
 
 Expected: exit code 0, all tests pass (12 from before + 5 new = 17).
 
+> **Historical note:** "17" was the count at the time this plan was written. It's historical/approximate, not a target to keep matching -- later fix rounds added more tests (and a new test file). Trust `npm test`'s own reported total over any hardcoded number in this doc.
+
 - [ ] **Step 6: Commit**
 
 ```bash
@@ -1272,6 +1278,8 @@ npm test
 ```
 
 Expected: exit code 0, 17/17 tests passing.
+
+> **Historical note:** "17/17" was the count at the time this plan was written. It's historical/approximate, not a target to keep matching -- later fix rounds added more tests (and a new test file). Trust `npm test`'s own reported total over any hardcoded number in this doc.
 
 - [ ] **Step 4: Commit**
 
