@@ -64,7 +64,7 @@ Add this test method inside the existing `DecisionCycleManagerTests` class in `A
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionCycleManagerTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task1-fail.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionCycleManagerTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task1-fail.xml"
 ```
 Expected: FAIL — `DecisionRecord` does not exist / `OnDecisionRecorded` does not exist (compile error).
 
@@ -161,7 +161,7 @@ namespace UnderstudyKingdom.Core
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionCycleManagerTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task1-pass.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionCycleManagerTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task1-pass.xml"
 ```
 Expected: PASS, all `DecisionCycleManagerTests` tests green (the new one plus the 4 pre-existing ones).
 
@@ -295,7 +295,7 @@ namespace UnderstudyKingdom.Tests
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "SessionDataTests|SessionStoreTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task2-fail.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "SessionDataTests|SessionStoreTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task2-fail.xml"
 ```
 Expected: FAIL — `UnderstudyKingdom.Backend` namespace / `SessionData` / `SessionStore` do not exist.
 
@@ -390,7 +390,7 @@ namespace UnderstudyKingdom.Backend
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "SessionDataTests|SessionStoreTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task2-pass.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "SessionDataTests|SessionStoreTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task2-pass.xml"
 ```
 Expected: PASS, all 8 tests green.
 
@@ -467,7 +467,7 @@ namespace UnderstudyKingdom.Tests
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionSyncRequestFactoryTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task3-fail.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionSyncRequestFactoryTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task3-fail.xml"
 ```
 Expected: FAIL — `DecisionSyncRequest`/`DecisionSyncRequestFactory` do not exist.
 
@@ -532,7 +532,7 @@ namespace UnderstudyKingdom.Backend
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionSyncRequestFactoryTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task3-pass.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testFilter "DecisionSyncRequestFactoryTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task3-pass.xml"
 ```
 Expected: PASS, both tests green.
 
@@ -638,7 +638,7 @@ namespace UnderstudyKingdom.Tests
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "SupabaseAuthClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task4-fail.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "SupabaseAuthClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task4-fail.xml"
 ```
 Expected: FAIL — `SupabaseAuthClient` does not exist.
 
@@ -746,7 +746,7 @@ namespace UnderstudyKingdom.Backend
 
 Run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "SupabaseAuthClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task4-pass.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "SupabaseAuthClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task4-pass.xml"
 ```
 Expected: PASS, both tests green (requires internet access from the machine running this).
 
@@ -894,7 +894,7 @@ namespace UnderstudyKingdom.Tests
 
 With `server/` running locally (`cd server && npm run dev`), run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendApiClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task5-fail.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendApiClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task5-fail.xml"
 ```
 Expected: FAIL — `BackendApiClient` does not exist.
 
@@ -963,7 +963,7 @@ namespace UnderstudyKingdom.Backend
 
 With `server/` still running locally, run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendApiClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task5-pass.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendApiClientTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task5-pass.xml"
 ```
 Expected: PASS, all 3 tests green.
 
@@ -1073,7 +1073,7 @@ Note: `[UnityTest]` methods returning `IEnumerator` need no `[Test]`/`[UnitySetU
 
 With `server/` running locally, run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendSyncCoordinatorTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task6-fail.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendSyncCoordinatorTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task6-fail.xml"
 ```
 Expected: FAIL — `BackendSyncCoordinator` does not exist.
 
@@ -1216,7 +1216,7 @@ namespace UnderstudyKingdom.Backend
 
 With `server/` still running locally, run:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendSyncCoordinatorTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task6-pass.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testFilter "BackendSyncCoordinatorTests" -testResults "C:\Users\rajes\understudy-kingdom\test-results-task6-pass.xml"
 ```
 Expected: PASS.
 
@@ -1272,8 +1272,8 @@ Expected: `CoreLoopSceneBuilder.Verify: scene opened and controller found succes
 
 With `server/` running locally, run both:
 ```
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testResults "C:\Users\rajes\understudy-kingdom\test-results-final-editmode.xml" -quit
-"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testResults "C:\Users\rajes\understudy-kingdom\test-results-final-playmode.xml" -quit
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform EditMode -testResults "C:\Users\rajes\understudy-kingdom\test-results-final-editmode.xml"
+"C:\Users\rajes\UnityEditors\6000.3.23f1\Editor\Unity.exe" -batchmode -nographics -runTests -projectPath "C:\Users\rajes\understudy-kingdom" -testPlatform PlayMode -testResults "C:\Users\rajes\understudy-kingdom\test-results-final-playmode.xml"
 ```
 Expected: PASS, zero failures in both result files.
 
