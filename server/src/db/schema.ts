@@ -8,7 +8,7 @@ import { pgTable, uuid, integer, text, boolean, jsonb, timestamp, unique } from 
  */
 export const kingdoms = pgTable('kingdoms', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull(),
+  userId: uuid('user_id').notNull().unique(),
   foundedAt: timestamp('founded_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

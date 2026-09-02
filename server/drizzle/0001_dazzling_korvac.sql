@@ -1,0 +1,1 @@
+ALTER TABLE "kingdoms" ADD CONSTRAINT "kingdoms_user_id_unique" UNIQUE("user_id");

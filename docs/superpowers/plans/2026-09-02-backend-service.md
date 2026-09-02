@@ -44,13 +44,13 @@ If you don't already have one: go to https://supabase.com, sign up (free), click
 
 Once created, enable anonymous sign-ins (needed for this plan's integration tests, which authenticate as a real anonymous user): in the Supabase dashboard, go to **Authentication → Sign In / Providers**, find **"Allow anonymous sign-ins"**, and turn it on.
 
-Then collect four values from the dashboard:
+Then collect three values from the dashboard:
 - **`DATABASE_URL`**: Project Settings → Database → Connection string → URI (choose the "Session pooler" or direct connection string; it looks like `postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres` or `postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres`). Substitute in the database password you set at project creation.
 - **`SUPABASE_URL`**: Project Settings → API → Project URL (looks like `https://[ref].supabase.co`).
 - **`SUPABASE_ANON_KEY`**: Project Settings → API → Project API keys → `anon` `public` key.
-- **`SUPABASE_JWT_SECRET`**: Project Settings → API → JWT Settings → JWT Secret (may be labeled "Legacy JWT Secret" on newer dashboards — if you only see a section about JWT *signing keys* with no visible secret string, click into it; there should be a "Legacy JWT Secret" reveal option since this plan's auth verification uses the shared-secret/HS256 approach). Copy the full secret string.
+No JWT secret needs to be collected: this plan's auth verification uses JWKS-based asymmetric (ES256) verification, resolved automatically from `SUPABASE_URL` at `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` — there's no shared secret to provision, store, or rotate. (An earlier draft of this plan called for collecting a `SUPABASE_JWT_SECRET`/"Legacy JWT Secret" for HS256 verification; that assumption didn't match how this project's Supabase instance actually signs tokens — see the "Design Correction" section of `docs/superpowers/specs/2026-09-02-backend-service-design.md`.)
 
-If anything in this step doesn't match what's described (e.g. no anonymous sign-in toggle, no visible JWT secret), **stop and report back** with what you actually see in the dashboard rather than guessing — the exact Supabase dashboard layout changes over time and this plan's instructions may be stale.
+If anything in this step doesn't match what's described (e.g. no anonymous sign-in toggle), **stop and report back** with what you actually see in the dashboard rather than guessing — the exact Supabase dashboard layout changes over time and this plan's instructions may be stale.
 
 - [ ] **Step 2: Scaffold the Node project**
 
@@ -114,7 +114,6 @@ Create `server/.env.example`:
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres
 SUPABASE_URL=https://[YOUR-PROJECT-REF].supabase.co
 SUPABASE_ANON_KEY=your-anon-public-key
-SUPABASE_JWT_SECRET=your-jwt-secret
 PORT=3000
 ```
 
@@ -127,14 +126,14 @@ dist/
 drizzle/
 ```
 
-Create `server/.env` (NOT committed — copy from `.env.example` and fill in the four real values from Step 1):
+Create `server/.env` (NOT committed — copy from `.env.example` and fill in the three real values from Step 1):
 
 ```bash
 cd "C:\Users\rajes\understudy-kingdom\server"
 cp .env.example .env
 ```
 
-Then manually edit `server/.env` to replace the four placeholder values with the real ones from Step 1. If you (the implementer) don't have these values because a human hasn't completed Step 1 yet, **stop here and report NEEDS_CONTEXT** — do not fabricate placeholder credentials and proceed, since Step 4 below requires a real, working connection.
+Then manually edit `server/.env` to replace the three placeholder values with the real ones from Step 1. If you (the implementer) don't have these values because a human hasn't completed Step 1 yet, **stop here and report NEEDS_CONTEXT** — do not fabricate placeholder credentials and proceed, since Step 4 below requires a real, working connection.
 
 - [ ] **Step 3: Install dependencies**
 
@@ -741,11 +740,12 @@ Expected: fails at import/collection time — `server/src/routes/kingdoms.ts` do
 
 - [ ] **Step 3: Write the minimal implementation**
 
-Create `server/src/auth/authPlugin.ts`:
+Create `server/src/auth/authPlugin.ts` (uses JWKS-based verification, not a shared secret — see the "Design Correction" section of `docs/superpowers/specs/2026-09-02-backend-service-design.md`; `jose`'s `createRemoteJWKSet` resolves and caches Supabase's current ES256 public key from `{SUPABASE_URL}/auth/v1/.well-known/jwks.json`):
 
 ```typescript
 import fp from 'fastify-plugin';
 import { FastifyPluginAsync } from 'fastify';
+import { createRemoteJWKSet } from 'jose';
 import { verifySupabaseJwt, TokenVerificationError } from './verifyToken';
 
 declare module 'fastify' {
@@ -754,7 +754,17 @@ declare module 'fastify' {
   }
 }
 
+function getJwks() {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error('SUPABASE_URL is not configured');
+  }
+  return createRemoteJWKSet(new URL('/auth/v1/.well-known/jwks.json', supabaseUrl));
+}
+
 const authPlugin: FastifyPluginAsync = async (fastify) => {
+  const jwks = getJwks();
+
   fastify.addHook('onRequest', async (request, reply) => {
     const authHeader = request.headers.authorization;
 
@@ -764,14 +774,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     const token = authHeader.slice('Bearer '.length);
-    const secret = process.env.SUPABASE_JWT_SECRET;
-
-    if (!secret) {
-      throw new Error('SUPABASE_JWT_SECRET is not configured');
-    }
 
     try {
-      const { userId } = await verifySupabaseJwt(token, secret);
+      const { userId } = await verifySupabaseJwt(token, jwks);
       request.userId = userId;
     } catch (err) {
       if (err instanceof TokenVerificationError) {
@@ -785,6 +790,8 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
 
 export default fp(authPlugin);
 ```
+
+(The shipped version of this file also distinguishes JWKS-infrastructure failures — the endpoint being unreachable or timing out — from bad-token failures, replying `503` rather than `401` for the former, and builds the JWKS getter lazily on first request rather than at module load. See the actual `server/src/auth/authPlugin.ts` for the current implementation rather than treating this snippet as authoritative.)
 
 Create `server/src/routes/kingdoms.ts`:
 
@@ -871,7 +878,7 @@ cd "C:\Users\rajes\understudy-kingdom\server"
 npm test -- test/integration/kingdoms.test.ts
 ```
 
-Expected: exit code 0, all 6 tests pass. This makes real network calls to Supabase (creating an anonymous auth user, then real Postgres queries) — if it hangs or times out, check `server/.env` has the correct `SUPABASE_URL`/`SUPABASE_ANON_KEY`/`SUPABASE_JWT_SECRET` and that anonymous sign-ins are enabled (Task 1, Step 1).
+Expected: exit code 0, all 6 tests pass. This makes real network calls to Supabase (creating an anonymous auth user, real JWKS fetch, then real Postgres queries) — if it hangs or times out, check `server/.env` has the correct `SUPABASE_URL`/`SUPABASE_ANON_KEY` and that anonymous sign-ins are enabled (Task 1, Step 1).
 
 - [ ] **Step 5: Run the full test suite so far to confirm no regression**
 

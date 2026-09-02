@@ -86,9 +86,9 @@ Verification method (revised from this doc's original plan — see "Design
 Correction" below): Supabase signs tokens asymmetrically (ES256), resolved
 via the project's JWKS endpoint
 (`{SUPABASE_URL}/auth/v1/.well-known/jwks.json`), not a shared HS256
-secret. The auth plugin constructs a `jose` `createRemoteJWKSet` once at
-module load (it caches fetched keys internally) and passes it to
-`verifySupabaseJwt` on each request. `SUPABASE_JWT_SECRET` is not used.
+secret. The auth plugin constructs a `jose` `createRemoteJWKSet` once,
+lazily on first request (it caches fetched keys internally), and passes it
+to `verifySupabaseJwt` on each request. `SUPABASE_JWT_SECRET` is not used.
 
 ### Design Correction (found during Task 5 implementation)
 
@@ -99,11 +99,13 @@ dashboard* but does not actually use to sign tokens. Empirically decoding
 a real token issued by `signInAnonymously()` showed `alg: "ES256"` with a
 `kid`, and JWKS-based verification against
 `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` succeeds where HS256
-verification against the dashboard's "Legacy JWT Secret" value fails. This
-is exactly the ambiguity flagged as a risk during this document's original
-authoring (newer Supabase projects can default to asymmetric signing keys
-even when a legacy secret is still visible/copyable in the dashboard) —
-confirmed in practice rather than caught in design review. The fix
+verification against the dashboard's "Legacy JWT Secret" value fails. The
+*plan* document (a separate file, written after this one) did note that
+the dashboard's JWT-secret labeling was worth verifying carefully — but
+this design document itself assumed HS256 throughout and never considered
+asymmetric signing as a real possibility anywhere in its original text.
+The mismatch was not anticipated in design review; it was only caught by
+running the plan's Task 5 against the real Supabase project. The fix
 (JWKS-based verification) is a net simplification: no secret to provision,
 store, or rotate; `jose`'s `createRemoteJWKSet` handles key rotation
 automatically.
@@ -138,9 +140,10 @@ migrations (`drizzle-kit generate`).
 
 ### `server/src/auth/verifyToken.ts`
 Fastify `onRequest` hook: reads `Authorization: Bearer <token>`, verifies
-against Supabase's JWT secret, rejects with `401` on missing/invalid/expired
-token, otherwise attaches `request.userId` (the verified `sub` claim) for
-downstream route handlers.
+against Supabase's JWKS-resolved ES256 public key (see "Verification
+method" above — not a shared JWT secret), rejects with `401` on
+missing/invalid/expired token, otherwise attaches `request.userId` (the
+verified `sub` claim) for downstream route handlers.
 
 ### `server/src/routes/kingdoms.ts`
 - `POST /api/v1/kingdoms` — creates a kingdom + ruler_npc row for

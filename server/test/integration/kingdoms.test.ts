@@ -88,4 +88,14 @@ describe('kingdoms routes', () => {
 
     expect(response.statusCode).toBe(401);
   });
+
+  it('rejects requests with a syntactically-invalid bearer token', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/kingdoms/me',
+      headers: { authorization: 'Bearer not.a.real.jwt' },
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
 });
