@@ -70,7 +70,11 @@ describe('verifySupabaseJwt', () => {
 // built from a local JWK, so these exercise that production code path
 // without a network dependency. The JWK below carries kid/alg/use/key_ops
 // matching what a real Supabase JWKS entry looks like, so key selection is
-// constrained the same way it is in production, not looser than it.
+// constrained the same way it is in production, not looser than it. Note
+// that the downgrade/forgery tests below (alg:"none", HS256, ES384, RS256)
+// are all rejected by the `algorithms: ['ES256']` pin before key resolution
+// is ever attempted -- only the accept-case and multiple-matching-keys
+// tests actually exercise key resolution itself.
 const KID = 'test-kid';
 
 describe('verifySupabaseJwt via JWTVerifyGetKey (createLocalJWKSet)', () => {
@@ -136,5 +140,34 @@ describe('verifySupabaseJwt via JWTVerifyGetKey (createLocalJWKSet)', () => {
       .sign(rsaPrivateKey);
 
     await expect(verifySupabaseJwt(token, jwks)).rejects.toThrow(TokenVerificationError);
+  });
+
+  it('classifies a kid-less token against a multi-key JWKS as a TokenVerificationError (I-1)', async () => {
+    // createLocalJWKSet/createRemoteJWKSet's key selector matches a JWK
+    // whenever `kid === undefined || kid === jwkKid` -- so a token with no
+    // `kid` in its header matches every ES256 key in the set. With 2+ keys
+    // present (Supabase's JWKS legitimately has this shape during key
+    // rotation), that ambiguity makes jose throw JWKSMultipleMatchingKeys.
+    // This must classify as a bad *token* (401 via TokenVerificationError),
+    // not as JWKS infrastructure being down (503) -- see verifyToken.ts's
+    // TOKEN_CLASS_ERRORS doc comment.
+    const secondKeyPair = await generateKeyPair('ES256');
+    const jwk1 = await exportJWK(publicKey);
+    const jwk2 = await exportJWK(secondKeyPair.publicKey);
+    const multiKeyJwks = createLocalJWKSet({
+      keys: [
+        { ...jwk1, kid: 'kid-1', alg: 'ES256', use: 'sig', key_ops: ['verify'] },
+        { ...jwk2, kid: 'kid-2', alg: 'ES256', use: 'sig', key_ops: ['verify'] },
+      ],
+    });
+
+    const token = await new SignJWT({})
+      .setProtectedHeader({ alg: 'ES256' })
+      .setSubject('user-456')
+      .setIssuedAt()
+      .setExpirationTime('1h')
+      .sign(privateKey);
+
+    await expect(verifySupabaseJwt(token, multiKeyJwks)).rejects.toThrow(TokenVerificationError);
   });
 });

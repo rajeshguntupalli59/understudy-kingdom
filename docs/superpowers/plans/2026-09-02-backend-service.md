@@ -332,6 +332,8 @@ Claude-Session: https://claude.ai/code/session_017JNi1ThZutdGUt6toaGBmq"
 
 ## Task 3: JWT verification (pure logic) + unit tests
 
+> **Historical note:** the step-by-step content below (HS256-based test code and implementation) is superseded. The shipped implementation uses JWKS-based ES256 verification, not the HS256/shared-secret approach shown in this task's original steps — see the "Design Correction" section of `docs/superpowers/specs/2026-09-02-backend-service-design.md`. The content is left in place for historical context rather than deleted; see Task 5 below and the current `server/src/auth/verifyToken.ts` for what actually shipped.
+
 **Files:**
 - Create: `server/src/auth/verifyToken.ts`
 - Create: `server/test/unit/verifyToken.test.ts`
@@ -339,7 +341,7 @@ Claude-Session: https://claude.ai/code/session_017JNi1ThZutdGUt6toaGBmq"
 
 **Interfaces:**
 - Consumes: nothing new (no DB, no network — pure function).
-- Produces: `server/src/auth/verifyToken.ts` exports `verifySupabaseJwt(token: string, secret: string): Promise<{ userId: string }>` (throws `TokenVerificationError` on any invalid/expired/malformed/missing-subject token) and the `TokenVerificationError` class itself. Task 5's auth plugin imports both: `import { verifySupabaseJwt, TokenVerificationError } from '../auth/verifyToken'`.
+- Produces: `server/src/auth/verifyToken.ts` exports `verifySupabaseJwt(token: string, key: CryptoKey | JWTVerifyGetKey, options?: VerifySupabaseJwtOptions): Promise<{ userId: string }>` (throws `TokenVerificationError` on any invalid/expired/malformed/missing-subject token) and the `TokenVerificationError` class itself. `VerifySupabaseJwtOptions` is `{ issuer?: string; audience?: string }`. Task 5's auth plugin imports both: `import { verifySupabaseJwt, TokenVerificationError } from '../auth/verifyToken'`.
 
 - [ ] **Step 1: Write the failing tests**
 

@@ -46,6 +46,46 @@ describe('kingdoms routes', () => {
     expect(second.json().kingdom.id).toBe(first.json().kingdom.id);
   });
 
+  it('handles two concurrent POST /api/v1/kingdoms requests for the same user without a bare kingdom (I-2/I-3)', async () => {
+    // Fire both requests "simultaneously" -- both promises are created and
+    // handed to Promise.all without awaiting either individually first, so
+    // their underlying DB work genuinely overlaps instead of running one
+    // after the other. This is what would have caught the pre-fix I-2 race
+    // (kingdom insert and ruler_npc insert as two separate autocommitted
+    // statements): the losing request could re-select a kingdom whose
+    // ruler_npc hadn't committed yet and 500 out of getRulerNpcOrThrow.
+    const [first, second] = await Promise.all([
+      app.inject({
+        method: 'POST',
+        url: '/api/v1/kingdoms',
+        headers: { authorization: `Bearer ${jwt}` },
+      }),
+      app.inject({
+        method: 'POST',
+        url: '/api/v1/kingdoms',
+        headers: { authorization: `Bearer ${jwt}` },
+      }),
+    ]);
+
+    // Exactly one request created the kingdom (201) and the other found it
+    // already there (200) -- but which one is non-deterministic, so assert
+    // on the multiset of status codes rather than which promise "won".
+    expect([first.statusCode, second.statusCode].sort()).toEqual([200, 201]);
+
+    const firstBody = first.json();
+    const secondBody = second.json();
+
+    expect(firstBody.kingdom.id).toBeDefined();
+    expect(secondBody.kingdom.id).toBe(firstBody.kingdom.id);
+
+    // The specific invariant Fix I-2's transaction is supposed to
+    // guarantee: both responses see a fully-formed ruler, never a kingdom
+    // without one.
+    expect(firstBody.rulerNpc).toBeTruthy();
+    expect(secondBody.rulerNpc).toBeTruthy();
+    expect(secondBody.rulerNpc.kingdomId).toBe(firstBody.kingdom.id);
+  });
+
   it('GET /api/v1/kingdoms/me returns 404 when no kingdom exists yet', async () => {
     const response = await app.inject({
       method: 'GET',

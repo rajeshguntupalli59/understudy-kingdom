@@ -18,11 +18,22 @@ export class TokenVerificationError extends Error {
  * itself couldn't be retrieved or parsed -- propagates as its original
  * jose error type instead of being swallowed here, so `authPlugin.ts` can
  * tell an infrastructure outage (503) apart from a bad token (401).
+ *
+ * `JWKSMultipleMatchingKeys` belongs here too, not just `JWKSNoMatchingKey`:
+ * `createLocalJWKSet`/`createRemoteJWKSet`'s key selector matches a JWK
+ * whenever `kid === undefined || kid === jwkKid` -- so a token with NO
+ * `kid` in its header matches every key in the JWKS with the right `alg`.
+ * Supabase's JWKS legitimately has 2+ keys during key rotation (a normal,
+ * expected state, not an infrastructure problem), and any caller can
+ * trigger this deliberately just by sending a `kid`-less token during that
+ * window. That's a malformed/ambiguous *token*, not a JWKS outage -- it
+ * must classify as 401, not 503.
  */
 const TOKEN_CLASS_ERRORS = [
   joseErrors.JWSSignatureVerificationFailed,
   joseErrors.JWTExpired,
   joseErrors.JWKSNoMatchingKey,
+  joseErrors.JWKSMultipleMatchingKeys,
   joseErrors.JOSENotSupported,
   joseErrors.JOSEAlgNotAllowed,
   joseErrors.JWSInvalid,
