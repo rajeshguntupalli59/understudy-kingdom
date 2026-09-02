@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnderstudyKingdom.Npc;
@@ -13,6 +14,8 @@ namespace UnderstudyKingdom.Core
     public class DecisionCycleManager : MonoBehaviour
     {
         public RulerNpcController Ruler;
+
+        public event Action<DecisionRecord> OnDecisionRecorded;
 
         private int currentCycleNumber;
 
@@ -48,6 +51,9 @@ namespace UnderstudyKingdom.Core
             OverrideResult result = OverrideEvaluator.Evaluate(Ruler.State, recommendation, roll);
             Ruler.State.ApplyDelta(result.MoodDelta, result.LoyaltyDelta);
             SaveService.Save(Ruler.State);
+
+            OnDecisionRecorded?.Invoke(new DecisionRecord(
+                currentCycleNumber, recommendation, result.Overridden, Ruler.State.Mood, Ruler.State.Loyalty));
 
             string templateTag = result.Overridden ? "ruler_override" : "ruler_accept";
             var variables = new Dictionary<string, string>

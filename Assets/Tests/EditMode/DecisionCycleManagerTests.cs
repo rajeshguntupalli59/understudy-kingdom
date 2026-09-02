@@ -136,5 +136,24 @@ namespace UnderstudyKingdom.Tests
                 Object.DestroyImmediate(authoredRulerObject);
             }
         }
+
+        [Test]
+        public void SubmitRecommendation_FiresOnDecisionRecorded_WithMatchingData()
+        {
+            DecisionRecord? captured = null;
+            manager.OnDecisionRecorded += record => captured = record;
+
+            var allocation = new ResourceAllocation(20, 60, 20); // aligned with Mercantile
+            manager.SubmitRecommendation(allocation, roll: 0.99); // low probability (clamped), no override
+
+            Assert.IsTrue(captured.HasValue);
+            Assert.AreEqual(1, captured.Value.CycleNumber);
+            Assert.AreEqual(20, captured.Value.Recommendation.Army);
+            Assert.AreEqual(60, captured.Value.Recommendation.Trade);
+            Assert.AreEqual(20, captured.Value.Recommendation.Religion);
+            Assert.IsFalse(captured.Value.Overridden);
+            Assert.AreEqual(55, captured.Value.Mood);
+            Assert.AreEqual(83, captured.Value.Loyalty);
+        }
     }
 }
