@@ -90,6 +90,27 @@ namespace UnderstudyKingdom.EditorTools
             }
         }
 
+        [MenuItem("Understudy Kingdom/Verify Core Loop Scene")]
+        public static void Verify()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            if (File.Exists(UnderstudyKingdom.Core.SaveService.SavePath))
+            {
+                File.Delete(UnderstudyKingdom.Core.SaveService.SavePath);
+            }
+
+            var controller = Object.FindFirstObjectByType<CoreLoopScreenController>();
+            if (controller == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no CoreLoopScreenController found in the scene.");
+                EditorApplication.Exit(1);
+                return;
+            }
+
+            Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
+        }
+
         private static Slider CreateSlider(Transform parent, string name, float yOffset, float initialValue)
         {
             var sliderObject = new GameObject(name, typeof(Slider));
