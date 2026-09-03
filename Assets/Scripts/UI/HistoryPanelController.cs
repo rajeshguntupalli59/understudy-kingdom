@@ -6,16 +6,16 @@ using UnderstudyKingdom.Backend;
 namespace UnderstudyKingdom.UI
 {
     /// <summary>
-    /// Modal history panel: while open, the core loop's sliders/Submit/Challenge
-    /// are non-interactive. Single fixed page (up to MaxRows), no scrolling, no
-    /// "Load More" -- see
+    /// Modal history panel: while open, the "View History" button and the core
+    /// loop's sliders/Submit/Challenge are non-interactive. Single fixed page
+    /// (up to rowTexts.Length rows), no scrolling, no "Load More" -- see
     /// docs/superpowers/specs/2026-09-02-decision-history-design.md.
     /// </summary>
     public class HistoryPanelController : MonoBehaviour
     {
-        private const int MaxRows = 10;
         private const string NoKingdomErrorMessage = "No kingdom found for this user";
         private const string EmptyHistoryMessage = "No decisions yet -- submit your first recommendation!";
+        private const string LoadingMessage = "Loading...";
 
         [SerializeField] private Button viewHistoryButton;
         [SerializeField] private GameObject panelRoot;
@@ -78,7 +78,17 @@ namespace UnderstudyKingdom.UI
         {
             SetCoreLoopControlsInteractable(false);
             panelRoot.SetActive(true);
-            coordinator.RequestHistory(MaxRows, HandleResult, HandleError);
+
+            // Instant feedback for the round-trip: avoids a blank panel on first
+            // open and stale rows from a previous fetch on reopen.
+            rowTexts[0].gameObject.SetActive(true);
+            rowTexts[0].text = LoadingMessage;
+            for (int i = 1; i < rowTexts.Length; i++)
+            {
+                rowTexts[i].gameObject.SetActive(false);
+            }
+
+            coordinator.RequestHistory(rowTexts.Length, HandleResult, HandleError);
         }
 
         private void HandleResult(DecisionHistoryEntry[] entries)
@@ -108,6 +118,11 @@ namespace UnderstudyKingdom.UI
             }
         }
 
+        // NoKingdomErrorMessage must stay byte-identical to the 404 body
+        // server/src/routes/decisions.ts returns when the caller has no kingdom
+        // yet -- if that server-side message is ever reworded, this comparison
+        // silently stops matching and the player sees the raw error text instead
+        // of the friendly empty-state message.
         private void HandleError(string error)
         {
             // A fresh player who's never had a kingdom created yet gets the same
@@ -131,6 +146,7 @@ namespace UnderstudyKingdom.UI
 
         private void SetCoreLoopControlsInteractable(bool interactable)
         {
+            viewHistoryButton.interactable = interactable;
             armySlider.interactable = interactable;
             tradeSlider.interactable = interactable;
             religionSlider.interactable = interactable;

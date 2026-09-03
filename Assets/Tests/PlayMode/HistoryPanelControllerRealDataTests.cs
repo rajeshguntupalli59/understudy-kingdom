@@ -130,7 +130,11 @@ namespace UnderstudyKingdom.Tests
         {
             viewHistoryButton.onClick.Invoke();
 
-            yield return new WaitUntil(() => !string.IsNullOrEmpty(rowTexts[0].text));
+            // OnViewHistory now sets rowTexts[0] to "Loading..." synchronously
+            // (M-3 fix) before the real network round-trip resolves, so waiting on
+            // "non-empty" alone would trip on that placeholder -- wait for it to be
+            // replaced by the real result instead.
+            yield return new WaitUntil(() => !string.IsNullOrEmpty(rowTexts[0].text) && rowTexts[0].text != "Loading...");
 
             Assert.AreEqual(
                 "Cycle 1: Army 40 / Trade 30 / Religion 30 -> Accepted (Mood 55, Loyalty 60)",

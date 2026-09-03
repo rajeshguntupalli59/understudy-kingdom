@@ -242,6 +242,17 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
+            var historyController = Object.FindFirstObjectByType<HistoryPanelController>();
+            if (historyController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no HistoryPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
         }
 

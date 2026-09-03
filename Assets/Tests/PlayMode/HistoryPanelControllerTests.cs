@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -98,6 +99,7 @@ namespace UnderstudyKingdom.Tests
         {
             viewHistoryButton.onClick.Invoke();
 
+            Assert.IsFalse(viewHistoryButton.interactable);
             Assert.IsFalse(armySlider.interactable);
             Assert.IsFalse(tradeSlider.interactable);
             Assert.IsFalse(religionSlider.interactable);
@@ -113,12 +115,35 @@ namespace UnderstudyKingdom.Tests
             viewHistoryButton.onClick.Invoke();
             closeButton.onClick.Invoke();
 
+            Assert.IsTrue(viewHistoryButton.interactable);
             Assert.IsTrue(armySlider.interactable);
             Assert.IsTrue(tradeSlider.interactable);
             Assert.IsTrue(religionSlider.interactable);
             Assert.IsTrue(submitButton.interactable);
             Assert.IsTrue(challengeButton.interactable);
             Assert.IsFalse(panelRootObject.activeSelf);
+        }
+
+        [Test]
+        public void HandleResult_WithEmptyDecisionsArray_ShowsEmptyStateMessage()
+        {
+            // Realistic first-launch case: a fresh kingdom with zero decisions yet.
+            // HandleResult is private, so invoke it via reflection -- same technique
+            // already established for internal state in
+            // BackendSyncCoordinatorHistoryTests.cs/BackendSyncCoordinatorDuelTests.cs.
+            var controller = controllerObject.GetComponent<HistoryPanelController>();
+            MethodInfo handleResult = typeof(HistoryPanelController).GetMethod(
+                "HandleResult", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.IsNotNull(handleResult, "HandleResult method not found -- HistoryPanelController internals changed");
+
+            handleResult.Invoke(controller, new object[] { new DecisionHistoryEntry[0] });
+
+            Assert.AreEqual("No decisions yet -- submit your first recommendation!", rowTexts[0].text);
+            Assert.IsTrue(rowTexts[0].gameObject.activeSelf);
+            for (int i = 1; i < rowTexts.Length; i++)
+            {
+                Assert.IsFalse(rowTexts[i].gameObject.activeSelf, $"rowTexts[{i}] should be hidden for the empty-state render");
+            }
         }
     }
 }
