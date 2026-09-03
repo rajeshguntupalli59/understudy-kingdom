@@ -168,6 +168,111 @@ namespace UnderstudyKingdom.Backend
             onSuccess?.Invoke(response.decisions);
         }
 
+        /// <summary>
+        /// Mirrors PostDuel's response-parsing shape (SendDuelRequest) -- the
+        /// response body carries real council data, not just a status code.
+        /// </summary>
+        public void CreateCouncil(string accessToken, string name, Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            string body = JsonUtility.ToJson(new CreateCouncilRequest { name = name });
+            StartCoroutine(SendCouncilRequest("POST", $"{BackendBaseUrl}/api/v1/councils", body, accessToken, onSuccess, onError));
+        }
+
+        public void JoinCouncil(string accessToken, string joinCode, Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            string body = JsonUtility.ToJson(new JoinCouncilRequest { joinCode = joinCode });
+            StartCoroutine(SendCouncilRequest("POST", $"{BackendBaseUrl}/api/v1/councils/join", body, accessToken, onSuccess, onError));
+        }
+
+        private IEnumerator SendCouncilRequest(string method, string url, string jsonBody, string accessToken,
+            Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            using var request = new UnityWebRequest(url, method);
+            byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
+            request.uploadHandler = new UploadHandlerRaw(bodyBytes);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Council request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
+                yield break;
+            }
+
+            CouncilResponse response;
+            try
+            {
+                response = JsonUtility.FromJson<CouncilResponse>(request.downloadHandler.text);
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke($"Council response parse failed: {ex.Message}");
+                yield break;
+            }
+
+            if (response == null || response.id == null)
+            {
+                onError?.Invoke("Council response missing expected fields");
+                yield break;
+            }
+
+            onSuccess?.Invoke(response);
+        }
+
+        /// <summary>
+        /// The second GET-based call in this project (see GetDecisionHistory).
+        /// A real "Not in a council" 404 is surfaced via onError like any
+        /// other non-2xx response -- the UI layer (CouncilPanelController)
+        /// decides whether that specific message means "show the empty
+        /// state" rather than "show an error," mirroring
+        /// HistoryPanelController's own 404-vs-real-error split.
+        /// </summary>
+        public void GetCouncilStatus(string accessToken, Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            StartCoroutine(SendGetCouncilStatus(accessToken, onSuccess, onError));
+        }
+
+        private IEnumerator SendGetCouncilStatus(string accessToken, Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            string url = $"{BackendBaseUrl}/api/v1/councils/me";
+            using var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Council status request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
+                yield break;
+            }
+
+            CouncilResponse response;
+            try
+            {
+                response = JsonUtility.FromJson<CouncilResponse>(request.downloadHandler.text);
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke($"Council status response parse failed: {ex.Message}");
+                yield break;
+            }
+
+            if (response == null || response.id == null)
+            {
+                onError?.Invoke("Council status response missing expected fields");
+                yield break;
+            }
+
+            onSuccess?.Invoke(response);
+        }
+
         private static string TryExtractServerErrorMessage(string responseBody)
         {
             if (string.IsNullOrEmpty(responseBody)) return null;
