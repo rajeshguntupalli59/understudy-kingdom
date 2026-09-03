@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
-import { and, desc, eq, lt } from 'drizzle-orm';
+import { and, count, desc, eq, lt } from 'drizzle-orm';
 import { db } from '../db/client';
-import { kingdoms, decisions } from '../db/schema';
+import { kingdoms, decisions, councils, councilMembers } from '../db/schema';
 
 const createDecisionSchema = {
   body: {
@@ -36,6 +36,59 @@ const listDecisionsSchema = {
 interface ListDecisionsQuery {
   cursor?: string;
   limit: number;
+}
+
+// Same TxExecutor derivation as kingdoms.ts/councils.ts -- kept local since
+// this is the only place in decisions.ts needing a transaction.
+type TxExecutor = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Called after a decision is newly recorded (the 201 path only, never the
+ * 409 duplicate path). If the caller is in a council whose milestone hasn't
+ * been reached yet, recomputes the council's total decision count and, if
+ * it now meets the threshold, atomically flips milestoneReached and grants
+ * rewardEligible to every CURRENT member in one transaction -- guarded by
+ * `WHERE milestone_reached = false` so two concurrent decisions racing to
+ * cross the threshold can only ever flip it once. See
+ * docs/superpowers/specs/2026-09-03-council-social-design.md.
+ */
+async function maybeAdvanceCouncilMilestone(userId: string): Promise<void> {
+  const [membership] = await db.select().from(councilMembers).where(eq(councilMembers.userId, userId)).limit(1);
+  if (!membership) {
+    return;
+  }
+
+  const [council] = await db.select().from(councils).where(eq(councils.id, membership.councilId)).limit(1);
+  if (!council || council.milestoneReached) {
+    return;
+  }
+
+  const [{ value: totalDecisions }] = await db
+    .select({ value: count() })
+    .from(decisions)
+    .innerJoin(kingdoms, eq(kingdoms.id, decisions.kingdomId))
+    .innerJoin(councilMembers, eq(councilMembers.userId, kingdoms.userId))
+    .where(eq(councilMembers.councilId, council.id));
+
+  if (totalDecisions < council.milestoneThreshold) {
+    return;
+  }
+
+  await db.transaction(async (tx: TxExecutor) => {
+    const flipped = await tx
+      .update(councils)
+      .set({ milestoneReached: true })
+      .where(and(eq(councils.id, council.id), eq(councils.milestoneReached, false)))
+      .returning();
+
+    if (flipped.length === 0) {
+      // Lost the race to a concurrent request that already flipped this --
+      // no-op, don't grant eligibility twice.
+      return;
+    }
+
+    await tx.update(councilMembers).set({ rewardEligible: true }).where(eq(councilMembers.councilId, council.id));
+  });
 }
 
 const decisionsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -74,6 +127,8 @@ const decisionsRoutes: FastifyPluginAsync = async (fastify) => {
         reply.code(409);
         return { error: 'This cycle_number already has a recorded decision' };
       }
+
+      await maybeAdvanceCouncilMilestone(request.userId);
 
       reply.code(201);
       return { decision };
