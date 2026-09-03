@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnderstudyKingdom.Core;
 
@@ -22,6 +23,22 @@ namespace UnderstudyKingdom.Backend
         private BackendApiClient apiClient;
         private SessionData currentSession;
         private bool kingdomReady;
+
+        // This coordinator now has three independent, player- or event-triggered
+        // entry points (HandleDecisionRecorded, RequestDuel, RequestHistory) that
+        // all share currentSession. Each used to run its own "is it expired? then
+        // refresh" check inline -- if two fired in the same window, both would send
+        // Supabase the SAME refresh token. Supabase rotates refresh tokens on use,
+        // so the loser of that race gets a rejected/superseded token, and whichever
+        // response landed last silently overwrote SessionStore -- risking a
+        // permanently-orphaned identity on a later BootstrapSession (a failed
+        // bootstrap refresh clears the session and signs in fresh, i.e. a NEW
+        // anonymous user, abandoning the old kingdom and its history). Flagged in
+        // milestone #6's final review (I-4). EnsureFreshSession below is the single
+        // place that may ever call RefreshSession -- every caller queues onto it
+        // instead of racing their own call.
+        private bool refreshInFlight;
+        private readonly List<(Action onReady, Action<string> onError)> pendingRefreshCallbacks = new List<(Action, Action<string>)>();
 
         private void Start()
         {
@@ -85,6 +102,82 @@ namespace UnderstudyKingdom.Backend
             }
         }
 
+        /// <summary>
+        /// Single choke point for "make sure currentSession is usable right now."
+        /// If no refresh is needed, onReady fires immediately (synchronously). If a
+        /// refresh is needed and none is in flight, this starts the one and only
+        /// RefreshSession call and queues onReady/onError to fire when it resolves.
+        /// If a refresh is ALREADY in flight (a concurrent caller started it), this
+        /// just queues onto that same call rather than firing a second one with the
+        /// same (about-to-be-rotated) refresh token. By the time onReady fires,
+        /// currentSession is guaranteed fresh -- callers should read
+        /// currentSession.AccessToken only after onReady, never before.
+        /// </summary>
+        private void EnsureFreshSession(Action onReady, Action<string> onError)
+        {
+            if (currentSession == null)
+            {
+                onError?.Invoke("No session available yet -- try again in a moment.");
+                return;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (!currentSession.IsExpired(now))
+            {
+                onReady?.Invoke();
+                return;
+            }
+
+            if (string.IsNullOrEmpty(currentSession.RefreshToken))
+            {
+                onError?.Invoke("Session expired and cannot be refreshed -- please restart the app.");
+                return;
+            }
+
+            pendingRefreshCallbacks.Add((onReady, onError));
+
+            if (refreshInFlight)
+            {
+                // A concurrent caller already started the refresh this one needs --
+                // just wait for it instead of sending a second RefreshSession call
+                // with the same (about-to-be-rotated) refresh token.
+                return;
+            }
+
+            refreshInFlight = true;
+            authClient.RefreshSession(currentSession.RefreshToken,
+                onSuccess: refreshed =>
+                {
+                    currentSession = refreshed;
+                    SessionStore.Save(refreshed);
+                    refreshInFlight = false;
+                    DrainPendingRefreshCallbacks(ready => ready?.Invoke());
+                },
+                onError: err =>
+                {
+                    refreshInFlight = false;
+                    DrainPendingRefreshCallbacks(_ => { }, err);
+                });
+        }
+
+        private void DrainPendingRefreshCallbacks(Action<Action> invokeReady, string errorMessage = null)
+        {
+            var callbacks = new List<(Action onReady, Action<string> onError)>(pendingRefreshCallbacks);
+            pendingRefreshCallbacks.Clear();
+
+            foreach (var (onReady, onError) in callbacks)
+            {
+                if (errorMessage != null)
+                {
+                    onError?.Invoke($"Session refresh failed: {errorMessage}");
+                }
+                else
+                {
+                    invokeReady(onReady);
+                }
+            }
+        }
+
         // Defense-in-depth: OnDecisionRecorded is invoked synchronously from
         // DecisionCycleManager.SubmitRecommendation, so any uncaught exception here
         // would propagate into gameplay code and violate this milestone's core
@@ -93,33 +186,9 @@ namespace UnderstudyKingdom.Backend
         {
             try
             {
-                if (currentSession == null)
-                {
-                    Debug.LogWarning("BackendSyncCoordinator: no session available, dropping decision sync.");
-                    return;
-                }
-
-                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                if (currentSession.IsExpired(now))
-                {
-                    if (string.IsNullOrEmpty(currentSession.RefreshToken))
-                    {
-                        Debug.LogWarning("BackendSyncCoordinator: session expired with no refresh token, dropping decision sync.");
-                        return;
-                    }
-
-                    authClient.RefreshSession(currentSession.RefreshToken,
-                        onSuccess: refreshed =>
-                        {
-                            currentSession = refreshed;
-                            SessionStore.Save(refreshed);
-                            SyncDecision(record);
-                        },
-                        onError: err => Debug.LogWarning($"BackendSyncCoordinator: session refresh failed, dropping decision sync: {err}"));
-                    return;
-                }
-
-                SyncDecision(record);
+                EnsureFreshSession(
+                    onReady: () => SyncDecision(record),
+                    onError: err => Debug.LogWarning($"BackendSyncCoordinator: {err} -- dropping decision sync for cycle {record.CycleNumber}."));
             }
             catch (Exception ex)
             {
@@ -158,38 +227,9 @@ namespace UnderstudyKingdom.Backend
         /// </summary>
         public void RequestDuel(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
         {
-            if (currentSession == null)
-            {
-                onError?.Invoke("No session available yet -- try again in a moment.");
-                return;
-            }
-
-            // The session must be refreshed (if needed) BEFORE we branch on
-            // kingdomReady -- EnsureKingdom below sends currentSession.AccessToken,
-            // and if that token is stale the request would 401 against the real
-            // server. See final-review I-1: this used to check kingdomReady first,
-            // which skipped the refresh entirely on the not-ready retry path.
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (currentSession.IsExpired(now))
-            {
-                if (string.IsNullOrEmpty(currentSession.RefreshToken))
-                {
-                    onError?.Invoke("Session expired and cannot be refreshed -- please restart the app.");
-                    return;
-                }
-
-                authClient.RefreshSession(currentSession.RefreshToken,
-                    onSuccess: refreshed =>
-                    {
-                        currentSession = refreshed;
-                        SessionStore.Save(refreshed);
-                        EnsureKingdomThenSendDuel(recommendation, onSuccess, onError);
-                    },
-                    onError: err => onError?.Invoke($"Session refresh failed: {err}"));
-                return;
-            }
-
-            EnsureKingdomThenSendDuel(recommendation, onSuccess, onError);
+            EnsureFreshSession(
+                onReady: () => EnsureKingdomThenSendDuel(recommendation, onSuccess, onError),
+                onError: onError);
         }
 
         private void EnsureKingdomThenSendDuel(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
@@ -198,7 +238,8 @@ namespace UnderstudyKingdom.Backend
             // flight (or may have failed at startup) -- rather than fail a duel
             // tapped very early in the app's lifetime, re-attempt EnsureKingdom
             // here and chain into the duel send on its success. See I-2. By the
-            // time we get here, currentSession.AccessToken is guaranteed fresh.
+            // time we get here, currentSession.AccessToken is guaranteed fresh
+            // (EnsureFreshSession already ran).
             if (!kingdomReady)
             {
                 apiClient.EnsureKingdom(currentSession.AccessToken,
@@ -229,43 +270,16 @@ namespace UnderstudyKingdom.Backend
         }
 
         /// <summary>
-        /// Mirrors RequestDuel's structure exactly: refresh-if-needed runs
-        /// unconditionally first, then the shared kingdomReady gate, then the send.
-        /// This is written directly against RequestDuel's corrected (post-fix)
-        /// shape, not a fresh reinvention of the same ordering decision -- see
-        /// RequestDuel's own comment for why the ordering matters (final-review
-        /// I-1/I-2 on the async-pvp milestone found and fixed the opposite ordering
-        /// as a real bug).
+        /// Mirrors RequestDuel's structure: refresh-if-needed runs first (now via
+        /// the shared EnsureFreshSession, so it can never race RequestDuel's or
+        /// HandleDecisionRecorded's refresh), then the shared kingdomReady gate,
+        /// then the send.
         /// </summary>
         public void RequestHistory(int limit, Action<DecisionHistoryEntry[]> onSuccess, Action<string> onError)
         {
-            if (currentSession == null)
-            {
-                onError?.Invoke("No session available yet -- try again in a moment.");
-                return;
-            }
-
-            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (currentSession.IsExpired(now))
-            {
-                if (string.IsNullOrEmpty(currentSession.RefreshToken))
-                {
-                    onError?.Invoke("Session expired and cannot be refreshed -- please restart the app.");
-                    return;
-                }
-
-                authClient.RefreshSession(currentSession.RefreshToken,
-                    onSuccess: refreshed =>
-                    {
-                        currentSession = refreshed;
-                        SessionStore.Save(refreshed);
-                        EnsureKingdomThenSendHistory(limit, onSuccess, onError);
-                    },
-                    onError: err => onError?.Invoke($"Session refresh failed: {err}"));
-                return;
-            }
-
-            EnsureKingdomThenSendHistory(limit, onSuccess, onError);
+            EnsureFreshSession(
+                onReady: () => EnsureKingdomThenSendHistory(limit, onSuccess, onError),
+                onError: onError);
         }
 
         private void EnsureKingdomThenSendHistory(int limit, Action<DecisionHistoryEntry[]> onSuccess, Action<string> onError)
