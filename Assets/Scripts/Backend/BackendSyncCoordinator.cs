@@ -147,5 +147,57 @@ namespace UnderstudyKingdom.Backend
                 DecisionCycleManager.OnDecisionRecorded -= HandleDecisionRecorded;
             }
         }
+
+        /// <summary>
+        /// Unlike HandleDecisionRecorded (fire-and-forget, every failure logged
+        /// and dropped), a duel is an explicit player-initiated request -- failures
+        /// are reported to the caller via onError, not swallowed. See
+        /// docs/superpowers/specs/2026-09-02-async-pvp-design.md's Error Handling
+        /// section.
+        /// </summary>
+        public void RequestDuel(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
+        {
+            if (currentSession == null)
+            {
+                onError?.Invoke("No session available yet -- try again in a moment.");
+                return;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (currentSession.IsExpired(now))
+            {
+                if (string.IsNullOrEmpty(currentSession.RefreshToken))
+                {
+                    onError?.Invoke("Session expired and cannot be refreshed -- please restart the app.");
+                    return;
+                }
+
+                authClient.RefreshSession(currentSession.RefreshToken,
+                    onSuccess: refreshed =>
+                    {
+                        currentSession = refreshed;
+                        SessionStore.Save(refreshed);
+                        SendDuelRequest(recommendation, onSuccess, onError);
+                    },
+                    onError: err => onError?.Invoke($"Session refresh failed: {err}"));
+                return;
+            }
+
+            SendDuelRequest(recommendation, onSuccess, onError);
+        }
+
+        private void SendDuelRequest(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
+        {
+            var dto = new DuelRequest
+            {
+                recommendation = new PlayerRecommendationDto
+                {
+                    army = recommendation.Army,
+                    trade = recommendation.Trade,
+                    religion = recommendation.Religion
+                }
+            };
+            apiClient.PostDuel(currentSession.AccessToken, dto, onSuccess, onError);
+        }
     }
 }
