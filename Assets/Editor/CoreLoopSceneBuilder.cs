@@ -155,7 +155,11 @@ namespace UnderstudyKingdom.EditorTools
             for (int i = 0; i < rowTexts.Length; i++)
             {
                 TextMeshProUGUI row = CreateLabel(panelRootObject.transform, $"Row{i}", 0f, string.Empty);
-                row.fontSize = 18f;
+                // Matches the rest of the scene's label convention (CreateLabel's own
+                // default is 24) -- this row previously used 18, noticeably smaller
+                // than every other label, and was flagged as hard to read during the
+                // milestone's manual Play Mode checkpoint.
+                row.fontSize = 24f;
                 row.alignment = TextAlignmentOptions.Left;
                 var rowRect = row.GetComponent<RectTransform>();
                 rowRect.sizeDelta = new Vector2(640f, 50f);
