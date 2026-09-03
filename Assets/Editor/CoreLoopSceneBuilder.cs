@@ -55,7 +55,7 @@ namespace UnderstudyKingdom.EditorTools
             // elements (labels, button) on any viewport shorter than ~900px tall.
             var canvasScaler = canvasObject.GetComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(800f, 1000f);
+            canvasScaler.referenceResolution = new Vector2(800f, 1200f);
             canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             canvasScaler.matchWidthOrHeight = 1f;
 
@@ -91,6 +91,26 @@ namespace UnderstudyKingdom.EditorTools
             var controller = controllerObject.AddComponent<CoreLoopScreenController>();
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, button);
+
+            var duelButtonObject = new GameObject("ChallengeButton", typeof(Image), typeof(Button));
+            duelButtonObject.transform.SetParent(canvasObject.transform, false);
+            var duelButtonRect = duelButtonObject.GetComponent<RectTransform>();
+            duelButtonRect.anchoredPosition = new Vector2(0f, -480f);
+            duelButtonRect.sizeDelta = new Vector2(260f, 44f);
+            duelButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+            var duelButton = duelButtonObject.GetComponent<Button>();
+            TextMeshProUGUI duelButtonLabel = CreateLabel(duelButtonObject.transform, "Text", 0f, "Challenge a Rival Kingdom");
+            var duelButtonLabelRect = duelButtonLabel.GetComponent<RectTransform>();
+            duelButtonLabelRect.anchorMin = Vector2.zero;
+            duelButtonLabelRect.anchorMax = Vector2.one;
+            duelButtonLabelRect.sizeDelta = Vector2.zero;
+            duelButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI duelResultText = CreateLabel(canvasObject.transform, "DuelResultText", 540f, string.Empty);
+
+            var duelControllerObject = new GameObject("DuelButtonController");
+            var duelController = duelControllerObject.AddComponent<DuelButtonController>();
+            duelController.Initialize(armySlider, tradeSlider, religionSlider, duelButton, duelResultText, backendCoordinator);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
