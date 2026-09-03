@@ -121,6 +121,53 @@ namespace UnderstudyKingdom.Backend
             onSuccess?.Invoke(result);
         }
 
+        /// <summary>
+        /// The project's first GET-based call (everything else so far is POST).
+        /// Reuses TryExtractServerErrorMessage (added for PostDuel in milestone #5)
+        /// so a real server error message reaches the player instead of a generic
+        /// status code.
+        /// </summary>
+        public void GetDecisionHistory(string accessToken, int limit, Action<DecisionHistoryEntry[]> onSuccess, Action<string> onError)
+        {
+            StartCoroutine(SendGetDecisionHistory(accessToken, limit, onSuccess, onError));
+        }
+
+        private IEnumerator SendGetDecisionHistory(string accessToken, int limit, Action<DecisionHistoryEntry[]> onSuccess, Action<string> onError)
+        {
+            string url = $"{BackendBaseUrl}/api/v1/decisions?limit={limit}";
+            using var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Decision history request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
+                yield break;
+            }
+
+            DecisionHistoryResponse response;
+            try
+            {
+                response = JsonUtility.FromJson<DecisionHistoryResponse>(request.downloadHandler.text);
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke($"Decision history response parse failed: {ex.Message}");
+                yield break;
+            }
+
+            if (response == null || response.decisions == null)
+            {
+                onError?.Invoke("Decision history response missing expected fields");
+                yield break;
+            }
+
+            onSuccess?.Invoke(response.decisions);
+        }
+
         private static string TryExtractServerErrorMessage(string responseBody)
         {
             if (string.IsNullOrEmpty(responseBody)) return null;
