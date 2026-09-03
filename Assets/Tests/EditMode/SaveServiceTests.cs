@@ -68,6 +68,30 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void SaveThenLoad_RoundTripsTutorialCompleted()
+        {
+            var original = new RulerState { Mood = 65, Loyalty = 65, Agenda = RulerState.AgendaType.Pious, TutorialCompleted = true };
+
+            SaveService.Save(original);
+            var loaded = SaveService.Load();
+
+            Assert.IsTrue(loaded.TutorialCompleted);
+        }
+
+        [Test]
+        public void Load_NoSaveFile_TutorialCompletedDefaultsFalse()
+        {
+            if (File.Exists(SaveService.SavePath))
+            {
+                File.Delete(SaveService.SavePath);
+            }
+
+            var state = SaveService.Load();
+
+            Assert.IsFalse(state.TutorialCompleted);
+        }
+
+        [Test]
         public void Load_CorruptFile_ReturnsDefaultState()
         {
             File.WriteAllText(SaveService.SavePath, "not valid json {{{");

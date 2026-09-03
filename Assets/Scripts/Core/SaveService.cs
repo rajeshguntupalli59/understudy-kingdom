@@ -31,7 +31,8 @@ namespace UnderstudyKingdom.Core
                 Mood = state.Mood,
                 Loyalty = state.Loyalty,
                 Agenda = (int)state.Agenda,
-                CouncilRewardApplied = state.CouncilRewardApplied
+                CouncilRewardApplied = state.CouncilRewardApplied,
+                TutorialCompleted = state.TutorialCompleted
             };
             File.WriteAllText(SavePath, JsonUtility.ToJson(data));
         }
@@ -69,7 +70,8 @@ namespace UnderstudyKingdom.Core
                     Mood = data.Mood,
                     Loyalty = data.Loyalty,
                     Agenda = agenda,
-                    CouncilRewardApplied = data.CouncilRewardApplied
+                    CouncilRewardApplied = data.CouncilRewardApplied,
+                    TutorialCompleted = data.TutorialCompleted
                 };
 
                 // Clamp Mood/Loyalty into [0,100] in case the file was corrupted with an

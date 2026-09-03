@@ -28,6 +28,12 @@ namespace UnderstudyKingdom.Npc
         // docs/superpowers/specs/2026-09-03-council-social-design.md.
         public bool CouncilRewardApplied = false;
 
+        // True once the player has dismissed (via Skip or completing all
+        // steps) the first-launch onboarding tutorial -- prevents it from
+        // showing again on every subsequent launch. See
+        // docs/superpowers/specs/2026-09-03-onboarding-tutorial-design.md.
+        public bool TutorialCompleted = false;
+
         public void ApplyDelta(int moodDelta, int loyaltyDelta)
         {
             Mood = Clamp(Mood + moodDelta);
