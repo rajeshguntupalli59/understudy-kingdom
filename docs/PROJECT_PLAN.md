@@ -142,9 +142,14 @@ FR-15 Acceptance:
 ## 6. Data Model
 
 ```sql
-users:            id (UUID PK), device_id, email (nullable), created_at, country_code
+users:            id (UUID PK), device_id (unique, nullable), device_secret_hash (nullable),
+                  google_sub (unique, nullable), apple_sub (unique, nullable),
+                  email (nullable), created_at, country_code
 
-kingdoms:         id (UUID PK), user_id (FK -> users), ruler_npc_id (FK -> ruler_npcs), founded_at
+kingdoms:         id (UUID PK), user_id (FK -> users), founded_at
+                  -- 1:1 with ruler_npcs; the FK lives on ruler_npcs.kingdom_id
+                  -- (single direction, no redundant back-reference -- see
+                  -- backend Task 1 review, 2026-09-01)
 
 ruler_npcs:       id (UUID PK), kingdom_id (FK -> kingdoms), mood (int), loyalty (int),
                   agenda (enum), trait_seed (int)
@@ -192,9 +197,15 @@ kingdom → many pvp_duels as challenger or defender.
 Method:   POST
 Path:     /api/v1/decisions
 Auth:     Bearer token required
-Request:  { kingdom_id: uuid, cycle_number: int, recommendation: object }
+Request:  { kingdom_id: uuid, cycle_number: int, recommendation: object,
+            ruler_outcome: object, overridden: bool }
+          -- ruler_outcome/overridden are client-reported, not server-computed:
+          -- the client stays authoritative for the decision cycle in this pass
+          -- (see docs/superpowers/specs/2026-09-01-auth-decisions-backend-design.md
+          -- Scope Decisions). Server-authoritative scoring is a Future Phase item.
 Response: { decision_id: uuid, ruler_outcome: object, overridden: bool }
-Errors:   400 (invalid cycle), 401 (auth), 409 (cycle already resolved)
+Errors:   400 (malformed request, incl. non-UUID kingdom_id), 401 (auth),
+          403 (kingdom not owned by caller), 409 (cycle already resolved)
 ```
 
 ```
