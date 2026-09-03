@@ -29,6 +29,7 @@ namespace UnderstudyKingdom.Tests
         private Button viewHistoryButton;
         private Button closeButton;
         private TextMeshProUGUI[] rowTexts;
+        private GameObject gateObject;
         private DuelModalGate gate;
 
         [UnitySetUp]
@@ -103,7 +104,8 @@ namespace UnderstudyKingdom.Tests
                 rowTexts[i] = rowObject.GetComponent<TextMeshProUGUI>();
             }
 
-            gate = new DuelModalGate();
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<HistoryPanelController>();
@@ -118,6 +120,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(canvasObject);
             Object.DestroyImmediate(coordinatorObject);
             Object.DestroyImmediate(directApiClientObject);
+            Object.DestroyImmediate(gateObject);
             SessionStore.Clear();
         }
 

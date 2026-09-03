@@ -34,6 +34,7 @@ namespace UnderstudyKingdom.Tests
         private RulerNpcController ruler;
         private Button councilButton;
         private TextMeshProUGUI rewardStatusLabel;
+        private GameObject gateObject;
         private DuelModalGate gate;
 
         [UnitySetUp]
@@ -148,7 +149,8 @@ namespace UnderstudyKingdom.Tests
             rewardStatusLabel = CreateLabel("RewardStatusLabel", inCouncilViewObject.transform);
             var statusMessageText = CreateLabel("StatusMessageText", panelRootObject.transform);
 
-            gate = new DuelModalGate();
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<CouncilPanelController>();
@@ -169,6 +171,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
             Object.DestroyImmediate(directApiClientObject);
+            Object.DestroyImmediate(gateObject);
 
             if (File.Exists(SaveService.SavePath))
             {

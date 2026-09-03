@@ -31,6 +31,7 @@ namespace UnderstudyKingdom.Tests
         private Button closeButton;
         private TextMeshProUGUI resultText;
         private TextMeshProUGUI[] rowTexts;
+        private GameObject gateObject;
         private DuelModalGate gate;
 
         [SetUp]
@@ -86,7 +87,8 @@ namespace UnderstudyKingdom.Tests
                 rowTexts[i] = rowObject.GetComponent<TextMeshProUGUI>();
             }
 
-            gate = new DuelModalGate();
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
 
             duelControllerObject = new GameObject("DuelController");
             var duelController = duelControllerObject.AddComponent<DuelButtonController>();
@@ -105,6 +107,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(historyControllerObject);
             Object.DestroyImmediate(canvasObject);
             Object.DestroyImmediate(coordinatorObject);
+            Object.DestroyImmediate(gateObject);
         }
 
         private Slider CreateSlider(string name, float initialValue)

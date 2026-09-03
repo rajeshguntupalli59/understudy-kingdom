@@ -46,6 +46,27 @@ These were confirmed interactively before any design work began:
   `Initialize()` calls (one new trailing parameter each), matching this
   project's established dependency-injection-via-`Initialize()`-args
   convention rather than introducing any new static/singleton state.
+
+  **Amendment (final whole-branch review, milestone #9, C-1):** this was
+  wrong. Unity's `[SerializeField]` silently drops any field whose type is
+  neither a `UnityEngine.Object` subclass nor marked `[System.Serializable]`
+  — it does not error, it just serializes as `null`. `CoreLoopSceneBuilder`
+  wires `gate` correctly at editor time, but every task-level review only
+  ever exercised the controllers via `Initialize()` called directly, never
+  via the real committed scene deserializing. In the real built scene the
+  three controllers' `gate` fields all came back `null`, so the first real
+  click of Challenge / View History / Council threw a
+  `NullReferenceException`. A plain C# class genuinely cannot be shared
+  through this project's `Initialize()`-args DI convention once Unity's
+  scene serializer is the thing wiring it — it had to become a
+  `MonoBehaviour` (a real `UnityEngine.Object`, constructed as its own
+  `GameObject` in `CoreLoopSceneBuilder.Build()`) so Unity can serialize a
+  genuine shared component reference, exactly like every other
+  `Initialize()`-injected dependency in this project. `[System.Serializable]`
+  was considered and rejected: it would have removed the null but
+  serialized the state **by value**, giving each controller its own private
+  copy and silently reintroducing the exact cross-controller-interleaving
+  bug this milestone exists to fix, with no crash left to reveal it.
 - **Deterministic tests only, no real duel.** The bug is local
   interactable-flag bookkeeping (does `challengeButton` end up in the
   right state given a sequence of open/close/start/resolve calls), not

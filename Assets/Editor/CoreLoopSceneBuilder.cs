@@ -92,7 +92,8 @@ namespace UnderstudyKingdom.EditorTools
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, button);
 
-            var duelModalGate = new DuelModalGate();
+            var duelModalGateObject = new GameObject("DuelModalGate");
+            var duelModalGate = duelModalGateObject.AddComponent<DuelModalGate>();
 
             var duelButtonObject = new GameObject("ChallengeButton", typeof(Image), typeof(Button));
             duelButtonObject.transform.SetParent(canvasObject.transform, false);

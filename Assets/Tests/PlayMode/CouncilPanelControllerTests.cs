@@ -33,6 +33,7 @@ namespace UnderstudyKingdom.Tests
         private TMP_InputField nameInputField;
         private TMP_InputField joinCodeInputField;
         private TextMeshProUGUI statusMessageText;
+        private GameObject gateObject;
         private DuelModalGate gate;
 
         [SetUp]
@@ -123,7 +124,8 @@ namespace UnderstudyKingdom.Tests
             var rewardStatusLabel = CreateLabel("RewardStatusLabel", inCouncilViewObject.transform);
             statusMessageText = CreateLabel("StatusMessageText", panelRootObject.transform);
 
-            gate = new DuelModalGate();
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<CouncilPanelController>();
@@ -143,6 +145,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(coordinatorObject);
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
+            Object.DestroyImmediate(gateObject);
         }
 
         private Slider CreateSlider(string name, float initialValue)

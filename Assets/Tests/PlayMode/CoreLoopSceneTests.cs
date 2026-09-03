@@ -99,5 +99,91 @@ namespace UnderstudyKingdom.Tests
             Assert.Fail($"No TextMeshProUGUI named '{name}' found under the Canvas.");
             return null;
         }
+
+        /// <summary>
+        /// Regression guard for the final-review C-1 finding: DuelModalGate was a
+        /// plain C# class, not a MonoBehaviour, so Unity's serializer silently
+        /// dropped [SerializeField] private DuelModalGate gate on
+        /// DuelButtonController/HistoryPanelController/CouncilPanelController --
+        /// it deserialized as null in the real committed scene even though
+        /// CoreLoopSceneBuilder.Build() wired it correctly at editor time. Every
+        /// other test in this project calls Initialize(...) directly, bypassing
+        /// scene deserialization entirely, so none of them could ever catch this.
+        /// This test is the one place that loads the real Assets/Scenes/CoreLoop.unity
+        /// and clicks the real button, so if gate were still null this click would
+        /// throw a NullReferenceException on gate.IsDuelInFlight = true and fail
+        /// the test -- no explicit exception assertion needed, an uncaught
+        /// exception during a UnityTest fails it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_ChallengeButton_DoesNotThrow()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button challengeButton = FindButton(canvas, "ChallengeButton");
+            Assert.IsNotNull(challengeButton, "ChallengeButton not found in the loaded CoreLoop scene.");
+
+            challengeButton.onClick.Invoke();
+        }
+
+        /// <summary>
+        /// Same C-1 regression guard as LoadedCoreLoopScene_ChallengeButton_DoesNotThrow,
+        /// for HistoryPanelController's shared gate reference. OnViewHistory sets
+        /// gate.IsModalOpen = true before panelRoot.SetActive(true) runs, so a null
+        /// gate would throw before the panel ever became visible -- successfully
+        /// seeing HistoryPanel become active is itself proof the shared gate
+        /// reference survived scene deserialization.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_ViewHistoryButton_OpensPanelWithoutThrowing()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button viewHistoryButton = FindButton(canvas, "ViewHistoryButton");
+            Assert.IsNotNull(viewHistoryButton, "ViewHistoryButton not found in the loaded CoreLoop scene.");
+
+            GameObject historyPanel = FindChildByName(canvas.transform, "HistoryPanel");
+            Assert.IsNotNull(historyPanel, "HistoryPanel not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(historyPanel.activeSelf, "Expected HistoryPanel to start inactive.");
+
+            viewHistoryButton.onClick.Invoke();
+
+            Assert.IsTrue(historyPanel.activeSelf,
+                "Expected HistoryPanel to become active after ViewHistoryButton is clicked.");
+        }
+
+        private static Button FindButton(Canvas canvas, string name)
+        {
+            foreach (Button candidate in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
+            {
+                if (candidate.gameObject.name == name)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static GameObject FindChildByName(Transform root, string name)
+        {
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.gameObject.name == name)
+                {
+                    return child.gameObject;
+                }
+            }
+
+            return null;
+        }
     }
 }

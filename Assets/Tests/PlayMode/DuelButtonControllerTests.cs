@@ -17,6 +17,7 @@ namespace UnderstudyKingdom.Tests
         private Slider religionSlider;
         private Button challengeButton;
         private TextMeshProUGUI resultText;
+        private GameObject gateObject;
         private DuelModalGate gate;
 
         [SetUp]
@@ -45,7 +46,8 @@ namespace UnderstudyKingdom.Tests
             resultObject.transform.SetParent(canvasObject.transform, false);
             resultText = resultObject.GetComponent<TextMeshProUGUI>();
 
-            gate = new DuelModalGate();
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<DuelButtonController>();
@@ -58,6 +60,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(controllerObject);
             Object.DestroyImmediate(canvasObject);
             Object.DestroyImmediate(coordinatorObject);
+            Object.DestroyImmediate(gateObject);
         }
 
         private Slider CreateSlider(string name, float initialValue)
