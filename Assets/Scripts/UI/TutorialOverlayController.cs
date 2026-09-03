@@ -105,6 +105,7 @@ namespace UnderstudyKingdom.UI
             if (manager.Ruler.State.TutorialCompleted)
             {
                 panelRoot.SetActive(false);
+                SetCoreLoopControlsInteractable(true);
                 return;
             }
 

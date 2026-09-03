@@ -117,8 +117,14 @@ Steps (fixed array, index 0-3):
 ```
 
 **On `Start()`:** if `manager.Ruler.State.TutorialCompleted`, hide the
-panel and return immediately (no controls touched — normal play resumes
-untouched). Otherwise show step 0, disable the 7 shared controls.
+panel and re-enable the 7 shared controls, then return immediately. The
+re-enable is required even on this path: `CoreLoopSceneBuilder.Build()`
+calls `Initialize()` at edit time against a fresh `RulerState`, which
+disables those controls and serializes that disabled state into the
+committed scene asset, so a returning player whose save already has
+`TutorialCompleted == true` must have them explicitly restored at
+runtime rather than assumed untouched. Otherwise show step 0, disable
+the 7 shared controls.
 
 **On Next:** advance to the next step's text; on step 3, the button's own
 label switches to "Done". Tapping it on step 3 calls the same completion
@@ -179,7 +185,8 @@ dependency, matching `HistoryPanelControllerTests`'/`CouncilPanelControllerTests
 synchronous-setup pattern, not the real-network `*RealDataTests` pattern
 since nothing here touches the backend): overlay shows and disables the 7
 controls when `TutorialCompleted` starts false; overlay stays hidden and
-leaves controls untouched when it starts true; Next advances through all
+re-enables controls that were left disabled from the scene-builder's
+edit-time `Initialize()` call when it starts true; Next advances through all
 4 steps with the button label switching to "Done" on step 3; Skip on an
 early step sets `TutorialCompleted` true, persists it, hides the panel,
 and re-enables the 7 controls; Done on step 3 does the same.
