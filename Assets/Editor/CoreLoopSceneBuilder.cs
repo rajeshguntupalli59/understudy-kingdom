@@ -55,7 +55,7 @@ namespace UnderstudyKingdom.EditorTools
             // elements (labels, button) on any viewport shorter than ~900px tall.
             var canvasScaler = canvasObject.GetComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(800f, 1200f);
+            canvasScaler.referenceResolution = new Vector2(800f, 1400f);
             canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             canvasScaler.matchWidthOrHeight = 1f;
 
@@ -111,6 +111,62 @@ namespace UnderstudyKingdom.EditorTools
             var duelControllerObject = new GameObject("DuelButtonController");
             var duelController = duelControllerObject.AddComponent<DuelButtonController>();
             duelController.Initialize(armySlider, tradeSlider, religionSlider, duelButton, duelResultText, backendCoordinator);
+
+            var viewHistoryButtonObject = new GameObject("ViewHistoryButton", typeof(Image), typeof(Button));
+            viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
+            var viewHistoryButtonRect = viewHistoryButtonObject.GetComponent<RectTransform>();
+            viewHistoryButtonRect.anchoredPosition = new Vector2(0f, -600f);
+            viewHistoryButtonRect.sizeDelta = new Vector2(220f, 44f);
+            viewHistoryButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.6f, 0.4f, 1f);
+            var viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
+            TextMeshProUGUI viewHistoryLabel = CreateLabel(viewHistoryButtonObject.transform, "Text", 0f, "View History");
+            var viewHistoryLabelRect = viewHistoryLabel.GetComponent<RectTransform>();
+            viewHistoryLabelRect.anchorMin = Vector2.zero;
+            viewHistoryLabelRect.anchorMax = Vector2.one;
+            viewHistoryLabelRect.sizeDelta = Vector2.zero;
+            viewHistoryLabelRect.anchoredPosition = Vector2.zero;
+
+            var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
+            panelRootObject.transform.SetParent(canvasObject.transform, false);
+            var panelRect = panelRootObject.GetComponent<RectTransform>();
+            panelRect.anchoredPosition = Vector2.zero;
+            panelRect.sizeDelta = new Vector2(700f, 800f);
+            panelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+
+            var closeButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
+            closeButtonObject.transform.SetParent(panelRootObject.transform, false);
+            var closeButtonRect = closeButtonObject.GetComponent<RectTransform>();
+            closeButtonRect.anchoredPosition = new Vector2(310f, 360f);
+            closeButtonRect.sizeDelta = new Vector2(60f, 40f);
+            closeButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+            var closeButton = closeButtonObject.GetComponent<Button>();
+            TextMeshProUGUI closeLabel = CreateLabel(closeButtonObject.transform, "Text", 0f, "X");
+            var closeLabelRect = closeLabel.GetComponent<RectTransform>();
+            closeLabelRect.anchorMin = Vector2.zero;
+            closeLabelRect.anchorMax = Vector2.one;
+            closeLabelRect.sizeDelta = Vector2.zero;
+            closeLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI titleLabel = CreateLabel(panelRootObject.transform, "Title", 0f, "Your Reign So Far");
+            titleLabel.fontSize = 28f;
+            titleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 340f);
+
+            var rowTexts = new TextMeshProUGUI[10];
+            for (int i = 0; i < rowTexts.Length; i++)
+            {
+                TextMeshProUGUI row = CreateLabel(panelRootObject.transform, $"Row{i}", 0f, string.Empty);
+                row.fontSize = 18f;
+                row.alignment = TextAlignmentOptions.Left;
+                var rowRect = row.GetComponent<RectTransform>();
+                rowRect.sizeDelta = new Vector2(640f, 50f);
+                rowRect.anchoredPosition = new Vector2(0f, 280f - i * 55f);
+                rowTexts[i] = row;
+            }
+
+            var historyControllerObject = new GameObject("HistoryPanelController");
+            var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
+            historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
+                armySlider, tradeSlider, religionSlider, button, duelButton);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
