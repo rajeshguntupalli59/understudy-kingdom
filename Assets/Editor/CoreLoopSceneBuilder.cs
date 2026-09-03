@@ -298,6 +298,69 @@ namespace UnderstudyKingdom.EditorTools
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
                 armySlider, tradeSlider, religionSlider, button, duelButton, councilButton);
 
+            var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
+            tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);
+            var tutorialOverlayRect = tutorialOverlayObject.GetComponent<RectTransform>();
+            tutorialOverlayRect.anchorMin = Vector2.zero;
+            tutorialOverlayRect.anchorMax = Vector2.one;
+            tutorialOverlayRect.offsetMin = Vector2.zero;
+            tutorialOverlayRect.offsetMax = Vector2.zero;
+            tutorialOverlayObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
+
+            var tutorialBoxObject = new GameObject("CalloutBox", typeof(Image));
+            tutorialBoxObject.transform.SetParent(tutorialOverlayObject.transform, false);
+            var tutorialBoxRect = tutorialBoxObject.GetComponent<RectTransform>();
+            tutorialBoxRect.anchoredPosition = Vector2.zero;
+            tutorialBoxRect.sizeDelta = new Vector2(600f, 500f);
+            tutorialBoxObject.GetComponent<Image>().color = new Color(0.15f, 0.15f, 0.2f, 1f);
+
+            TextMeshProUGUI tutorialStepIndicatorLabel = CreateLabel(tutorialBoxObject.transform, "StepIndicatorLabel", 0f, "Step 1 of 4");
+            tutorialStepIndicatorLabel.fontSize = 20f;
+            tutorialStepIndicatorLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 210f);
+
+            TextMeshProUGUI tutorialTitleLabel = CreateLabel(tutorialBoxObject.transform, "TitleLabel", 0f, string.Empty);
+            tutorialTitleLabel.fontSize = 28f;
+            tutorialTitleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 160f);
+
+            TextMeshProUGUI tutorialBodyLabel = CreateLabel(tutorialBoxObject.transform, "BodyLabel", 0f, string.Empty);
+            var tutorialBodyLabelRect = tutorialBodyLabel.GetComponent<RectTransform>();
+            tutorialBodyLabelRect.anchoredPosition = new Vector2(0f, 20f);
+            tutorialBodyLabelRect.sizeDelta = new Vector2(520f, 200f);
+
+            var tutorialSkipButtonObject = new GameObject("SkipButton", typeof(Image), typeof(Button));
+            tutorialSkipButtonObject.transform.SetParent(tutorialBoxObject.transform, false);
+            var tutorialSkipButtonRect = tutorialSkipButtonObject.GetComponent<RectTransform>();
+            tutorialSkipButtonRect.anchoredPosition = new Vector2(-140f, -190f);
+            tutorialSkipButtonRect.sizeDelta = new Vector2(220f, 44f);
+            tutorialSkipButtonObject.GetComponent<Image>().color = new Color(0.4f, 0.4f, 0.4f, 1f);
+            var tutorialSkipButton = tutorialSkipButtonObject.GetComponent<Button>();
+            TextMeshProUGUI tutorialSkipButtonLabel = CreateLabel(tutorialSkipButtonObject.transform, "Text", 0f, "Skip");
+            var tutorialSkipButtonLabelRect = tutorialSkipButtonLabel.GetComponent<RectTransform>();
+            tutorialSkipButtonLabelRect.anchorMin = Vector2.zero;
+            tutorialSkipButtonLabelRect.anchorMax = Vector2.one;
+            tutorialSkipButtonLabelRect.sizeDelta = Vector2.zero;
+            tutorialSkipButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var tutorialNextButtonObject = new GameObject("NextButton", typeof(Image), typeof(Button));
+            tutorialNextButtonObject.transform.SetParent(tutorialBoxObject.transform, false);
+            var tutorialNextButtonRect = tutorialNextButtonObject.GetComponent<RectTransform>();
+            tutorialNextButtonRect.anchoredPosition = new Vector2(140f, -190f);
+            tutorialNextButtonRect.sizeDelta = new Vector2(220f, 44f);
+            tutorialNextButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
+            var tutorialNextButton = tutorialNextButtonObject.GetComponent<Button>();
+            TextMeshProUGUI tutorialNextButtonLabel = CreateLabel(tutorialNextButtonObject.transform, "Text", 0f, "Next");
+            var tutorialNextButtonLabelRect = tutorialNextButtonLabel.GetComponent<RectTransform>();
+            tutorialNextButtonLabelRect.anchorMin = Vector2.zero;
+            tutorialNextButtonLabelRect.anchorMax = Vector2.one;
+            tutorialNextButtonLabelRect.sizeDelta = Vector2.zero;
+            tutorialNextButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var tutorialControllerObject = new GameObject("TutorialOverlayController");
+            var tutorialController = tutorialControllerObject.AddComponent<TutorialOverlayController>();
+            tutorialController.Initialize(tutorialOverlayObject, tutorialStepIndicatorLabel, tutorialTitleLabel, tutorialBodyLabel,
+                tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton);
+
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
             Directory.CreateDirectory("Assets/Scenes");
@@ -387,6 +450,17 @@ namespace UnderstudyKingdom.EditorTools
             if (councilController == null)
             {
                 Debug.LogError("CoreLoopSceneBuilder.Verify: no CouncilPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var tutorialController = Object.FindFirstObjectByType<TutorialOverlayController>();
+            if (tutorialController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no TutorialOverlayController found in the scene.");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
