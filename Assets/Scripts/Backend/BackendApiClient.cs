@@ -61,5 +61,56 @@ namespace UnderstudyKingdom.Backend
 
             onError?.Invoke($"Backend request to {url} failed: {request.result} ({request.responseCode})");
         }
+
+        /// <summary>
+        /// Unlike EnsureKingdom/PostDecision (which only ever care about status
+        /// codes via the shared Post coroutine), a duel's response body carries the
+        /// actual result -- this needs its own coroutine that parses it, following
+        /// the same three-way error discrimination (network failure / parse
+        /// failure / missing field) SupabaseAuthClient.PostJson already uses.
+        /// </summary>
+        public void PostDuel(string accessToken, DuelRequest dto, Action<DuelResult> onSuccess, Action<string> onError)
+        {
+            string body = JsonUtility.ToJson(dto);
+            StartCoroutine(SendDuelRequest(body, accessToken, onSuccess, onError));
+        }
+
+        private IEnumerator SendDuelRequest(string jsonBody, string accessToken, Action<DuelResult> onSuccess, Action<string> onError)
+        {
+            string url = $"{BackendBaseUrl}/api/v1/duels";
+            using var request = new UnityWebRequest(url, "POST");
+            byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
+            request.uploadHandler = new UploadHandlerRaw(bodyBytes);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                onError?.Invoke($"Duel request to {url} failed: {request.result} ({request.responseCode})");
+                yield break;
+            }
+
+            DuelResult result;
+            try
+            {
+                result = JsonUtility.FromJson<DuelResult>(request.downloadHandler.text);
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke($"Duel response parse failed: {ex.Message}");
+                yield break;
+            }
+
+            if (result == null || result.defenderRulerSnapshot == null)
+            {
+                onError?.Invoke("Duel response missing expected fields");
+                yield break;
+            }
+
+            onSuccess?.Invoke(result);
+        }
     }
 }
