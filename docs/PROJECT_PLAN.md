@@ -1,6 +1,6 @@
 # Project Plan — Understudy Kingdom
 
-**Version:** 1.0 | **Status:** Pre-production | **Last updated:** 2026-09-01
+**Version:** 1.0 | **Status:** In development (6 milestones shipped) | **Last updated:** 2026-09-03
 
 Assumptions: mobile client (Android + iOS), Unity/C# client, lightweight
 backend (Node.js + PostgreSQL), F2P with IAP, India-first launch market,
@@ -237,7 +237,45 @@ BL-04: Async PvP duels resolve via scenario scoring server-side; the client
 - [ ] Unit + integration tests passing in CI
 - [ ] Deployed to internal testing track, smoke tests passed
 
-## 8. Open Questions
+## 8. Implementation Status
+
+Six milestones shipped end-to-end (brainstorm → spec → plan →
+subagent-driven-development → final whole-branch review → fix → manual
+Play Mode checkpoint → merge to `main`), each covered by real Supabase +
+real local Postgres integration tests (no mocking):
+
+| Milestone | Branch (merged) | Covers | Status |
+|---|---|---|---|
+| #1 Core Loop Vertical Slice | `feat/core-loop-...` | FR-01, FR-03 | Done |
+| #2 Ruler AI Depth | `feat/ruler-ai-depth` | FR-02, FR-04 | Done |
+| #3 Backend Service | `main` (direct, isolated `server/`) | Auth, `decisions` persistence/history endpoint | Done |
+| #4 Client-Backend Integration | `feat/client-backend-integration` | Wires client to `server/`; session bootstrap/refresh | Done |
+| #5 Async PvP | `feat/async-pvp` | FR-09 | Done |
+| #6 Relationship History Log | `feat/decision-history` | FR-06 | Done |
+
+**FR status:** FR-01, FR-02 (loyalty/agenda-weighted, not mood — see FR-02
+note), FR-03, FR-04, FR-06, FR-09 implemented and live. FR-05 (templated
+ruler dialogue) implemented as part of milestones #1/#2/#5/#6's narration
+work. FR-07/FR-08 (council/social), FR-10 through FR-15 (live-ops,
+monetization, cosmetics, onboarding) not yet started.
+
+**Known follow-up items, deliberately deferred (not bugs):**
+- Milestone #5's `defenderRulerSnapshot` is always the schema default
+  (`mood:50, loyalty:50, agenda:Expansionist`) because `server/` never
+  writes to `ruler_npcs` — a real duel's outcome currently depends only on
+  the challenger's own allocation. Documented in `duels.ts`; revisit once
+  a milestone actually needs the defender's real ruler state.
+- A concurrent-session-refresh race across `BackendSyncCoordinator`'s three
+  callers (decision sync, duel, history) was flagged in milestone #6's
+  final review (I-4) and fixed post-merge (commit `b5dd265`): all three now
+  funnel through one `EnsureFreshSession` chokepoint instead of racing
+  independent `RefreshSession` calls.
+
+Full task-by-task history (every commit, every review verdict, every
+fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
+for the duration of active development.
+
+## 9. Open Questions
 
 `Q1: Backend hosting provider (AWS/GCP/Azure/managed Postgres service) — Owner: you — Blocking: No, only needed before backend scaffolding starts`
 
