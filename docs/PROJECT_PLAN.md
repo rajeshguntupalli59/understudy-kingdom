@@ -243,7 +243,7 @@ BL-04: Async PvP duels resolve via scenario scoring server-side; the client
 
 ## 8. Implementation Status
 
-Seven milestones shipped end-to-end (brainstorm → spec → plan →
+Eight milestones shipped end-to-end (brainstorm → spec → plan →
 subagent-driven-development → final whole-branch review → fix → manual
 Play Mode checkpoint → merge to `main`), each covered by real Supabase +
 real local Postgres integration tests (no mocking):
@@ -257,12 +257,15 @@ real local Postgres integration tests (no mocking):
 | #5 Async PvP | `feat/async-pvp` | FR-09 | Done |
 | #6 Relationship History Log | `feat/decision-history` | FR-06 | Done |
 | #7 Council / Social | `feat/council-social` | FR-07, FR-08 | Done |
+| #8 Onboarding Tutorial | `feat/onboarding-tutorial` | FR-13 | Done |
 
 **FR status:** FR-01, FR-02 (loyalty/agenda-weighted, not mood — see FR-02
-note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09 implemented and live. FR-05
-(templated ruler dialogue) implemented as part of milestones #1/#2/#5/#6's
-narration work. FR-10 through FR-15 (live-ops, monetization, cosmetics,
-onboarding) not yet started.
+note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09, FR-13 implemented and live.
+FR-05 (templated ruler dialogue) implemented as part of milestones
+#1/#2/#5/#6's narration work. FR-13's "before any monetization prompt"
+gating is currently vacuous (FR-14/FR-15 don't exist yet — nothing to gate
+against); revisit once they land. FR-10 through FR-12, FR-14, FR-15
+(live-ops, cosmetics, monetization guardrails) not yet started.
 
 **Known follow-up items, deliberately deferred (not bugs):**
 - Milestone #5's `defenderRulerSnapshot` is always the schema default
@@ -289,6 +292,16 @@ onboarding) not yet started.
   shared gate) — a pre-existing gap from milestone #6, now duplicated by
   Council. Real fix needs `DuelButtonController` to own a shared in-flight
   flag the panels consult; deferred as larger than a single milestone.
+- Milestone #8's final review caught a real soft-lock bug (`CoreLoopSceneBuilder`
+  bakes disabled-control state into the committed scene at edit time; the
+  tutorial's completed-path never re-enabled it for returning players) —
+  fixed and re-verified before merge. Separately, the manual checkpoint
+  caught a *third* occurrence of a recurring readability bug (a new label
+  shipped under this scene's 24pt text-size convention) across milestones
+  #6/#7/#8, each time invisible to automated review since font size doesn't
+  show up as a diff-level defect. Fixed, and a permanent rule comment was
+  added directly above `CreateLabel()` in `CoreLoopSceneBuilder.cs` so every
+  future label call site carries an explicit floor to check against.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
