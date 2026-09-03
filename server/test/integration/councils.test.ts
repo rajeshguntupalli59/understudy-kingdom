@@ -1,8 +1,9 @@
 import { randomUUID } from 'crypto';
+import { eq } from 'drizzle-orm';
 import { describe, it, expect, afterEach } from 'vitest';
 import { buildApp } from '../../src/app';
 import { db } from '../../src/db/client';
-import { councilMembers } from '../../src/db/schema';
+import { councilMembers, councils } from '../../src/db/schema';
 import { createTestUser } from './helpers/testUser';
 import { truncateTables } from './helpers/db';
 
@@ -52,6 +53,15 @@ describe('councils routes', () => {
 
     expect(response.statusCode).toBe(409);
     expect(response.json().error).toBe('You are already in a council');
+
+    // Proves the transaction actually rolled back the council row inserted
+    // before the membership insert lost the race -- not just that the HTTP
+    // layer reported failure.
+    const orphanedCouncils = await db
+      .select()
+      .from(councils)
+      .where(eq(councils.name, 'Second Council'));
+    expect(orphanedCouncils).toHaveLength(0);
   });
 
   it('POST /api/v1/councils returns 400 for a malformed body', async () => {
