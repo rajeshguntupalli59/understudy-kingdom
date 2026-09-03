@@ -12,7 +12,9 @@ namespace UnderstudyKingdom.Npc
         private static readonly Dictionary<string, string> Templates = new Dictionary<string, string>
         {
             { "ruler_accept", "The ruler nods. \"A wise allocation.\" (mood {mood}, loyalty {loyalty})" },
-            { "ruler_override", "The ruler waves a hand. \"I have other plans.\" (mood {mood}, loyalty {loyalty})" }
+            { "ruler_override", "The ruler waves a hand. \"I have other plans.\" (mood {mood}, loyalty {loyalty})" },
+            { "duel_win", "Your strategy carried the day! A rival kingdom's ruler was won over." },
+            { "duel_lose", "A rival kingdom's ruler saw through your plan and refused it." }
         };
 
         public static string Resolve(string templateTag, IReadOnlyDictionary<string, string> variables)

@@ -24,5 +24,21 @@ namespace UnderstudyKingdom.Tests
 
             Assert.IsTrue(result.Contains("not_a_real_tag"));
         }
+
+        [Test]
+        public void Resolve_DuelWin_ReturnsExpectedNarration()
+        {
+            string result = DialogueTemplateEngine.Resolve("duel_win", new Dictionary<string, string>());
+
+            Assert.AreEqual("Your strategy carried the day! A rival kingdom's ruler was won over.", result);
+        }
+
+        [Test]
+        public void Resolve_DuelLose_ReturnsExpectedNarration()
+        {
+            string result = DialogueTemplateEngine.Resolve("duel_lose", new Dictionary<string, string>());
+
+            Assert.AreEqual("A rival kingdom's ruler saw through your plan and refused it.", result);
+        }
     }
 }
