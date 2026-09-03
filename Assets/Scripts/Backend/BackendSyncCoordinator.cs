@@ -227,5 +227,62 @@ namespace UnderstudyKingdom.Backend
             };
             apiClient.PostDuel(currentSession.AccessToken, dto, onSuccess, onError);
         }
+
+        /// <summary>
+        /// Mirrors RequestDuel's structure exactly: refresh-if-needed runs
+        /// unconditionally first, then the shared kingdomReady gate, then the send.
+        /// This is written directly against RequestDuel's corrected (post-fix)
+        /// shape, not a fresh reinvention of the same ordering decision -- see
+        /// RequestDuel's own comment for why the ordering matters (final-review
+        /// I-1/I-2 on the async-pvp milestone found and fixed the opposite ordering
+        /// as a real bug).
+        /// </summary>
+        public void RequestHistory(int limit, Action<DecisionHistoryEntry[]> onSuccess, Action<string> onError)
+        {
+            if (currentSession == null)
+            {
+                onError?.Invoke("No session available yet -- try again in a moment.");
+                return;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (currentSession.IsExpired(now))
+            {
+                if (string.IsNullOrEmpty(currentSession.RefreshToken))
+                {
+                    onError?.Invoke("Session expired and cannot be refreshed -- please restart the app.");
+                    return;
+                }
+
+                authClient.RefreshSession(currentSession.RefreshToken,
+                    onSuccess: refreshed =>
+                    {
+                        currentSession = refreshed;
+                        SessionStore.Save(refreshed);
+                        EnsureKingdomThenSendHistory(limit, onSuccess, onError);
+                    },
+                    onError: err => onError?.Invoke($"Session refresh failed: {err}"));
+                return;
+            }
+
+            EnsureKingdomThenSendHistory(limit, onSuccess, onError);
+        }
+
+        private void EnsureKingdomThenSendHistory(int limit, Action<DecisionHistoryEntry[]> onSuccess, Action<string> onError)
+        {
+            if (!kingdomReady)
+            {
+                apiClient.EnsureKingdom(currentSession.AccessToken,
+                    onSuccess: () =>
+                    {
+                        kingdomReady = true;
+                        apiClient.GetDecisionHistory(currentSession.AccessToken, limit, onSuccess, onError);
+                    },
+                    onError: err => onError?.Invoke($"Your kingdom isn't ready yet: {err}"));
+                return;
+            }
+
+            apiClient.GetDecisionHistory(currentSession.AccessToken, limit, onSuccess, onError);
+        }
     }
 }
