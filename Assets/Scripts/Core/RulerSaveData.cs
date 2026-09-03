@@ -21,5 +21,6 @@ namespace UnderstudyKingdom.Core
         public int Mood;
         public int Loyalty;
         public int Agenda;
+        public bool CouncilRewardApplied;
     }
 }

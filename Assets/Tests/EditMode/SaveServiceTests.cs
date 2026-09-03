@@ -44,6 +44,30 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void SaveThenLoad_RoundTripsCouncilRewardApplied()
+        {
+            var original = new RulerState { Mood = 60, Loyalty = 60, Agenda = RulerState.AgendaType.Mercantile, CouncilRewardApplied = true };
+
+            SaveService.Save(original);
+            var loaded = SaveService.Load();
+
+            Assert.IsTrue(loaded.CouncilRewardApplied);
+        }
+
+        [Test]
+        public void Load_NoSaveFile_CouncilRewardAppliedDefaultsFalse()
+        {
+            if (File.Exists(SaveService.SavePath))
+            {
+                File.Delete(SaveService.SavePath);
+            }
+
+            var state = SaveService.Load();
+
+            Assert.IsFalse(state.CouncilRewardApplied);
+        }
+
+        [Test]
         public void Load_CorruptFile_ReturnsDefaultState()
         {
             File.WriteAllText(SaveService.SavePath, "not valid json {{{");

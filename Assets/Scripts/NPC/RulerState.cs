@@ -22,6 +22,12 @@ namespace UnderstudyKingdom.Npc
         public int Loyalty = 50;
         public AgendaType Agenda = AgendaType.Expansionist;
 
+        // True once the one-time council-milestone mood/loyalty reward has
+        // been applied to THIS player's ruler -- prevents re-applying it on
+        // every subsequent council-panel open. See
+        // docs/superpowers/specs/2026-09-03-council-social-design.md.
+        public bool CouncilRewardApplied = false;
+
         public void ApplyDelta(int moodDelta, int loyaltyDelta)
         {
             Mood = Clamp(Mood + moodDelta);
