@@ -185,7 +185,12 @@ namespace UnderstudyKingdom.UI
             createButton.interactable = false;
             joinButton.interactable = false;
             statusMessageText.text = "Joining...";
-            coordinator.RequestJoinCouncil(joinCodeInputField.text, HandleCreateOrJoinResult, HandleCreateOrJoinError);
+            // Server generates join codes from an uppercase-only alphabet and
+            // does an exact-match lookup -- normalize here so a lowercase
+            // paste or stray whitespace (e.g. copied from a chat message)
+            // doesn't produce a misleading "no council found" error.
+            string normalizedJoinCode = joinCodeInputField.text.Trim().ToUpperInvariant();
+            coordinator.RequestJoinCouncil(normalizedJoinCode, HandleCreateOrJoinResult, HandleCreateOrJoinError);
         }
 
         private void HandleCreateOrJoinResult(CouncilResponse response)

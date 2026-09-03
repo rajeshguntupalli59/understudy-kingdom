@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { and, count, eq } from 'drizzle-orm';
 import { db } from '../db/client';
 import { councils, councilMembers, kingdoms, decisions } from '../db/schema';
+import { maybeAdvanceCouncilMilestone } from './decisions';
 
 const MAX_COUNCIL_MEMBERS = 20;
 const JOIN_CODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -137,6 +138,14 @@ const councilsRoutes: FastifyPluginAsync = async (fastify) => {
       throw err;
     }
 
+    // The membership insert above already committed (db.transaction resolved
+    // before this line runs), so the lookup inside
+    // maybeAdvanceCouncilMilestone will find it. Covers a member who already
+    // has enough pre-existing decisions to clear the milestone the instant
+    // they create the council, rather than waiting for their next decision
+    // submission -- see the I-2 finding in the milestone #7 final review.
+    await maybeAdvanceCouncilMilestone(request.userId);
+
     reply.code(201);
     return buildCouncilStatus(councilId, request.userId);
   });
@@ -175,6 +184,11 @@ const councilsRoutes: FastifyPluginAsync = async (fastify) => {
       reply.code(409);
       return { error: 'You are already in a council' };
     }
+
+    // Same reasoning as the create path above: the membership insert just
+    // committed, so this will find it and immediately recognize a milestone
+    // the joiner's pre-existing decisions already satisfy.
+    await maybeAdvanceCouncilMilestone(request.userId);
 
     return buildCouncilStatus(council.id, request.userId);
   });

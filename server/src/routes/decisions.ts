@@ -44,15 +44,20 @@ type TxExecutor = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
  * Called after a decision is newly recorded (the 201 path only, never the
- * 409 duplicate path). If the caller is in a council whose milestone hasn't
- * been reached yet, recomputes the council's total decision count and, if
- * it now meets the threshold, atomically flips milestoneReached and grants
- * rewardEligible to every CURRENT member in one transaction -- guarded by
- * `WHERE milestone_reached = false` so two concurrent decisions racing to
- * cross the threshold can only ever flip it once. See
+ * 409 duplicate path), and also from councils.ts's create/join success paths
+ * so a member with pre-existing decisions doesn't have to submit another one
+ * just to have an already-met milestone recognized. If the caller is in a
+ * council whose milestone hasn't been reached yet, recomputes the council's
+ * total decision count and, if it now meets the threshold, atomically flips
+ * milestoneReached and grants rewardEligible to every CURRENT member in one
+ * transaction -- guarded by `WHERE milestone_reached = false` so two
+ * concurrent requests racing to cross the threshold can only ever flip it
+ * once. Exported for councils.ts to reuse rather than duplicating this
+ * logic -- decisions.ts imports nothing from councils.ts, so this stays a
+ * one-directional dependency. See
  * docs/superpowers/specs/2026-09-03-council-social-design.md.
  */
-async function maybeAdvanceCouncilMilestone(userId: string): Promise<void> {
+export async function maybeAdvanceCouncilMilestone(userId: string): Promise<void> {
   const [membership] = await db.select().from(councilMembers).where(eq(councilMembers.userId, userId)).limit(1);
   if (!membership) {
     return;

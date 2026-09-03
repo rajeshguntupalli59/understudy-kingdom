@@ -145,4 +145,90 @@ describe('council milestone triggering (via POST /api/v1/decisions)', () => {
     },
     30000,
   );
+
+  it(
+    'reflects an already-met milestone immediately in the create-council response for a member with pre-existing decisions (I-2)',
+    async () => {
+      const member = await createTestUser();
+      await createKingdom(member.jwt);
+
+      // Rack up decisions BEFORE the council exists at all -- at this point
+      // maybeAdvanceCouncilMilestone is a no-op every time (no council_members
+      // row yet), matching the exact "14 pre-existing decisions" scenario
+      // from the milestone #7 final review's I-2 finding.
+      for (let cycle = 1; cycle <= 14; cycle++) {
+        await submitDecision(member.jwt, cycle);
+      }
+
+      const createResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/councils',
+        headers: { authorization: `Bearer ${member.jwt}` },
+        payload: { name: 'Grinders' },
+      });
+
+      const body = createResponse.json();
+      expect(body.totalDecisions).toBe(14);
+      expect(body.milestoneThreshold).toBe(10);
+      expect(body.milestoneReached).toBe(true);
+      expect(body.rewardEligible).toBe(true);
+
+      const [council] = await db.select().from(councils).where(eq(councils.id, body.id));
+      expect(council.milestoneReached).toBe(true);
+      const [membership] = await db.select().from(councilMembers).where(eq(councilMembers.userId, member.userId));
+      expect(membership.rewardEligible).toBe(true);
+    },
+    30000,
+  );
+
+  it(
+    'reflects an already-met milestone immediately in the join-council response for a joiner with pre-existing decisions (I-2)',
+    async () => {
+      const inviter = await createTestUser();
+      await createKingdom(inviter.jwt);
+
+      const createResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/councils',
+        headers: { authorization: `Bearer ${inviter.jwt}` },
+        payload: { name: 'Grinders' },
+      });
+      const { joinCode } = createResponse.json();
+
+      const joiner = await createTestUser();
+      await createKingdom(joiner.jwt);
+
+      // Same as the create-path test above, but the pre-existing decisions
+      // belong to the JOINER, and the milestone is only crossed once their
+      // membership is inserted (their decisions get counted into the
+      // council's total for the first time).
+      for (let cycle = 1; cycle <= 12; cycle++) {
+        await submitDecision(joiner.jwt, cycle);
+      }
+
+      const joinResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/councils/join',
+        headers: { authorization: `Bearer ${joiner.jwt}` },
+        payload: { joinCode },
+      });
+
+      const body = joinResponse.json();
+      expect(body.totalDecisions).toBe(12);
+      expect(body.milestoneThreshold).toBe(10);
+      expect(body.milestoneReached).toBe(true);
+      expect(body.rewardEligible).toBe(true);
+
+      const [council] = await db.select().from(councils).where(eq(councils.id, body.id));
+      expect(council.milestoneReached).toBe(true);
+      const [joinerMembership] = await db.select().from(councilMembers).where(eq(councilMembers.userId, joiner.userId));
+      expect(joinerMembership.rewardEligible).toBe(true);
+      // The check flips milestoneReached for the council, so every CURRENT
+      // member becomes reward-eligible, including the inviter who had 0
+      // decisions of their own.
+      const [inviterMembership] = await db.select().from(councilMembers).where(eq(councilMembers.userId, inviter.userId));
+      expect(inviterMembership.rewardEligible).toBe(true);
+    },
+    30000,
+  );
 });
