@@ -1,5 +1,6 @@
 using System.Collections;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -90,6 +91,86 @@ namespace UnderstudyKingdom.Tests
             Assert.IsNull(error, $"Expected success, got error: {error}");
             Assert.IsNotNull(result);
             Assert.IsNotNull(result.defenderRulerSnapshot);
+        }
+
+        /// <summary>
+        /// Targets the kingdomReady==false retry branch in RequestDuel (see final-review
+        /// I-1/I-2): the UnitySetUp coordinator above always finishes its own bootstrap
+        /// during the 2-second wait, so by the time any [UnityTest] body runs its
+        /// kingdomReady is already true and that branch never fires. This test uses a
+        /// SEPARATE, freshly-created coordinator and calls RequestDuel on it with no
+        /// warm-up wait, so the session-ready-but-kingdom-not-ready window is real.
+        ///
+        /// That window is made reliable (not a lucky race) rather than merely hoped-for:
+        /// BootstrapSession's SessionStore.Load() picks up the session the UnitySetUp
+        /// coordinator already persisted to disk, so currentSession becomes non-null via
+        /// a synchronous local load the moment Start() runs -- no network round trip
+        /// needed for that part. EnsureKingdom (fired synchronously right after, from
+        /// OnSessionReady) is a real network call and cannot complete within the same
+        /// frame, so kingdomReady is still false at that instant. Reflection is used only
+        /// to observe this internal timing for the test's own assertions -- production
+        /// code and its public surface are unchanged.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator RequestDuel_CalledBeforeKingdomReady_ExercisesRetryPathAndSettles()
+        {
+            var freshCoordinatorObject = new GameObject("FreshCoordinator");
+            try
+            {
+                var coordinator = freshCoordinatorObject.AddComponent<BackendSyncCoordinator>();
+                coordinator.SupabaseUrl = "https://kszwkvxtnzbbndclpbbe.supabase.co";
+                coordinator.SupabaseAnonKey = "sb_publishable_R277yUhT4qK5yTdZwamiuQ_3MD-gdvw";
+                coordinator.BackendBaseUrl = "http://localhost:3000";
+
+                FieldInfo sessionField = typeof(BackendSyncCoordinator).GetField("currentSession", BindingFlags.NonPublic | BindingFlags.Instance);
+                FieldInfo kingdomReadyField = typeof(BackendSyncCoordinator).GetField("kingdomReady", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.IsNotNull(sessionField, "currentSession field not found -- BackendSyncCoordinator internals changed");
+                Assert.IsNotNull(kingdomReadyField, "kingdomReady field not found -- BackendSyncCoordinator internals changed");
+
+                // Poll (rather than a single yield return null) so this still works even
+                // if Start()'s timing shifts, or SessionStore happens to be empty and a
+                // full sign-in round trip is required instead of a local load.
+                float deadline = Time.realtimeSinceStartup + 10f;
+                while (sessionField.GetValue(coordinator) == null && Time.realtimeSinceStartup < deadline)
+                {
+                    yield return null;
+                }
+
+                bool sessionWasReady = sessionField.GetValue(coordinator) != null;
+                bool observedRetryWindow = sessionWasReady && !(bool)kingdomReadyField.GetValue(coordinator);
+
+                var allocation = new ResourceAllocation(40, 30, 30);
+                DuelResult result = null;
+                string error = null;
+                coordinator.RequestDuel(allocation, r => result = r, err => error = err);
+
+                yield return new WaitUntil(() => result != null || error != null);
+
+                // Whichever branch actually fired, the coordinator must settle -- never
+                // hang, never throw uncaught.
+                Assert.IsTrue(result != null || error != null, "RequestDuel never settled");
+
+                if (observedRetryWindow)
+                {
+                    // We confirmed kingdomReady was false with a real session in hand at
+                    // the moment RequestDuel was called -- this is the retry branch I-1
+                    // fixed. It must refresh-if-needed, re-attempt EnsureKingdom, and go
+                    // on to a real duel, not report "no session".
+                    Assert.IsNull(error, $"Expected the kingdomReady retry path to succeed, got error: {error}");
+                    Assert.IsNotNull(result);
+                    Assert.IsNotNull(result.defenderRulerSnapshot);
+                }
+                else if (!sessionWasReady)
+                {
+                    // Called before BootstrapSession finished at all -- the graceful
+                    // too-early guard is the only valid outcome here.
+                    Assert.AreEqual("No session available yet -- try again in a moment.", error);
+                }
+            }
+            finally
+            {
+                Object.DestroyImmediate(freshCoordinatorObject);
+            }
         }
     }
 }

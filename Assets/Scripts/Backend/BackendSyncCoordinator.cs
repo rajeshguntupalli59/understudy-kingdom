@@ -164,27 +164,11 @@ namespace UnderstudyKingdom.Backend
                 return;
             }
 
-            // The kingdom-ensure round-trip from OnSessionReady may still be in
-            // flight (or may have failed at startup) -- rather than fail a duel
-            // tapped very early in the app's lifetime, re-attempt EnsureKingdom
-            // here and chain into the duel send on its success. See I-2.
-            if (!kingdomReady)
-            {
-                apiClient.EnsureKingdom(currentSession.AccessToken,
-                    onSuccess: () =>
-                    {
-                        kingdomReady = true;
-                        ProceedWithDuel(recommendation, onSuccess, onError);
-                    },
-                    onError: err => onError?.Invoke($"Your kingdom isn't ready yet: {err}"));
-                return;
-            }
-
-            ProceedWithDuel(recommendation, onSuccess, onError);
-        }
-
-        private void ProceedWithDuel(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
-        {
+            // The session must be refreshed (if needed) BEFORE we branch on
+            // kingdomReady -- EnsureKingdom below sends currentSession.AccessToken,
+            // and if that token is stale the request would 401 against the real
+            // server. See final-review I-1: this used to check kingdomReady first,
+            // which skipped the refresh entirely on the not-ready retry path.
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             if (currentSession.IsExpired(now))
             {
@@ -199,9 +183,31 @@ namespace UnderstudyKingdom.Backend
                     {
                         currentSession = refreshed;
                         SessionStore.Save(refreshed);
-                        SendDuelRequest(recommendation, onSuccess, onError);
+                        EnsureKingdomThenSendDuel(recommendation, onSuccess, onError);
                     },
                     onError: err => onError?.Invoke($"Session refresh failed: {err}"));
+                return;
+            }
+
+            EnsureKingdomThenSendDuel(recommendation, onSuccess, onError);
+        }
+
+        private void EnsureKingdomThenSendDuel(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
+        {
+            // The kingdom-ensure round-trip from OnSessionReady may still be in
+            // flight (or may have failed at startup) -- rather than fail a duel
+            // tapped very early in the app's lifetime, re-attempt EnsureKingdom
+            // here and chain into the duel send on its success. See I-2. By the
+            // time we get here, currentSession.AccessToken is guaranteed fresh.
+            if (!kingdomReady)
+            {
+                apiClient.EnsureKingdom(currentSession.AccessToken,
+                    onSuccess: () =>
+                    {
+                        kingdomReady = true;
+                        SendDuelRequest(recommendation, onSuccess, onError);
+                    },
+                    onError: err => onError?.Invoke($"Your kingdom isn't ready yet: {err}"));
                 return;
             }
 
