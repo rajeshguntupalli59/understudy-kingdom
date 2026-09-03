@@ -100,7 +100,12 @@ describe('duels routes', () => {
     expect(typeof body.overridden).toBe('boolean');
     // The defender's ruler_npcs row was just created with schema defaults
     // (mood 50, loyalty 50, agenda 'Expansionist') and nothing in this test
-    // mutates it, so the snapshot must match exactly.
+    // mutates it, so the snapshot must match exactly. This isn't just
+    // fixture-local, either: ruler_npcs is never mutated server-side
+    // anywhere in this codebase (see the comment in duels.ts above the
+    // defender-selection query), so this is also the actual permanent
+    // production state of every ruler_npcs row -- every duel's defender
+    // snapshot is always these exact schema defaults, not just in this test.
     expect(body.defenderRulerSnapshot).toEqual({ mood: 50, loyalty: 50, agenda: 'Expansionist' });
   });
 

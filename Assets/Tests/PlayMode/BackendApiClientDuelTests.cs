@@ -81,5 +81,48 @@ namespace UnderstudyKingdom.Tests
             Assert.IsNotNull(result.defenderRulerSnapshot);
             Assert.IsFalse(string.IsNullOrEmpty(result.defenderRulerSnapshot.agenda));
         }
+
+        /// <summary>
+        /// I-1 regression test: a real 404 from the real server carries
+        /// {"error":"No kingdom found for this user"} in its body -- PostDuel must
+        /// surface that exact message to onError, not a generic
+        /// "failed: ProtocolError (404)" string. Uses a fresh anonymous user that
+        /// never calls EnsureKingdom, so the server's kingdom lookup genuinely misses.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator PostDuel_ChallengerWithNoKingdom_SurfacesRealServerErrorMessage()
+        {
+            var freshAuthObject = new GameObject("FreshAuth");
+            var freshAuth = freshAuthObject.AddComponent<SupabaseAuthClient>();
+            freshAuth.SupabaseUrl = "https://kszwkvxtnzbbndclpbbe.supabase.co";
+            freshAuth.SupabaseAnonKey = "sb_publishable_R277yUhT4qK5yTdZwamiuQ_3MD-gdvw";
+
+            try
+            {
+                SessionData freshSession = null;
+                freshAuth.SignInAnonymously(s => freshSession = s, err => Assert.Fail($"Fresh sign-in failed: {err}"));
+                yield return new WaitUntil(() => freshSession != null);
+
+                var apiClient = apiClientObject.GetComponent<BackendApiClient>();
+                var dto = new DuelRequest
+                {
+                    recommendation = new PlayerRecommendationDto { army = 40, trade = 30, religion = 30 }
+                };
+
+                DuelResult result = null;
+                string error = null;
+                apiClient.PostDuel(freshSession.AccessToken, dto, r => result = r, err => error = err);
+                yield return new WaitUntil(() => result != null || error != null);
+
+                Assert.IsNull(result, "Expected the request to fail (no kingdom exists for this fresh user).");
+                Assert.IsNotNull(error);
+                Assert.IsTrue(error.Contains("No kingdom found for this user"),
+                    $"Expected the real server error message, got: {error}");
+            }
+            finally
+            {
+                Object.DestroyImmediate(freshAuthObject);
+            }
+        }
     }
 }

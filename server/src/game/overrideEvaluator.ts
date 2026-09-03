@@ -3,10 +3,12 @@
 // parity tests in server/test/unit/overrideEvaluator.test.ts, which assert
 // against the C# test suite's own known values.
 
+export type Agenda = 'Expansionist' | 'Isolationist' | 'Mercantile' | 'Pious';
+
 export interface RulerState {
   mood: number;
   loyalty: number;
-  agenda: string;
+  agenda: Agenda;
 }
 
 export interface ResourceAllocation {
@@ -34,7 +36,7 @@ const ACCEPTED_LOYALTY_DELTA = 3;
 const OVERRIDDEN_MOOD_DELTA = -10;
 const OVERRIDDEN_LOYALTY_DELTA = -5;
 
-export function isAligned(agenda: string, allocation: ResourceAllocation): boolean {
+export function isAligned(agenda: Agenda, allocation: ResourceAllocation): boolean {
   switch (agenda) {
     case 'Expansionist':
       return allocation.army >= 40;

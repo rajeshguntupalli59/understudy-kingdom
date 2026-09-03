@@ -215,3 +215,11 @@ network, no-mocks pattern.
 - Kingdom display names.
 - Defender-side notifications ("someone challenged you").
 - Rate limiting on challenge frequency.
+- Server-side ruler state (mood/loyalty/agenda) sync or mutation. Nothing in
+  this pass ever writes to `ruler_npcs` after its initial insert with schema
+  defaults, so every duel's `defenderRulerSnapshot` is always `{mood: 50,
+  loyalty: 50, agenda: 'Expansionist'}` in production, and duel outcomes vary
+  only with the challenger's own allocation, not with any real defender
+  variety. Meaningful outcome variety across different defenders requires a
+  future milestone that syncs ruler state server-side (e.g., writing mood/
+  loyalty/agenda alongside decision sync).

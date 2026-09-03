@@ -21,6 +21,7 @@ namespace UnderstudyKingdom.Backend
         private SupabaseAuthClient authClient;
         private BackendApiClient apiClient;
         private SessionData currentSession;
+        private bool kingdomReady;
 
         private void Start()
         {
@@ -75,7 +76,7 @@ namespace UnderstudyKingdom.Backend
         private void OnSessionReady()
         {
             apiClient.EnsureKingdom(currentSession.AccessToken,
-                onSuccess: () => { },
+                onSuccess: () => { kingdomReady = true; },
                 onError: err => Debug.LogWarning($"BackendSyncCoordinator: EnsureKingdom failed: {err}"));
 
             if (DecisionCycleManager != null)
@@ -163,6 +164,27 @@ namespace UnderstudyKingdom.Backend
                 return;
             }
 
+            // The kingdom-ensure round-trip from OnSessionReady may still be in
+            // flight (or may have failed at startup) -- rather than fail a duel
+            // tapped very early in the app's lifetime, re-attempt EnsureKingdom
+            // here and chain into the duel send on its success. See I-2.
+            if (!kingdomReady)
+            {
+                apiClient.EnsureKingdom(currentSession.AccessToken,
+                    onSuccess: () =>
+                    {
+                        kingdomReady = true;
+                        ProceedWithDuel(recommendation, onSuccess, onError);
+                    },
+                    onError: err => onError?.Invoke($"Your kingdom isn't ready yet: {err}"));
+                return;
+            }
+
+            ProceedWithDuel(recommendation, onSuccess, onError);
+        }
+
+        private void ProceedWithDuel(ResourceAllocation recommendation, Action<DuelResult> onSuccess, Action<string> onError)
+        {
             long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             if (currentSession.IsExpired(now))
             {

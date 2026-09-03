@@ -2,16 +2,18 @@ import { FastifyPluginAsync } from 'fastify';
 import { eq, ne, sql } from 'drizzle-orm';
 import { db } from '../db/client';
 import { kingdoms, rulerNpcs, pvpDuels } from '../db/schema';
-import { evaluate, RulerState, ResourceAllocation } from '../game/overrideEvaluator';
+import { evaluate, RulerState, ResourceAllocation, Agenda } from '../game/overrideEvaluator';
 
 const createDuelSchema = {
   body: {
     type: 'object',
     required: ['recommendation'],
+    additionalProperties: false,
     properties: {
       recommendation: {
         type: 'object',
         required: ['army', 'trade', 'religion'],
+        additionalProperties: false,
         properties: {
           army: { type: 'integer', minimum: 0 },
           trade: { type: 'integer', minimum: 0 },
@@ -48,6 +50,16 @@ const duelsRoutes: FastifyPluginAsync = async (fastify) => {
     }
     const challenger = challengerRows[0];
 
+    // ruler_npcs is never mutated server-side anywhere in this milestone
+    // (kingdoms.ts inserts a row with schema defaults and nothing ever
+    // updates it afterward) -- so defenderRuler.mood/loyalty/agenda below,
+    // and therefore defenderRulerSnapshot in every response, is always the
+    // schema default (50, 50, 'Expansionist') in production. Duel outcomes
+    // currently vary only with the challenger's own allocation (via the
+    // agenda-alignment check), not with any real defender state. This is a
+    // known, deliberate limitation of this pass, not a bug -- meaningful PvP
+    // variety across different defenders requires syncing ruler state to the
+    // server in a future milestone.
     const defenderRows = await db
       .select({ kingdom: kingdoms, ruler: rulerNpcs })
       .from(kingdoms)
@@ -68,9 +80,17 @@ const duelsRoutes: FastifyPluginAsync = async (fastify) => {
     const defenderState: RulerState = {
       mood: defenderRuler.mood,
       loyalty: defenderRuler.loyalty,
-      agenda: defenderRuler.agenda,
+      // ruler_npcs.agenda is unconstrained text (no DB CHECK constraint);
+      // this cast trusts existing data -- runtime values are currently
+      // always one of the four known agendas since nothing else writes it
+      // (see the "never mutated server-side" comment on the query above).
+      agenda: defenderRuler.agenda as Agenda,
     };
     const roll = Math.random();
+    // result.moodDelta/loyaltyDelta are intentionally discarded below -- the
+    // spec's "No mechanical effect on the challenger's own kingdom this
+    // pass" scope decision means nothing persists them. Don't wire them up
+    // without checking the spec first.
     const result = evaluate(defenderState, allocation, roll);
 
     await db.insert(pvpDuels).values({

@@ -14,6 +14,12 @@ namespace UnderstudyKingdom.Backend
     {
         public string BackendBaseUrl;
 
+        [Serializable]
+        private class ErrorResponseDto
+        {
+            public string error;
+        }
+
         public void EnsureKingdom(string accessToken, Action onSuccess, Action<string> onError)
         {
             StartCoroutine(Post($"{BackendBaseUrl}/api/v1/kingdoms", "{}", accessToken,
@@ -89,7 +95,9 @@ namespace UnderstudyKingdom.Backend
 
             if (request.result != UnityWebRequest.Result.Success)
             {
-                onError?.Invoke($"Duel request to {url} failed: {request.result} ({request.responseCode})");
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Duel request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
                 yield break;
             }
 
@@ -111,6 +119,20 @@ namespace UnderstudyKingdom.Backend
             }
 
             onSuccess?.Invoke(result);
+        }
+
+        private static string TryExtractServerErrorMessage(string responseBody)
+        {
+            if (string.IsNullOrEmpty(responseBody)) return null;
+            try
+            {
+                var parsed = JsonUtility.FromJson<ErrorResponseDto>(responseBody);
+                return string.IsNullOrEmpty(parsed?.error) ? null : parsed.error;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 }
