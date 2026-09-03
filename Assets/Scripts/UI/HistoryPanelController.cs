@@ -27,6 +27,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Slider religionSlider;
         [SerializeField] private Button submitButton;
         [SerializeField] private Button challengeButton;
+        [SerializeField] private Button councilButton;
 
         private void Start()
         {
@@ -48,7 +49,8 @@ namespace UnderstudyKingdom.UI
             Slider tradeSlider,
             Slider religionSlider,
             Button submitButton,
-            Button challengeButton)
+            Button challengeButton,
+            Button councilButton)
         {
             this.viewHistoryButton = viewHistoryButton;
             this.panelRoot = panelRoot;
@@ -60,6 +62,7 @@ namespace UnderstudyKingdom.UI
             this.religionSlider = religionSlider;
             this.submitButton = submitButton;
             this.challengeButton = challengeButton;
+            this.councilButton = councilButton;
 
             Bind();
         }
@@ -152,6 +155,7 @@ namespace UnderstudyKingdom.UI
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
             challengeButton.interactable = interactable;
+            councilButton.interactable = interactable;
         }
     }
 }

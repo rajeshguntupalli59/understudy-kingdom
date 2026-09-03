@@ -55,7 +55,7 @@ namespace UnderstudyKingdom.EditorTools
             // elements (labels, button) on any viewport shorter than ~900px tall.
             var canvasScaler = canvasObject.GetComponent<CanvasScaler>();
             canvasScaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScaler.referenceResolution = new Vector2(800f, 1400f);
+            canvasScaler.referenceResolution = new Vector2(800f, 1600f);
             canvasScaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             canvasScaler.matchWidthOrHeight = 1f;
 
@@ -126,6 +126,132 @@ namespace UnderstudyKingdom.EditorTools
             viewHistoryLabelRect.sizeDelta = Vector2.zero;
             viewHistoryLabelRect.anchoredPosition = Vector2.zero;
 
+            var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
+            councilButtonObject.transform.SetParent(canvasObject.transform, false);
+            var councilButtonRect = councilButtonObject.GetComponent<RectTransform>();
+            councilButtonRect.anchoredPosition = new Vector2(0f, -660f);
+            councilButtonRect.sizeDelta = new Vector2(220f, 44f);
+            councilButtonObject.GetComponent<Image>().color = new Color(0.5f, 0.35f, 0.65f, 1f);
+            var councilButton = councilButtonObject.GetComponent<Button>();
+            TextMeshProUGUI councilButtonLabel = CreateLabel(councilButtonObject.transform, "Text", 0f, "Council");
+            var councilButtonLabelRect = councilButtonLabel.GetComponent<RectTransform>();
+            councilButtonLabelRect.anchorMin = Vector2.zero;
+            councilButtonLabelRect.anchorMax = Vector2.one;
+            councilButtonLabelRect.sizeDelta = Vector2.zero;
+            councilButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
+            councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
+            var councilPanelRect = councilPanelRootObject.GetComponent<RectTransform>();
+            councilPanelRect.anchoredPosition = Vector2.zero;
+            councilPanelRect.sizeDelta = new Vector2(700f, 800f);
+            councilPanelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+
+            var councilCloseButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
+            councilCloseButtonObject.transform.SetParent(councilPanelRootObject.transform, false);
+            var councilCloseButtonRect = councilCloseButtonObject.GetComponent<RectTransform>();
+            councilCloseButtonRect.anchoredPosition = new Vector2(310f, 360f);
+            councilCloseButtonRect.sizeDelta = new Vector2(60f, 40f);
+            councilCloseButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+            var councilCloseButton = councilCloseButtonObject.GetComponent<Button>();
+            TextMeshProUGUI councilCloseLabel = CreateLabel(councilCloseButtonObject.transform, "Text", 0f, "X");
+            var councilCloseLabelRect = councilCloseLabel.GetComponent<RectTransform>();
+            councilCloseLabelRect.anchorMin = Vector2.zero;
+            councilCloseLabelRect.anchorMax = Vector2.one;
+            councilCloseLabelRect.sizeDelta = Vector2.zero;
+            councilCloseLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI councilTitleLabel = CreateLabel(councilPanelRootObject.transform, "Title", 0f, "Your Council");
+            councilTitleLabel.fontSize = 28f;
+            councilTitleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 340f);
+
+            TextMeshProUGUI councilStatusMessageText = CreateLabel(councilPanelRootObject.transform, "StatusMessageText", 0f, string.Empty);
+            councilStatusMessageText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 260f);
+
+            var notInCouncilViewObject = new GameObject("NotInCouncilView", typeof(RectTransform));
+            notInCouncilViewObject.transform.SetParent(councilPanelRootObject.transform, false);
+
+            // Persistent field labels, not placeholder-only -- ui-ux-pro-max's
+            // Quick Reference (Forms & Feedback, `input-labels`) flags
+            // placeholder-only labels as an anti-pattern: the placeholder
+            // text on the input fields below disappears the moment the
+            // player starts typing.
+            TextMeshProUGUI nameFieldLabel = CreateLabel(notInCouncilViewObject.transform, "NameFieldLabel", 0f, "Council Name");
+            nameFieldLabel.fontSize = 18f;
+            nameFieldLabel.alignment = TextAlignmentOptions.Left;
+            var nameFieldLabelRect = nameFieldLabel.GetComponent<RectTransform>();
+            nameFieldLabelRect.anchoredPosition = new Vector2(0f, 215f);
+            nameFieldLabelRect.sizeDelta = new Vector2(400f, 24f);
+
+            TMP_InputField nameInputField = CreateInputField(notInCouncilViewObject.transform, "NameInput", "Council name");
+            nameInputField.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 180f);
+
+            var createButtonObject = new GameObject("CreateButton", typeof(Image), typeof(Button));
+            createButtonObject.transform.SetParent(notInCouncilViewObject.transform, false);
+            var createButtonRect = createButtonObject.GetComponent<RectTransform>();
+            createButtonRect.anchoredPosition = new Vector2(0f, 110f);
+            createButtonRect.sizeDelta = new Vector2(220f, 44f);
+            createButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
+            var createButton = createButtonObject.GetComponent<Button>();
+            TextMeshProUGUI createButtonLabel = CreateLabel(createButtonObject.transform, "Text", 0f, "Create Council");
+            var createButtonLabelRect = createButtonLabel.GetComponent<RectTransform>();
+            createButtonLabelRect.anchorMin = Vector2.zero;
+            createButtonLabelRect.anchorMax = Vector2.one;
+            createButtonLabelRect.sizeDelta = Vector2.zero;
+            createButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI joinCodeFieldLabel = CreateLabel(notInCouncilViewObject.transform, "JoinCodeFieldLabel", 0f, "Join Code");
+            joinCodeFieldLabel.fontSize = 18f;
+            joinCodeFieldLabel.alignment = TextAlignmentOptions.Left;
+            var joinCodeFieldLabelRect = joinCodeFieldLabel.GetComponent<RectTransform>();
+            joinCodeFieldLabelRect.anchoredPosition = new Vector2(0f, 35f);
+            joinCodeFieldLabelRect.sizeDelta = new Vector2(400f, 24f);
+
+            TMP_InputField joinCodeInputField = CreateInputField(notInCouncilViewObject.transform, "JoinCodeInput", "Join code");
+            joinCodeInputField.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 0f);
+
+            var joinButtonObject = new GameObject("JoinButton", typeof(Image), typeof(Button));
+            joinButtonObject.transform.SetParent(notInCouncilViewObject.transform, false);
+            var joinButtonRect = joinButtonObject.GetComponent<RectTransform>();
+            joinButtonRect.anchoredPosition = new Vector2(0f, -70f);
+            joinButtonRect.sizeDelta = new Vector2(220f, 44f);
+            joinButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.6f, 0.4f, 1f);
+            var joinButton = joinButtonObject.GetComponent<Button>();
+            TextMeshProUGUI joinButtonLabel = CreateLabel(joinButtonObject.transform, "Text", 0f, "Join Council");
+            var joinButtonLabelRect = joinButtonLabel.GetComponent<RectTransform>();
+            joinButtonLabelRect.anchorMin = Vector2.zero;
+            joinButtonLabelRect.anchorMax = Vector2.one;
+            joinButtonLabelRect.sizeDelta = Vector2.zero;
+            joinButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var inCouncilViewObject = new GameObject("InCouncilView", typeof(RectTransform));
+            inCouncilViewObject.transform.SetParent(councilPanelRootObject.transform, false);
+
+            TextMeshProUGUI councilNameLabel = CreateLabel(inCouncilViewObject.transform, "NameLabel", 0f, string.Empty);
+            councilNameLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 180f);
+
+            TextMeshProUGUI councilJoinCodeLabel = CreateLabel(inCouncilViewObject.transform, "JoinCodeLabel", 0f, string.Empty);
+            councilJoinCodeLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 120f);
+
+            TextMeshProUGUI councilMemberCountLabel = CreateLabel(inCouncilViewObject.transform, "MemberCountLabel", 0f, string.Empty);
+            councilMemberCountLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 60f);
+
+            TextMeshProUGUI councilProgressLabel = CreateLabel(inCouncilViewObject.transform, "ProgressLabel", 0f, string.Empty);
+            councilProgressLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 0f);
+
+            TextMeshProUGUI councilRewardStatusLabel = CreateLabel(inCouncilViewObject.transform, "RewardStatusLabel", 0f, string.Empty);
+            var councilRewardStatusLabelRect = councilRewardStatusLabel.GetComponent<RectTransform>();
+            councilRewardStatusLabelRect.anchoredPosition = new Vector2(0f, -80f);
+            councilRewardStatusLabelRect.sizeDelta = new Vector2(640f, 80f);
+
+            var councilControllerObject = new GameObject("CouncilPanelController");
+            var councilController = councilControllerObject.AddComponent<CouncilPanelController>();
+            councilController.Initialize(councilButton, councilPanelRootObject, councilCloseButton, notInCouncilViewObject, inCouncilViewObject,
+                nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
+                councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
+                backendCoordinator, manager, controller,
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton);
+
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
             var panelRect = panelRootObject.GetComponent<RectTransform>();
@@ -170,7 +296,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
@@ -257,6 +383,17 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
+            var councilController = Object.FindFirstObjectByType<CouncilPanelController>();
+            if (councilController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no CouncilPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
         }
 
@@ -318,6 +455,54 @@ namespace UnderstudyKingdom.EditorTools
             label.color = Color.white;
 
             return label;
+        }
+
+        private static TMP_InputField CreateInputField(Transform parent, string name, string placeholderText)
+        {
+            var fieldObject = new GameObject(name, typeof(Image), typeof(TMP_InputField));
+            fieldObject.transform.SetParent(parent, false);
+            var rect = fieldObject.GetComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(400f, 44f);
+            fieldObject.GetComponent<Image>().color = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+            var textAreaObject = new GameObject("Text Area", typeof(RectMask2D));
+            textAreaObject.transform.SetParent(fieldObject.transform, false);
+            var textAreaRect = textAreaObject.GetComponent<RectTransform>();
+            textAreaRect.anchorMin = Vector2.zero;
+            textAreaRect.anchorMax = Vector2.one;
+            textAreaRect.offsetMin = new Vector2(10f, 6f);
+            textAreaRect.offsetMax = new Vector2(-10f, -6f);
+
+            var placeholderObject = new GameObject("Placeholder", typeof(TextMeshProUGUI));
+            placeholderObject.transform.SetParent(textAreaObject.transform, false);
+            var placeholderRect = placeholderObject.GetComponent<RectTransform>();
+            placeholderRect.anchorMin = Vector2.zero;
+            placeholderRect.anchorMax = Vector2.one;
+            placeholderRect.sizeDelta = Vector2.zero;
+            var placeholder = placeholderObject.GetComponent<TextMeshProUGUI>();
+            placeholder.text = placeholderText;
+            placeholder.fontSize = 22f;
+            placeholder.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+            placeholder.alignment = TextAlignmentOptions.MidlineLeft;
+
+            var textObject = new GameObject("Text", typeof(TextMeshProUGUI));
+            textObject.transform.SetParent(textAreaObject.transform, false);
+            var textRect = textObject.GetComponent<RectTransform>();
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
+            var text = textObject.GetComponent<TextMeshProUGUI>();
+            text.fontSize = 22f;
+            text.color = Color.black;
+            text.alignment = TextAlignmentOptions.MidlineLeft;
+
+            var inputField = fieldObject.GetComponent<TMP_InputField>();
+            inputField.textViewport = textAreaRect;
+            inputField.textComponent = text;
+            inputField.placeholder = placeholder;
+            inputField.text = string.Empty;
+
+            return inputField;
         }
     }
 }
