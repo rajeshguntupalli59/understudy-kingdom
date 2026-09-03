@@ -92,6 +92,8 @@ namespace UnderstudyKingdom.EditorTools
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, button);
 
+            var duelModalGate = new DuelModalGate();
+
             var duelButtonObject = new GameObject("ChallengeButton", typeof(Image), typeof(Button));
             duelButtonObject.transform.SetParent(canvasObject.transform, false);
             var duelButtonRect = duelButtonObject.GetComponent<RectTransform>();
@@ -110,7 +112,7 @@ namespace UnderstudyKingdom.EditorTools
 
             var duelControllerObject = new GameObject("DuelButtonController");
             var duelController = duelControllerObject.AddComponent<DuelButtonController>();
-            duelController.Initialize(armySlider, tradeSlider, religionSlider, duelButton, duelResultText, backendCoordinator);
+            duelController.Initialize(armySlider, tradeSlider, religionSlider, duelButton, duelResultText, backendCoordinator, duelModalGate);
 
             var viewHistoryButtonObject = new GameObject("ViewHistoryButton", typeof(Image), typeof(Button));
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);

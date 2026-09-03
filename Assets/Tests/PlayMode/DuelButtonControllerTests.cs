@@ -17,6 +17,7 @@ namespace UnderstudyKingdom.Tests
         private Slider religionSlider;
         private Button challengeButton;
         private TextMeshProUGUI resultText;
+        private DuelModalGate gate;
 
         [SetUp]
         public void SetUp()
@@ -44,9 +45,11 @@ namespace UnderstudyKingdom.Tests
             resultObject.transform.SetParent(canvasObject.transform, false);
             resultText = resultObject.GetComponent<TextMeshProUGUI>();
 
+            gate = new DuelModalGate();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<DuelButtonController>();
-            controller.Initialize(armySlider, tradeSlider, religionSlider, challengeButton, resultText, coordinator);
+            controller.Initialize(armySlider, tradeSlider, religionSlider, challengeButton, resultText, coordinator, gate);
         }
 
         [TearDown]
@@ -76,6 +79,18 @@ namespace UnderstudyKingdom.Tests
 
             Assert.IsTrue(resultText.text.Contains("Challenge failed"));
             Assert.IsTrue(challengeButton.interactable);
+        }
+
+        [Test]
+        public void Challenge_WithModalOpen_LeavesButtonDisabledAfterError()
+        {
+            gate.IsModalOpen = true;
+
+            challengeButton.onClick.Invoke();
+
+            Assert.IsTrue(resultText.text.Contains("Challenge failed"));
+            Assert.IsFalse(challengeButton.interactable,
+                "a modal being open must keep Challenge disabled even after the duel request itself resolves");
         }
     }
 }

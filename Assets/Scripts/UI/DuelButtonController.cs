@@ -22,6 +22,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button challengeButton;
         [SerializeField] private TextMeshProUGUI resultText;
         [SerializeField] private BackendSyncCoordinator coordinator;
+        [SerializeField] private DuelModalGate gate;
 
         private void Start()
         {
@@ -39,7 +40,8 @@ namespace UnderstudyKingdom.UI
             Slider religionSlider,
             Button challengeButton,
             TextMeshProUGUI resultText,
-            BackendSyncCoordinator coordinator)
+            BackendSyncCoordinator coordinator,
+            DuelModalGate gate)
         {
             this.armySlider = armySlider;
             this.tradeSlider = tradeSlider;
@@ -47,6 +49,7 @@ namespace UnderstudyKingdom.UI
             this.challengeButton = challengeButton;
             this.resultText = resultText;
             this.coordinator = coordinator;
+            this.gate = gate;
 
             Bind();
         }
@@ -66,13 +69,18 @@ namespace UnderstudyKingdom.UI
 
             resultText.text = "Resolving...";
             challengeButton.interactable = false;
+            gate.IsDuelInFlight = true;
 
             coordinator.RequestDuel(allocation, HandleResult, HandleError);
         }
 
         private void HandleResult(DuelResult result)
         {
-            challengeButton.interactable = true;
+            gate.IsDuelInFlight = false;
+            if (!gate.IsModalOpen)
+            {
+                challengeButton.interactable = true;
+            }
 
             string templateTag = result.overridden ? "duel_lose" : "duel_win";
             resultText.text = DialogueTemplateEngine.Resolve(templateTag, new Dictionary<string, string>());
@@ -80,7 +88,11 @@ namespace UnderstudyKingdom.UI
 
         private void HandleError(string error)
         {
-            challengeButton.interactable = true;
+            gate.IsDuelInFlight = false;
+            if (!gate.IsModalOpen)
+            {
+                challengeButton.interactable = true;
+            }
             resultText.text = $"Challenge failed: {error}";
         }
     }
