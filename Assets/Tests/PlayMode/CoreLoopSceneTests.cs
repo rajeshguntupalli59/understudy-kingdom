@@ -160,6 +160,36 @@ namespace UnderstudyKingdom.Tests
                 "Expected HistoryPanel to become active after ViewHistoryButton is clicked.");
         }
 
+        /// <summary>
+        /// Same C-1 regression guard as the History/Challenge tests above, for
+        /// CouncilPanelController's shared gate reference -- the third and
+        /// last controller carrying a [SerializeField] DuelModalGate gate.
+        /// OnCouncilButtonClicked sets gate.IsModalOpen = true before
+        /// panelRoot.SetActive(true) runs, so a null gate would throw before
+        /// the panel ever became visible, the same shape as View History's.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_CouncilButton_OpensPanelWithoutThrowing()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button councilButton = FindButton(canvas, "CouncilButton");
+            Assert.IsNotNull(councilButton, "CouncilButton not found in the loaded CoreLoop scene.");
+
+            GameObject councilPanel = FindChildByName(canvas.transform, "CouncilPanel");
+            Assert.IsNotNull(councilPanel, "CouncilPanel not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(councilPanel.activeSelf, "Expected CouncilPanel to start inactive.");
+
+            councilButton.onClick.Invoke();
+
+            Assert.IsTrue(councilPanel.activeSelf,
+                "Expected CouncilPanel to become active after CouncilButton is clicked.");
+        }
+
         private static Button FindButton(Canvas canvas, string name)
         {
             foreach (Button candidate in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
