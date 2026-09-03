@@ -198,11 +198,12 @@ namespace UnderstudyKingdom.UI
             createButton.interactable = true;
             joinButton.interactable = true;
             ShowInCouncilView(response);
-            // A council the player just created or joined can never have
-            // rewardEligible=true for them yet (a fresh membership row
-            // always starts reward_eligible=false server-side) -- no
-            // reward-application check needed on this path, unlike
-            // HandleStatusResult.
+            // response.rewardEligible can legitimately be true here (e.g.
+            // creating a council with 10+ pre-existing decisions crosses the
+            // threshold immediately server-side) -- but this path
+            // deliberately never applies the reward. It lands the next time
+            // HandleStatusResult runs (reopening the panel), keeping exactly
+            // one code path responsible for the client-side reward mutation.
             rewardStatusLabel.text = manager.Ruler.State.CouncilRewardApplied ? RewardAlreadyClaimedMessage : string.Empty;
         }
 
