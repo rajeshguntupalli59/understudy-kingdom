@@ -34,6 +34,7 @@ namespace UnderstudyKingdom.Tests
         private RulerNpcController ruler;
         private Button councilButton;
         private TextMeshProUGUI rewardStatusLabel;
+        private DuelModalGate gate;
 
         [UnitySetUp]
         public IEnumerator UnitySetUp()
@@ -147,13 +148,15 @@ namespace UnderstudyKingdom.Tests
             rewardStatusLabel = CreateLabel("RewardStatusLabel", inCouncilViewObject.transform);
             var statusMessageText = CreateLabel("StatusMessageText", panelRootObject.transform);
 
+            gate = new DuelModalGate();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<CouncilPanelController>();
             controller.Initialize(councilButton, panelRootObject, closeButton, notInCouncilViewObject, inCouncilViewObject,
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, gate);
         }
 
         [TearDown]

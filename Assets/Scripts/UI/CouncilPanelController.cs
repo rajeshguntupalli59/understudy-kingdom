@@ -46,6 +46,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button submitButton;
         [SerializeField] private Button challengeButton;
         [SerializeField] private Button viewHistoryButton;
+        [SerializeField] private DuelModalGate gate;
 
         private void Start()
         {
@@ -81,7 +82,8 @@ namespace UnderstudyKingdom.UI
             Slider religionSlider,
             Button submitButton,
             Button challengeButton,
-            Button viewHistoryButton)
+            Button viewHistoryButton,
+            DuelModalGate gate)
         {
             this.councilButton = councilButton;
             this.panelRoot = panelRoot;
@@ -107,6 +109,7 @@ namespace UnderstudyKingdom.UI
             this.submitButton = submitButton;
             this.challengeButton = challengeButton;
             this.viewHistoryButton = viewHistoryButton;
+            this.gate = gate;
 
             Bind();
         }
@@ -127,6 +130,7 @@ namespace UnderstudyKingdom.UI
 
         private void OnCouncilButtonClicked()
         {
+            gate.IsModalOpen = true;
             SetCoreLoopControlsInteractable(false);
             panelRoot.SetActive(true);
             notInCouncilView.SetActive(false);
@@ -234,6 +238,7 @@ namespace UnderstudyKingdom.UI
         private void OnClose()
         {
             panelRoot.SetActive(false);
+            gate.IsModalOpen = false;
             SetCoreLoopControlsInteractable(true);
         }
 
@@ -245,6 +250,18 @@ namespace UnderstudyKingdom.UI
             tradeSlider.interactable = interactable;
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
+
+            // challengeButton has two independent disablers (this modal, and
+            // Duel's own in-flight state) -- opening always disables it
+            // unconditionally (a modal should always cover Challenge), but
+            // enabling skips it while gate.IsDuelInFlight is still true;
+            // DuelButtonController's own completion handler re-enables it
+            // once the real duel resolves. See
+            // docs/superpowers/specs/2026-09-03-duel-modal-gate-design.md.
+            if (interactable && gate.IsDuelInFlight)
+            {
+                return;
+            }
             challengeButton.interactable = interactable;
         }
     }
