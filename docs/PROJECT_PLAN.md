@@ -1,6 +1,6 @@
 # Project Plan — Understudy Kingdom
 
-**Version:** 1.0 | **Status:** In development (6 milestones shipped) | **Last updated:** 2026-09-03
+**Version:** 1.0 | **Status:** In development (7 milestones shipped) | **Last updated:** 2026-09-03
 
 Assumptions: mobile client (Android + iOS), Unity/C# client, lightweight
 backend (Node.js + PostgreSQL), F2P with IAP, India-first launch market,
@@ -153,8 +153,12 @@ decisions:        id (UUID PK), kingdom_id (FK -> kingdoms), cycle_number (int),
                   player_recommendation (jsonb), ruler_outcome (jsonb),
                   overridden (bool), created_at
 
-councils:         id (UUID PK), name, ruler_alignment (enum)
-council_members:  council_id (FK -> councils), user_id (FK -> users), joined_at   -- many-to-many
+councils:         id (UUID PK), name, join_code (unique, 6-char), milestone_threshold (int,
+                  default 10), milestone_reached (bool), created_at
+council_members:  user_id (PK, FK -> users -- one council per user, DB-enforced),
+                  council_id (FK -> councils), joined_at, reward_eligible (bool)
+                  -- shipped design: join-by-code, not ruler_alignment matching;
+                  -- capped at 20 members; see docs/superpowers/specs/2026-09-03-council-social-design.md
 
 events:           id (UUID PK), name, start_at, end_at, f2p_reward_tier (jsonb),
                   premium_reward_tier (jsonb)
@@ -239,7 +243,7 @@ BL-04: Async PvP duels resolve via scenario scoring server-side; the client
 
 ## 8. Implementation Status
 
-Six milestones shipped end-to-end (brainstorm → spec → plan →
+Seven milestones shipped end-to-end (brainstorm → spec → plan →
 subagent-driven-development → final whole-branch review → fix → manual
 Play Mode checkpoint → merge to `main`), each covered by real Supabase +
 real local Postgres integration tests (no mocking):
@@ -252,12 +256,13 @@ real local Postgres integration tests (no mocking):
 | #4 Client-Backend Integration | `feat/client-backend-integration` | Wires client to `server/`; session bootstrap/refresh | Done |
 | #5 Async PvP | `feat/async-pvp` | FR-09 | Done |
 | #6 Relationship History Log | `feat/decision-history` | FR-06 | Done |
+| #7 Council / Social | `feat/council-social` | FR-07, FR-08 | Done |
 
 **FR status:** FR-01, FR-02 (loyalty/agenda-weighted, not mood — see FR-02
-note), FR-03, FR-04, FR-06, FR-09 implemented and live. FR-05 (templated
-ruler dialogue) implemented as part of milestones #1/#2/#5/#6's narration
-work. FR-07/FR-08 (council/social), FR-10 through FR-15 (live-ops,
-monetization, cosmetics, onboarding) not yet started.
+note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09 implemented and live. FR-05
+(templated ruler dialogue) implemented as part of milestones #1/#2/#5/#6's
+narration work. FR-10 through FR-15 (live-ops, monetization, cosmetics,
+onboarding) not yet started.
 
 **Known follow-up items, deliberately deferred (not bugs):**
 - Milestone #5's `defenderRulerSnapshot` is always the schema default
@@ -270,6 +275,20 @@ monetization, cosmetics, onboarding) not yet started.
   final review (I-4) and fixed post-merge (commit `b5dd265`): all three now
   funnel through one `EnsureFreshSession` chokepoint instead of racing
   independent `RefreshSession` calls.
+- Milestone #7's shipped `councils`/`council_members` schema (see §6) diverged
+  from this doc's original sketch during design: no `ruler_alignment` enum
+  (join-by-code instead of ruler-alignment matching), and `council_members`
+  gained `join_code`/`milestone_threshold`/`milestone_reached`/`reward_eligible`
+  columns the original sketch didn't anticipate. §6 below is updated to match
+  what shipped. No leave/rename/kick-member, no browsing UI, no repeating
+  rewards this pass — see
+  `docs/superpowers/specs/2026-09-03-council-social-design.md`.
+- Milestone #7's final review flagged a duel-in-flight request as sitting
+  outside the modal mutual-exclusion gate shared by the History and Council
+  panels (`DuelButtonController` only disables its own button, not the
+  shared gate) — a pre-existing gap from milestone #6, now duplicated by
+  Council. Real fix needs `DuelButtonController` to own a shared in-flight
+  flag the panels consult; deferred as larger than a single milestone.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
