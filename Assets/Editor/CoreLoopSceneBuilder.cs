@@ -298,7 +298,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, duelModalGate);
 
             var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
             tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);

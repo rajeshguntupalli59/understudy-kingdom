@@ -23,6 +23,7 @@ namespace UnderstudyKingdom.Tests
         private Button viewHistoryButton;
         private Button closeButton;
         private TextMeshProUGUI[] rowTexts;
+        private DuelModalGate gate;
 
         [SetUp]
         public void SetUp()
@@ -73,10 +74,12 @@ namespace UnderstudyKingdom.Tests
                 rowTexts[i] = rowObject.GetComponent<TextMeshProUGUI>();
             }
 
+            gate = new DuelModalGate();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, gate);
         }
 
         [TearDown]
@@ -129,6 +132,24 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(challengeButton.interactable);
             Assert.IsTrue(councilButton.interactable);
             Assert.IsFalse(panelRootObject.activeSelf);
+        }
+
+        [Test]
+        public void Close_WithDuelInFlight_LeavesChallengeButtonDisabled()
+        {
+            gate.IsDuelInFlight = true;
+
+            viewHistoryButton.onClick.Invoke();
+            closeButton.onClick.Invoke();
+
+            Assert.IsTrue(viewHistoryButton.interactable);
+            Assert.IsTrue(armySlider.interactable);
+            Assert.IsTrue(tradeSlider.interactable);
+            Assert.IsTrue(religionSlider.interactable);
+            Assert.IsTrue(submitButton.interactable);
+            Assert.IsTrue(councilButton.interactable);
+            Assert.IsFalse(challengeButton.interactable,
+                "closing History while a duel is still in flight must NOT re-enable Challenge -- this is the exact bug DuelModalGate fixes");
         }
 
         [Test]

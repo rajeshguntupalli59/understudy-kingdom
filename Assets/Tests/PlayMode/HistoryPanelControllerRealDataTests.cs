@@ -29,6 +29,7 @@ namespace UnderstudyKingdom.Tests
         private Button viewHistoryButton;
         private Button closeButton;
         private TextMeshProUGUI[] rowTexts;
+        private DuelModalGate gate;
 
         [UnitySetUp]
         public IEnumerator UnitySetUp()
@@ -102,10 +103,12 @@ namespace UnderstudyKingdom.Tests
                 rowTexts[i] = rowObject.GetComponent<TextMeshProUGUI>();
             }
 
+            gate = new DuelModalGate();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, gate);
         }
 
         [TearDown]
