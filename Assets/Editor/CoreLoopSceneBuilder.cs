@@ -177,7 +177,7 @@ namespace UnderstudyKingdom.EditorTools
             // text on the input fields below disappears the moment the
             // player starts typing.
             TextMeshProUGUI nameFieldLabel = CreateLabel(notInCouncilViewObject.transform, "NameFieldLabel", 0f, "Council Name");
-            nameFieldLabel.fontSize = 18f;
+            nameFieldLabel.fontSize = 24f;
             nameFieldLabel.alignment = TextAlignmentOptions.Left;
             var nameFieldLabelRect = nameFieldLabel.GetComponent<RectTransform>();
             nameFieldLabelRect.anchoredPosition = new Vector2(0f, 215f);
@@ -201,7 +201,7 @@ namespace UnderstudyKingdom.EditorTools
             createButtonLabelRect.anchoredPosition = Vector2.zero;
 
             TextMeshProUGUI joinCodeFieldLabel = CreateLabel(notInCouncilViewObject.transform, "JoinCodeFieldLabel", 0f, "Join Code");
-            joinCodeFieldLabel.fontSize = 18f;
+            joinCodeFieldLabel.fontSize = 24f;
             joinCodeFieldLabel.alignment = TextAlignmentOptions.Left;
             var joinCodeFieldLabelRect = joinCodeFieldLabel.GetComponent<RectTransform>();
             joinCodeFieldLabelRect.anchoredPosition = new Vector2(0f, 35f);
@@ -481,7 +481,7 @@ namespace UnderstudyKingdom.EditorTools
             placeholderRect.sizeDelta = Vector2.zero;
             var placeholder = placeholderObject.GetComponent<TextMeshProUGUI>();
             placeholder.text = placeholderText;
-            placeholder.fontSize = 22f;
+            placeholder.fontSize = 24f;
             placeholder.color = new Color(0.5f, 0.5f, 0.5f, 1f);
             placeholder.alignment = TextAlignmentOptions.MidlineLeft;
 
@@ -492,7 +492,7 @@ namespace UnderstudyKingdom.EditorTools
             textRect.anchorMax = Vector2.one;
             textRect.sizeDelta = Vector2.zero;
             var text = textObject.GetComponent<TextMeshProUGUI>();
-            text.fontSize = 22f;
+            text.fontSize = 24f;
             text.color = Color.black;
             text.alignment = TextAlignmentOptions.MidlineLeft;
 
