@@ -512,15 +512,35 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
-        public void TutorialAlreadyCompleted_StaysHiddenAndLeavesControlsUntouched()
+        public void TutorialAlreadyCompleted_ReenablesControlsThatWereDisabledInTheScene()
         {
             BuildScene();
             ruler.State.TutorialCompleted = true;
+
+            // Mirrors the committed CoreLoop scene: CoreLoopSceneBuilder.Build()
+            // calls Initialize() at edit time against a fresh RulerState, which
+            // disables these controls and serializes that disabled state into
+            // the scene asset. Establish that same precondition here so this
+            // test actually proves the completed-path re-enables them at
+            // runtime, instead of trivially passing because Unity UI controls
+            // default to interactable == true.
+            armySlider.interactable = false;
+            tradeSlider.interactable = false;
+            religionSlider.interactable = false;
+            submitButton.interactable = false;
+            challengeButton.interactable = false;
+            viewHistoryButton.interactable = false;
+            councilButton.interactable = false;
+
             Initialize();
 
             Assert.IsFalse(panelRootObject.activeSelf);
             Assert.IsTrue(armySlider.interactable);
+            Assert.IsTrue(tradeSlider.interactable);
+            Assert.IsTrue(religionSlider.interactable);
             Assert.IsTrue(submitButton.interactable);
+            Assert.IsTrue(challengeButton.interactable);
+            Assert.IsTrue(viewHistoryButton.interactable);
             Assert.IsTrue(councilButton.interactable);
         }
 
