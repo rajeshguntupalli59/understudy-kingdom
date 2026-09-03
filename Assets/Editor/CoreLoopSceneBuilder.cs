@@ -315,7 +315,7 @@ namespace UnderstudyKingdom.EditorTools
             tutorialBoxObject.GetComponent<Image>().color = new Color(0.15f, 0.15f, 0.2f, 1f);
 
             TextMeshProUGUI tutorialStepIndicatorLabel = CreateLabel(tutorialBoxObject.transform, "StepIndicatorLabel", 0f, "Step 1 of 4");
-            tutorialStepIndicatorLabel.fontSize = 20f;
+            tutorialStepIndicatorLabel.fontSize = 24f;
             tutorialStepIndicatorLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 210f);
 
             TextMeshProUGUI tutorialTitleLabel = CreateLabel(tutorialBoxObject.transform, "TitleLabel", 0f, string.Empty);
@@ -323,6 +323,10 @@ namespace UnderstudyKingdom.EditorTools
             tutorialTitleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 160f);
 
             TextMeshProUGUI tutorialBodyLabel = CreateLabel(tutorialBoxObject.transform, "BodyLabel", 0f, string.Empty);
+            // Left-aligned, not CreateLabel's Center default -- multi-line
+            // wrapped paragraph text reads noticeably worse center-aligned
+            // (ragged, uneven line starts) than a short single-line label does.
+            tutorialBodyLabel.alignment = TextAlignmentOptions.Left;
             var tutorialBodyLabelRect = tutorialBodyLabel.GetComponent<RectTransform>();
             tutorialBodyLabelRect.anchoredPosition = new Vector2(0f, 20f);
             tutorialBodyLabelRect.sizeDelta = new Vector2(520f, 200f);
@@ -514,6 +518,16 @@ namespace UnderstudyKingdom.EditorTools
             return slider;
         }
 
+        // RULE, established after 3 separate readability bugs (milestones #6, #7,
+        // #8) all caught only by manual Play Mode testing, never by automated
+        // review: every label in this scene defaults to 24pt (this method's own
+        // fontSize below). Never override it smaller "just for this one small
+        // label" -- 18-22pt has repeatedly looked fine in isolation while
+        // reading noticeably worse than everything around it once rendered for
+        // real. Only 28pt (panel/section titles) is an established, deliberate
+        // exception to the 24pt default. If a new label genuinely needs a
+        // different size, say so explicitly in a comment at the override site,
+        // the way this one does -- don't silently drop below 24.
         private static TextMeshProUGUI CreateLabel(Transform parent, string name, float yOffset, string text)
         {
             var labelObject = new GameObject(name, typeof(TextMeshProUGUI));
