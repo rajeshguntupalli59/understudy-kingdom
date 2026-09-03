@@ -61,3 +61,31 @@ export const pvpDuels = pgTable('pvp_duels', {
   overridden: boolean('overridden').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// council_members.userId has no DB-level FK to Supabase's own auth.users --
+// same reasoning as kingdoms.userId (see the comment above that table): this
+// project doesn't own or migrate Supabase's auth schema.
+export const councils = pgTable('councils', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  joinCode: text('join_code').notNull().unique(),
+  milestoneThreshold: integer('milestone_threshold').notNull().default(10),
+  milestoneReached: boolean('milestone_reached').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// userId is this table's own primary key -- not a separate uuid id column --
+// which is what makes "one council per user" a DB-enforced invariant rather
+// than an application-level check: a second INSERT for the same userId can
+// never succeed. rewardEligible is set true for every CURRENT member the
+// moment the council's milestone_reached flips to true (see decisions.ts);
+// anyone who joins afterward keeps it false forever -- see
+// docs/superpowers/specs/2026-09-03-council-social-design.md.
+export const councilMembers = pgTable('council_members', {
+  userId: uuid('user_id').primaryKey(),
+  councilId: uuid('council_id')
+    .notNull()
+    .references(() => councils.id),
+  joinedAt: timestamp('joined_at', { withTimezone: true }).notNull().defaultNow(),
+  rewardEligible: boolean('reward_eligible').notNull().default(false),
+});
