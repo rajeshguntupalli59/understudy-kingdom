@@ -298,5 +298,32 @@ namespace UnderstudyKingdom.Backend
 
             apiClient.GetDecisionHistory(currentSession.AccessToken, limit, onSuccess, onError);
         }
+
+        /// <summary>
+        /// Unlike RequestDuel/RequestHistory, council endpoints never look up
+        /// a kingdom server-side (see server/src/routes/councils.ts) -- only
+        /// session freshness matters here, so there is no kingdomReady gate
+        /// or retry branch to mirror.
+        /// </summary>
+        public void RequestCreateCouncil(string name, Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            EnsureFreshSession(
+                onReady: () => apiClient.CreateCouncil(currentSession.AccessToken, name, onSuccess, onError),
+                onError: onError);
+        }
+
+        public void RequestJoinCouncil(string joinCode, Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            EnsureFreshSession(
+                onReady: () => apiClient.JoinCouncil(currentSession.AccessToken, joinCode, onSuccess, onError),
+                onError: onError);
+        }
+
+        public void RequestCouncilStatus(Action<CouncilResponse> onSuccess, Action<string> onError)
+        {
+            EnsureFreshSession(
+                onReady: () => apiClient.GetCouncilStatus(currentSession.AccessToken, onSuccess, onError),
+                onError: onError);
+        }
     }
 }
