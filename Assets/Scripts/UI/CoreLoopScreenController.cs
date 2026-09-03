@@ -111,7 +111,7 @@ namespace UnderstudyKingdom.UI
             RefreshStatusLabels();
         }
 
-        private void RefreshStatusLabels()
+        public void RefreshStatusLabels()
         {
             moodLabel.text = $"Mood: {manager.Ruler.State.Mood}";
             loyaltyLabel.text = $"Loyalty: {manager.Ruler.State.Loyalty}";
