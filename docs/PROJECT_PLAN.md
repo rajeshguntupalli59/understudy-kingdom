@@ -258,14 +258,20 @@ real local Postgres integration tests (no mocking):
 | #6 Relationship History Log | `feat/decision-history` | FR-06 | Done |
 | #7 Council / Social | `feat/council-social` | FR-07, FR-08 | Done |
 | #8 Onboarding Tutorial | `feat/onboarding-tutorial` | FR-13 | Done |
+| #10 Live-Ops Events | `feat/live-ops-events` | FR-10, FR-11 (narrowed) | Done |
 
 **FR status:** FR-01, FR-02 (loyalty/agenda-weighted, not mood — see FR-02
-note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09, FR-13 implemented and live.
-FR-05 (templated ruler dialogue) implemented as part of milestones
-#1/#2/#5/#6's narration work. FR-13's "before any monetization prompt"
-gating is currently vacuous (FR-14/FR-15 don't exist yet — nothing to gate
-against); revisit once they land. FR-10 through FR-12, FR-14, FR-15
-(live-ops, cosmetics, monetization guardrails) not yet started.
+note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09, FR-10, FR-11 (narrowed —
+see below), FR-13 implemented and live. FR-05 (templated ruler dialogue)
+implemented as part of milestones #1/#2/#5/#6's narration work. FR-13's
+"before any monetization prompt" gating is currently vacuous (FR-14/FR-15
+don't exist yet — nothing to gate against); revisit once they land. FR-11
+shipped narrowed to a single, unconditionally F2P-completable reward per
+event — the "premium spend unlocks cosmetic/time-skip rewards" clause is
+deliberately deferred, since no currency/IAP system exists yet to attach a
+premium tier to; see
+`docs/superpowers/specs/2026-09-03-live-ops-events-design.md`. FR-12,
+FR-14, FR-15 (cosmetics, monetization guardrails) not yet started.
 
 **Known follow-up items, deliberately deferred (not bugs):**
 - Milestone #5's `defenderRulerSnapshot` is always the schema default
@@ -302,6 +308,15 @@ against); revisit once they land. FR-10 through FR-12, FR-14, FR-15
   show up as a diff-level defect. Fixed, and a permanent rule comment was
   added directly above `CreateLabel()` in `CoreLoopSceneBuilder.cs` so every
   future label call site carries an explicit floor to check against.
+- Milestone #10's FR-11 shipped with the premium/IAP reward tier
+  deliberately deferred — no currency/IAP system exists yet to attach a
+  premium tier to; see
+  `docs/superpowers/specs/2026-09-03-live-ops-events-design.md`.
+- Milestone #10's `EventPanelController` is not `DuelModalGate`-aware —
+  it doesn't consult the shared duel-in-flight/modal-open gate that
+  History/Council already do (milestone #9), because `feat/live-ops-events`
+  branched before milestone #9 merged. Needs `DuelModalGate` threaded into
+  `EventPanelController` once milestone #9 merges.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
