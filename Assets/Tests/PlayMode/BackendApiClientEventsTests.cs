@@ -57,8 +57,9 @@ namespace UnderstudyKingdom.Tests
         [UnityTest]
         public IEnumerator GetActiveEvent_AfterKingdomCreated_ReturnsWellFormedResult()
         {
-            apiClient.EnsureKingdom(jwt, () => { }, err => Assert.Fail($"EnsureKingdom failed: {err}"));
-            yield return new WaitForSeconds(1f);
+            bool kingdomReady = false;
+            apiClient.EnsureKingdom(jwt, () => kingdomReady = true, err => Assert.Fail($"EnsureKingdom failed: {err}"));
+            yield return new WaitUntil(() => kingdomReady);
 
             EventResponse result = null;
             string error = null;
