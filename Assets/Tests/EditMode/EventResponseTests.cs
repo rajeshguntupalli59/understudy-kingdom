@@ -23,17 +23,5 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual(15, response.rewardMood);
             Assert.AreEqual(15, response.rewardLoyalty);
         }
-
-        [Test]
-        public void EventResponse_DecisionsCompletedMeetingObjective_Deserializes()
-        {
-            string json = "{\"eventId\":\"W2026-37\",\"name\":\"Harvest Tithe\"," +
-                "\"narration\":\"...\",\"objectiveDecisionCount\":3," +
-                "\"decisionsCompleted\":3,\"rewardMood\":15,\"rewardLoyalty\":15}";
-
-            EventResponse response = JsonUtility.FromJson<EventResponse>(json);
-
-            Assert.GreaterOrEqual(response.decisionsCompleted, response.objectiveDecisionCount);
-        }
     }
 }

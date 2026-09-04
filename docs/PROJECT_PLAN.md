@@ -260,6 +260,11 @@ real local Postgres integration tests (no mocking):
 | #8 Onboarding Tutorial | `feat/onboarding-tutorial` | FR-13 | Done |
 | #10 Live-Ops Events | `feat/live-ops-events` | FR-10, FR-11 (narrowed) | Done |
 
+*(No #9 row: milestone #9, Duel/Modal Gate Fix, is implemented on
+`feat/duel-modal-gate`, pending a manual playtest, and not yet merged —
+hence no row here yet, despite "Known follow-up items" below already
+referencing "once milestone #9 merges.")*
+
 **FR status:** FR-01, FR-02 (loyalty/agenda-weighted, not mood — see FR-02
 note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09, FR-10, FR-11 (narrowed —
 see below), FR-13 implemented and live. FR-05 (templated ruler dialogue)
@@ -317,6 +322,18 @@ FR-14, FR-15 (cosmetics, monetization guardrails) not yet started.
   History/Council already do (milestone #9), because `feat/live-ops-events`
   branched before milestone #9 merged. Needs `DuelModalGate` threaded into
   `EventPanelController` once milestone #9 merges.
+- Milestone #10's final whole-branch review caught a critical bug (C-1):
+  `DecisionCycleManager`'s cycle counter was pure in-memory state that reset
+  to 0 on every relaunch while the player's kingdom/decisions persisted
+  server-side, so a returning player's submissions silently collided with
+  cycle numbers already used and were dropped (server's
+  `onConflictDoNothing`) -- live-ops event progress could never advance past
+  a player's first-ever session. Fixed: the counter is now self-healing via
+  a server round-trip (`GET /api/v1/decisions?limit=1`) on session
+  bootstrap, seeding the counter up to the highest known server cycle
+  (never backward). Not purely local anymore. Any player with an
+  out-of-sync install from before this fix self-heals automatically on
+  their next launch once this ships.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger

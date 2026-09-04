@@ -93,7 +93,33 @@ namespace UnderstudyKingdom.Backend
         private void OnSessionReady()
         {
             apiClient.EnsureKingdom(currentSession.AccessToken,
-                onSuccess: () => { kingdomReady = true; },
+                onSuccess: () =>
+                {
+                    kingdomReady = true;
+
+                    // Self-heals C-1 (milestone #10 final review): currentCycleNumber
+                    // is in-memory only and resets to 0 every relaunch, but the
+                    // player's decisions persist server-side under the same kingdom --
+                    // without this, a returning player's first submission collides
+                    // with a cycle_number already used and is silently dropped
+                    // (server's onConflictDoNothing). Fire-and-forget like every other
+                    // sync call in this file: never blocks Submit/UI. A player who
+                    // submits before this resolves may get one dropped/unsynced
+                    // decision that first session after restart -- already-logged,
+                    // already-tolerated, same as every other failure mode here.
+                    if (DecisionCycleManager != null)
+                    {
+                        apiClient.GetDecisionHistory(currentSession.AccessToken, 1,
+                            onSuccess: entries =>
+                            {
+                                if (entries.Length > 0)
+                                {
+                                    DecisionCycleManager.SeedCycleNumberIfHigher(entries[0].cycleNumber);
+                                }
+                            },
+                            onError: err => Debug.LogWarning($"BackendSyncCoordinator: cycle-number seed fetch failed, will resync on next attempt: {err}"));
+                    }
+                },
                 onError: err => Debug.LogWarning($"BackendSyncCoordinator: EnsureKingdom failed: {err}"));
 
             if (DecisionCycleManager != null)

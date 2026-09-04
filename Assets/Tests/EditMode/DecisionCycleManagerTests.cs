@@ -155,5 +155,39 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual(55, captured.Value.Mood);
             Assert.AreEqual(83, captured.Value.Loyalty);
         }
+
+        [Test]
+        public void SeedCycleNumberIfHigher_HigherThanCurrent_TakesEffect()
+        {
+            DecisionRecord? captured = null;
+            manager.OnDecisionRecorded += record => captured = record;
+
+            manager.SeedCycleNumberIfHigher(9);
+
+            var allocation = new ResourceAllocation(20, 60, 20); // aligned with Mercantile
+            manager.SubmitRecommendation(allocation, roll: 0.99); // low probability (clamped), no override
+
+            Assert.IsTrue(captured.HasValue);
+            Assert.AreEqual(10, captured.Value.CycleNumber);
+        }
+
+        [Test]
+        public void SeedCycleNumberIfHigher_LowerThanCurrent_IsNoOp()
+        {
+            var allocation = new ResourceAllocation(20, 60, 20); // aligned with Mercantile
+
+            // Advance the counter to 1 first via a real submission.
+            manager.SubmitRecommendation(allocation, roll: 0.99);
+
+            // Attempt to seed backward -- must not affect the counter.
+            manager.SeedCycleNumberIfHigher(0);
+
+            DecisionRecord? captured = null;
+            manager.OnDecisionRecorded += record => captured = record;
+            manager.SubmitRecommendation(allocation, roll: 0.99);
+
+            Assert.IsTrue(captured.HasValue);
+            Assert.AreEqual(2, captured.Value.CycleNumber);
+        }
     }
 }
