@@ -92,6 +92,46 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void SaveThenLoad_RoundTripsClaimedEventWeekId()
+        {
+            var original = new RulerState { Mood = 55, Loyalty = 55, Agenda = RulerState.AgendaType.Expansionist, ClaimedEventWeekId = "W2026-37" };
+
+            SaveService.Save(original);
+            var loaded = SaveService.Load();
+
+            Assert.AreEqual("W2026-37", loaded.ClaimedEventWeekId);
+        }
+
+        [Test]
+        public void Load_NoSaveFile_ClaimedEventWeekIdDefaultsToEmptyString()
+        {
+            if (File.Exists(SaveService.SavePath))
+            {
+                File.Delete(SaveService.SavePath);
+            }
+
+            var state = SaveService.Load();
+
+            Assert.AreEqual(string.Empty, state.ClaimedEventWeekId);
+        }
+
+        [Test]
+        public void Load_SaveFileMissingClaimedEventWeekId_DefaultsToEmptyStringNotNull()
+        {
+            // Simulates a save file written before this milestone shipped --
+            // RulerSaveData's ClaimedEventWeekId field is left at its C#
+            // default (null) since it's never explicitly set here, matching
+            // how a real pre-milestone-10 save would deserialize.
+            var preMilestone10Save = new RulerSaveData { Mood = 50, Loyalty = 50, Agenda = 0 };
+            System.IO.File.WriteAllText(SaveService.SavePath, UnityEngine.JsonUtility.ToJson(preMilestone10Save));
+
+            var state = SaveService.Load();
+
+            Assert.AreEqual(string.Empty, state.ClaimedEventWeekId);
+            Assert.IsNotNull(state.ClaimedEventWeekId);
+        }
+
+        [Test]
         public void Load_CorruptFile_ReturnsDefaultState()
         {
             File.WriteAllText(SaveService.SavePath, "not valid json {{{");

@@ -34,6 +34,16 @@ namespace UnderstudyKingdom.Npc
         // docs/superpowers/specs/2026-09-03-onboarding-tutorial-design.md.
         public bool TutorialCompleted = false;
 
+        // Id (format "W<isoWeekYear>-<isoWeek>") of the live-ops event whose
+        // reward has already been applied to THIS player's ruler -- compared
+        // against the CURRENT active event's id so the reward is granted
+        // once per real calendar week, even though the rotating event
+        // list's content repeats every EVENTS.length weeks. Empty string
+        // (never null -- sidesteps JsonUtility's string-null serialization
+        // quirks) means "nothing claimed yet." See
+        // docs/superpowers/specs/2026-09-03-live-ops-events-design.md.
+        public string ClaimedEventWeekId = string.Empty;
+
         public void ApplyDelta(int moodDelta, int loyaltyDelta)
         {
             Mood = Clamp(Mood + moodDelta);
