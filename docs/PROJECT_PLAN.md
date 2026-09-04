@@ -330,10 +330,32 @@ FR-14, FR-15 (cosmetics, monetization guardrails) not yet started.
   `onConflictDoNothing`) -- live-ops event progress could never advance past
   a player's first-ever session. Fixed: the counter is now self-healing via
   a server round-trip (`GET /api/v1/decisions?limit=1`) on session
-  bootstrap, seeding the counter up to the highest known server cycle
-  (never backward). Not purely local anymore. Any player with an
-  out-of-sync install from before this fix self-heals automatically on
-  their next launch once this ships.
+  bootstrap, seeding the counter up to the most recently *inserted*
+  server decision's cycle number (never backward). Not purely local
+  anymore. Any player with an out-of-sync install from before this fix
+  self-heals automatically on their next launch once this ships.
+- The C-1 fix's re-review found 4 non-blocking Low/informational
+  follow-ups, none of which weaken the fix itself: (N-1) the seed reads
+  the newest-by-`created_at` decision rather than `MAX(cycle_number)` --
+  these coincide under normal sequential play, but could theoretically
+  diverge under a rare double-refresh-callback race
+  (`DrainPendingRefreshCallbacks` firing two queued syncs back-to-back),
+  landing the seed one cycle low; same silent-drop failure class as C-1
+  itself, narrow and self-recovering (one dropped decision, corrected on
+  the next launch) but worth switching to an explicit
+  `ORDER BY cycle_number DESC` / `MAX(cycle_number)` query before this
+  sees meaningful player traffic. (N-2) the seed fetch is bootstrap-only
+  with no in-session retry if `EnsureKingdom` fails at launch (unlike the
+  duel/history/event request paths, which do retry via
+  `EnsureKingdomThenSend*`); its own log message ("will resync on next
+  attempt") is misleading since the only next attempt is the next app
+  launch. (N-3) the new regression test
+  (`DecisionCycleManagerSessionResumeTests`) relies on prior test
+  fixtures' teardown for session isolation rather than calling
+  `SessionStore.Clear()` itself at setup. (N-4) a fixed
+  `WaitForSeconds(3f)` for two sequential real round-trips is a latent
+  flake source under a slow network, matching this project's existing
+  convention for real-data test fixtures elsewhere.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
