@@ -325,5 +325,35 @@ namespace UnderstudyKingdom.Backend
                 onReady: () => apiClient.GetCouncilStatus(currentSession.AccessToken, onSuccess, onError),
                 onError: onError);
         }
+
+        /// <summary>
+        /// Mirrors RequestHistory's structure: refresh-if-needed via the
+        /// shared EnsureFreshSession, then the shared kingdomReady gate,
+        /// then the send -- like Duel/History (unlike councils), this
+        /// endpoint needs kingdomId server-side to compute progress.
+        /// </summary>
+        public void RequestActiveEvent(Action<EventResponse> onSuccess, Action<string> onError)
+        {
+            EnsureFreshSession(
+                onReady: () => EnsureKingdomThenSendActiveEvent(onSuccess, onError),
+                onError: onError);
+        }
+
+        private void EnsureKingdomThenSendActiveEvent(Action<EventResponse> onSuccess, Action<string> onError)
+        {
+            if (!kingdomReady)
+            {
+                apiClient.EnsureKingdom(currentSession.AccessToken,
+                    onSuccess: () =>
+                    {
+                        kingdomReady = true;
+                        apiClient.GetActiveEvent(currentSession.AccessToken, onSuccess, onError);
+                    },
+                    onError: err => onError?.Invoke($"Your kingdom isn't ready yet: {err}"));
+                return;
+            }
+
+            apiClient.GetActiveEvent(currentSession.AccessToken, onSuccess, onError);
+        }
     }
 }
