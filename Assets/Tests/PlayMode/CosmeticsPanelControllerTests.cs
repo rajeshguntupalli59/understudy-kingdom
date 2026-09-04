@@ -188,8 +188,8 @@ namespace UnderstudyKingdom.Tests
             Assert.IsFalse(applyButtons[1].interactable, "Council should be locked on a fresh RulerState");
             Assert.IsFalse(applyButtons[2].interactable, "Event should be locked on a fresh RulerState");
             StringAssert.Contains("Default", statusLabels[0].text);
-            StringAssert.Contains("Council", statusLabels[1].text);
-            StringAssert.Contains("Event", statusLabels[2].text);
+            StringAssert.Contains("Council Chamber", statusLabels[1].text);
+            StringAssert.Contains("Harvest Hall", statusLabels[2].text);
         }
 
         [Test]
@@ -249,6 +249,9 @@ namespace UnderstudyKingdom.Tests
         public void ApplyTheme_NeverChangesMoodLoyaltyOrAgenda()
         {
             ruler.State.CouncilRewardApplied = true;
+            ruler.State.Mood = 73;
+            ruler.State.Loyalty = 17;
+            ruler.State.Agenda = RulerState.AgendaType.Pious;
             int moodBefore = ruler.State.Mood;
             int loyaltyBefore = ruler.State.Loyalty;
             RulerState.AgendaType agendaBefore = ruler.State.Agenda;

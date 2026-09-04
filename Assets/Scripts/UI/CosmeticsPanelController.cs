@@ -46,7 +46,7 @@ namespace UnderstudyKingdom.UI
             new ThemeDefinition
             {
                 Id = "Event",
-                DisplayName = "Harvest Event",
+                DisplayName = "Harvest Hall",
                 PanelColor = new Color(0.16f, 0.13f, 0.04f, 0.95f),
                 LockedDescription = "Unlocks once you claim a live-ops event reward"
             }
@@ -127,7 +127,7 @@ namespace UnderstudyKingdom.UI
             closeButton.onClick.RemoveAllListeners();
             closeButton.onClick.AddListener(OnClose);
 
-            for (int i = 0; i < applyButtons.Length; i++)
+            for (int i = 0; i < Themes.Length; i++)
             {
                 int themeIndex = i; // capture by value, not the loop variable
                 applyButtons[i].onClick.RemoveAllListeners();
