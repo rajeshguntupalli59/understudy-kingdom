@@ -69,11 +69,14 @@ Applying a theme:
 2. Sets `manager.Ruler.State.SelectedTheme` to the theme's id.
 3. `SaveService.Save(manager.Ruler.State)`.
 
-On panel open (and once at scene `Start()`, so a relaunch shows the
-previously-selected theme immediately rather than the default), the
-currently-saved `SelectedTheme` is re-applied to all three panels — this
-is the only place theme application happens outside an explicit tap, and
-it runs unconditionally (a `SelectedTheme` a player is no longer eligible
+Once at scene `Start()` (so a relaunch shows the previously-selected
+theme immediately rather than the default), the currently-saved
+`SelectedTheme` is re-applied to all three panels — this is the only
+place theme application happens outside an explicit tap (opening the
+panel itself only renders the picker's locked/unlocked state, it doesn't
+re-apply the theme, since the theme can only ever change via an explicit
+tap and is already applied the moment it does), and it runs
+unconditionally (a `SelectedTheme` a player is no longer eligible
 for, e.g. an edited save file, silently falls back to Default rather than
 erroring — the client trusts its own local flags, matching this
 project's client-authoritative design for every other reward in this

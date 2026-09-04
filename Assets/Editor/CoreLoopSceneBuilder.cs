@@ -154,6 +154,20 @@ namespace UnderstudyKingdom.EditorTools
             eventsButtonLabelRect.sizeDelta = Vector2.zero;
             eventsButtonLabelRect.anchoredPosition = Vector2.zero;
 
+            var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
+            customizeButtonObject.transform.SetParent(canvasObject.transform, false);
+            var customizeButtonRect = customizeButtonObject.GetComponent<RectTransform>();
+            customizeButtonRect.anchoredPosition = new Vector2(0f, -780f);
+            customizeButtonRect.sizeDelta = new Vector2(220f, 44f);
+            customizeButtonObject.GetComponent<Image>().color = new Color(0.45f, 0.45f, 0.5f, 1f);
+            var customizeButton = customizeButtonObject.GetComponent<Button>();
+            TextMeshProUGUI customizeButtonLabel = CreateLabel(customizeButtonObject.transform, "Text", 0f, "Customize");
+            var customizeButtonLabelRect = customizeButtonLabel.GetComponent<RectTransform>();
+            customizeButtonLabelRect.anchorMin = Vector2.zero;
+            customizeButtonLabelRect.anchorMax = Vector2.one;
+            customizeButtonLabelRect.sizeDelta = Vector2.zero;
+            customizeButtonLabelRect.anchoredPosition = Vector2.zero;
+
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
             var eventPanelRect = eventPanelRootObject.GetComponent<RectTransform>();
@@ -218,7 +232,7 @@ namespace UnderstudyKingdom.EditorTools
             var eventController = eventControllerObject.AddComponent<EventPanelController>();
             eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
                 eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -330,7 +344,7 @@ namespace UnderstudyKingdom.EditorTools
                 nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
                 councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
                 backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton);
 
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -376,7 +390,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton);
 
             var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
             tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);
@@ -443,7 +457,7 @@ namespace UnderstudyKingdom.EditorTools
             var tutorialController = tutorialControllerObject.AddComponent<TutorialOverlayController>();
             tutorialController.Initialize(tutorialOverlayObject, tutorialStepIndicatorLabel, tutorialTitleLabel, tutorialBodyLabel,
                 tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 

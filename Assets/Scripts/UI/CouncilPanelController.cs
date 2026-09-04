@@ -47,6 +47,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button challengeButton;
         [SerializeField] private Button viewHistoryButton;
         [SerializeField] private Button eventsButton;
+        [SerializeField] private Button customizeButton;
 
         private void Start()
         {
@@ -83,7 +84,8 @@ namespace UnderstudyKingdom.UI
             Button submitButton,
             Button challengeButton,
             Button viewHistoryButton,
-            Button eventsButton)
+            Button eventsButton,
+            Button customizeButton)
         {
             this.councilButton = councilButton;
             this.panelRoot = panelRoot;
@@ -110,6 +112,7 @@ namespace UnderstudyKingdom.UI
             this.challengeButton = challengeButton;
             this.viewHistoryButton = viewHistoryButton;
             this.eventsButton = eventsButton;
+            this.customizeButton = customizeButton;
 
             Bind();
         }
@@ -250,6 +253,7 @@ namespace UnderstudyKingdom.UI
             submitButton.interactable = interactable;
             challengeButton.interactable = interactable;
             eventsButton.interactable = interactable;
+            customizeButton.interactable = interactable;
         }
     }
 }

@@ -91,6 +91,10 @@ namespace UnderstudyKingdom.Tests
             eventsButtonObject.transform.SetParent(canvasObject.transform, false);
             var eventsButton = eventsButtonObject.GetComponent<Button>();
 
+            var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
+            customizeButtonObject.transform.SetParent(canvasObject.transform, false);
+            var customizeButton = customizeButtonObject.GetComponent<Button>();
+
             panelRootObject = new GameObject("PanelRoot");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
 
@@ -109,7 +113,7 @@ namespace UnderstudyKingdom.Tests
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton);
         }
 
         [TearDown]
