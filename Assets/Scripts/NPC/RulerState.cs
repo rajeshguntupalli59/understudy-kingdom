@@ -44,6 +44,14 @@ namespace UnderstudyKingdom.Npc
         // docs/superpowers/specs/2026-09-03-live-ops-events-design.md.
         public string ClaimedEventWeekId = string.Empty;
 
+        // Id of the currently-selected cosmetic panel-background theme
+        // ("Default", "Council", or "Event"). Empty/unrecognized values
+        // resolve to Default's color at application time -- see
+        // CosmeticsPanelController.GetThemeColor. Never null (same
+        // rationale as ClaimedEventWeekId). See
+        // docs/superpowers/specs/2026-09-04-cosmetics-customization-design.md.
+        public string SelectedTheme = "Default";
+
         public void ApplyDelta(int moodDelta, int loyaltyDelta)
         {
             Mood = Clamp(Mood + moodDelta);

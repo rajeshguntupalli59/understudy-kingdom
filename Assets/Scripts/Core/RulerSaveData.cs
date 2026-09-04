@@ -24,5 +24,6 @@ namespace UnderstudyKingdom.Core
         public bool CouncilRewardApplied;
         public bool TutorialCompleted;
         public string ClaimedEventWeekId;
+        public string SelectedTheme;
     }
 }

@@ -138,6 +138,50 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void SaveThenLoad_RoundTripsSelectedTheme()
+        {
+            var original = new RulerState { Mood = 55, Loyalty = 55, Agenda = RulerState.AgendaType.Expansionist, SelectedTheme = "Council" };
+
+            SaveService.Save(original);
+            var loaded = SaveService.Load();
+
+            Assert.AreEqual("Council", loaded.SelectedTheme);
+        }
+
+        [Test]
+        public void Load_NoSaveFile_SelectedThemeDefaultsToDefault()
+        {
+            if (File.Exists(SaveService.SavePath))
+            {
+                File.Delete(SaveService.SavePath);
+            }
+
+            var state = SaveService.Load();
+
+            Assert.AreEqual("Default", state.SelectedTheme);
+        }
+
+        [Test]
+        public void Load_SaveFileMissingSelectedTheme_DefaultsToDefaultNotNull()
+        {
+            // Simulates a save file written before this milestone shipped --
+            // literal JSON with no "SelectedTheme" key at all. As established
+            // by ClaimedEventWeekId's identical test (see the comment there),
+            // building this via JsonUtility.ToJson on a RulerSaveData with the
+            // field left at its C# default (null) does NOT reproduce this --
+            // Unity's JsonUtility serializes a null string field as an empty
+            // string VALUE with the key still present, never a genuinely
+            // missing key. Writing the JSON text directly guarantees the key
+            // is absent, matching a real pre-milestone-11 save.
+            System.IO.File.WriteAllText(SaveService.SavePath, "{\"Mood\":50,\"Loyalty\":50,\"Agenda\":0}");
+
+            var state = SaveService.Load();
+
+            Assert.AreEqual("Default", state.SelectedTheme);
+            Assert.IsNotNull(state.SelectedTheme);
+        }
+
+        [Test]
         public void Load_CorruptFile_ReturnsDefaultState()
         {
             File.WriteAllText(SaveService.SavePath, "not valid json {{{");
