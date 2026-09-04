@@ -140,23 +140,85 @@ namespace UnderstudyKingdom.EditorTools
             councilButtonLabelRect.sizeDelta = Vector2.zero;
             councilButtonLabelRect.anchoredPosition = Vector2.zero;
 
-            // Placeholder wiring only: satisfies History/Council/Tutorial's new
-            // eventsButton Initialize parameter (Task 8) so this builder keeps
-            // compiling. Task 9 owns the real Events button placement, styling,
-            // and EventPanelController wiring.
             var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
             eventsButtonObject.transform.SetParent(canvasObject.transform, false);
             var eventsButtonRect = eventsButtonObject.GetComponent<RectTransform>();
             eventsButtonRect.anchoredPosition = new Vector2(0f, -720f);
             eventsButtonRect.sizeDelta = new Vector2(220f, 44f);
-            eventsButtonObject.GetComponent<Image>().color = new Color(0.7f, 0.55f, 0.2f, 1f);
+            eventsButtonObject.GetComponent<Image>().color = new Color(0.65f, 0.55f, 0.25f, 1f);
             var eventsButton = eventsButtonObject.GetComponent<Button>();
-            TextMeshProUGUI eventsButtonLabel = CreateLabel(eventsButtonObject.transform, "Text", 0f, "Events");
+            TextMeshProUGUI eventsButtonLabel = CreateLabel(eventsButtonObject.transform, "Text", 0f, "This Week's Event");
             var eventsButtonLabelRect = eventsButtonLabel.GetComponent<RectTransform>();
             eventsButtonLabelRect.anchorMin = Vector2.zero;
             eventsButtonLabelRect.anchorMax = Vector2.one;
             eventsButtonLabelRect.sizeDelta = Vector2.zero;
             eventsButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
+            eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
+            var eventPanelRect = eventPanelRootObject.GetComponent<RectTransform>();
+            eventPanelRect.anchoredPosition = Vector2.zero;
+            eventPanelRect.sizeDelta = new Vector2(700f, 800f);
+            eventPanelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+
+            var eventCloseButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
+            eventCloseButtonObject.transform.SetParent(eventPanelRootObject.transform, false);
+            var eventCloseButtonRect = eventCloseButtonObject.GetComponent<RectTransform>();
+            eventCloseButtonRect.anchoredPosition = new Vector2(310f, 360f);
+            // 44pt tall, not the 60x40 this scene's other close buttons use --
+            // this project's touch-target minimum is 44pt; only this new
+            // panel's close button is corrected here (see Global Constraints
+            // in docs/superpowers/plans/2026-09-03-live-ops-events.md).
+            eventCloseButtonRect.sizeDelta = new Vector2(60f, 44f);
+            eventCloseButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+            var eventCloseButton = eventCloseButtonObject.GetComponent<Button>();
+            TextMeshProUGUI eventCloseLabel = CreateLabel(eventCloseButtonObject.transform, "Text", 0f, "X");
+            var eventCloseLabelRect = eventCloseLabel.GetComponent<RectTransform>();
+            eventCloseLabelRect.anchorMin = Vector2.zero;
+            eventCloseLabelRect.anchorMax = Vector2.one;
+            eventCloseLabelRect.sizeDelta = Vector2.zero;
+            eventCloseLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI eventTitleLabel = CreateLabel(eventPanelRootObject.transform, "Title", 0f, "This Week's Event");
+            eventTitleLabel.fontSize = 28f;
+            eventTitleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 340f);
+
+            TextMeshProUGUI eventNameLabel = CreateLabel(eventPanelRootObject.transform, "NameLabel", 0f, string.Empty);
+            eventNameLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 280f);
+
+            TextMeshProUGUI eventNarrationLabel = CreateLabel(eventPanelRootObject.transform, "NarrationLabel", 0f, string.Empty);
+            eventNarrationLabel.alignment = TextAlignmentOptions.Left;
+            var eventNarrationLabelRect = eventNarrationLabel.GetComponent<RectTransform>();
+            eventNarrationLabelRect.anchoredPosition = new Vector2(0f, 180f);
+            eventNarrationLabelRect.sizeDelta = new Vector2(620f, 140f);
+
+            TextMeshProUGUI eventProgressLabel = CreateLabel(eventPanelRootObject.transform, "ProgressLabel", 0f, string.Empty);
+            eventProgressLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 60f);
+
+            TextMeshProUGUI eventStatusMessageText = CreateLabel(eventPanelRootObject.transform, "StatusMessageText", 0f, string.Empty);
+            var eventStatusMessageRect = eventStatusMessageText.GetComponent<RectTransform>();
+            eventStatusMessageRect.anchoredPosition = new Vector2(0f, 10f);
+            eventStatusMessageRect.sizeDelta = new Vector2(620f, 60f);
+
+            var claimButtonObject = new GameObject("ClaimButton", typeof(Image), typeof(Button));
+            claimButtonObject.transform.SetParent(eventPanelRootObject.transform, false);
+            var claimButtonRect = claimButtonObject.GetComponent<RectTransform>();
+            claimButtonRect.anchoredPosition = new Vector2(0f, -60f);
+            claimButtonRect.sizeDelta = new Vector2(220f, 44f);
+            claimButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
+            var claimButton = claimButtonObject.GetComponent<Button>();
+            TextMeshProUGUI claimButtonLabel = CreateLabel(claimButtonObject.transform, "Text", 0f, "Claim Reward");
+            var claimButtonLabelRect = claimButtonLabel.GetComponent<RectTransform>();
+            claimButtonLabelRect.anchorMin = Vector2.zero;
+            claimButtonLabelRect.anchorMax = Vector2.one;
+            claimButtonLabelRect.sizeDelta = Vector2.zero;
+            claimButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var eventControllerObject = new GameObject("EventPanelController");
+            var eventController = eventControllerObject.AddComponent<EventPanelController>();
+            eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
+                eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -483,6 +545,17 @@ namespace UnderstudyKingdom.EditorTools
             if (tutorialController == null)
             {
                 Debug.LogError("CoreLoopSceneBuilder.Verify: no TutorialOverlayController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var eventController = Object.FindFirstObjectByType<EventPanelController>();
+            if (eventController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no EventPanelController found in the scene.");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
