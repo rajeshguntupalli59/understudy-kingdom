@@ -108,6 +108,28 @@ namespace UnderstudyKingdom.Tests
                 "Expected EventPanel to become active after EventsButton is clicked.");
         }
 
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_CustomizeButton_OpensPanelWithoutThrowing()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button customizeButton = FindButton(canvas, "CustomizeButton");
+            Assert.IsNotNull(customizeButton, "CustomizeButton not found in the loaded CoreLoop scene.");
+
+            GameObject cosmeticsPanel = FindChildByName(canvas.transform, "CosmeticsPanel");
+            Assert.IsNotNull(cosmeticsPanel, "CosmeticsPanel not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(cosmeticsPanel.activeSelf, "Expected CosmeticsPanel to start inactive.");
+
+            customizeButton.onClick.Invoke();
+
+            Assert.IsTrue(cosmeticsPanel.activeSelf,
+                "Expected CosmeticsPanel to become active after CustomizeButton is clicked.");
+        }
+
         private static TextMeshProUGUI FindLabel(Canvas canvas, string name)
         {
             foreach (TextMeshProUGUI label in canvas.GetComponentsInChildren<TextMeshProUGUI>(true))

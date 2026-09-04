@@ -459,6 +459,66 @@ namespace UnderstudyKingdom.EditorTools
                 tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton);
 
+            var cosmeticsPanelRootObject = new GameObject("CosmeticsPanel", typeof(Image));
+            cosmeticsPanelRootObject.transform.SetParent(canvasObject.transform, false);
+            var cosmeticsPanelRect = cosmeticsPanelRootObject.GetComponent<RectTransform>();
+            cosmeticsPanelRect.anchoredPosition = Vector2.zero;
+            cosmeticsPanelRect.sizeDelta = new Vector2(700f, 800f);
+            cosmeticsPanelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+
+            var cosmeticsCloseButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
+            cosmeticsCloseButtonObject.transform.SetParent(cosmeticsPanelRootObject.transform, false);
+            var cosmeticsCloseButtonRect = cosmeticsCloseButtonObject.GetComponent<RectTransform>();
+            cosmeticsCloseButtonRect.anchoredPosition = new Vector2(310f, 360f);
+            cosmeticsCloseButtonRect.sizeDelta = new Vector2(60f, 44f);
+            cosmeticsCloseButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+            var cosmeticsCloseButton = cosmeticsCloseButtonObject.GetComponent<Button>();
+            TextMeshProUGUI cosmeticsCloseLabel = CreateLabel(cosmeticsCloseButtonObject.transform, "Text", 0f, "X");
+            var cosmeticsCloseLabelRect = cosmeticsCloseLabel.GetComponent<RectTransform>();
+            cosmeticsCloseLabelRect.anchorMin = Vector2.zero;
+            cosmeticsCloseLabelRect.anchorMax = Vector2.one;
+            cosmeticsCloseLabelRect.sizeDelta = Vector2.zero;
+            cosmeticsCloseLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI cosmeticsTitleLabel = CreateLabel(cosmeticsPanelRootObject.transform, "Title", 0f, "Customize Your Court");
+            cosmeticsTitleLabel.fontSize = 28f;
+            cosmeticsTitleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 340f);
+
+            var themeStatusLabels = new TextMeshProUGUI[3];
+            var themeApplyButtons = new Button[3];
+            float[] themeRowY = { 240f, 140f, 40f };
+            for (int i = 0; i < 3; i++)
+            {
+                TextMeshProUGUI statusLabel = CreateLabel(cosmeticsPanelRootObject.transform, $"ThemeStatusLabel{i}", 0f, string.Empty);
+                statusLabel.alignment = TextAlignmentOptions.Left;
+                var statusLabelRect = statusLabel.GetComponent<RectTransform>();
+                statusLabelRect.sizeDelta = new Vector2(360f, 50f);
+                statusLabelRect.anchoredPosition = new Vector2(-40f, themeRowY[i]);
+                themeStatusLabels[i] = statusLabel;
+
+                var applyButtonObject = new GameObject($"ApplyButton{i}", typeof(Image), typeof(Button));
+                applyButtonObject.transform.SetParent(cosmeticsPanelRootObject.transform, false);
+                var applyButtonRect = applyButtonObject.GetComponent<RectTransform>();
+                applyButtonRect.anchoredPosition = new Vector2(270f, themeRowY[i]);
+                applyButtonRect.sizeDelta = new Vector2(140f, 44f);
+                applyButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
+                var applyButton = applyButtonObject.GetComponent<Button>();
+                TextMeshProUGUI applyButtonLabel = CreateLabel(applyButtonObject.transform, "Text", 0f, "Apply");
+                var applyButtonLabelRect = applyButtonLabel.GetComponent<RectTransform>();
+                applyButtonLabelRect.anchorMin = Vector2.zero;
+                applyButtonLabelRect.anchorMax = Vector2.one;
+                applyButtonLabelRect.sizeDelta = Vector2.zero;
+                applyButtonLabelRect.anchoredPosition = Vector2.zero;
+                themeApplyButtons[i] = applyButton;
+            }
+
+            var cosmeticsControllerObject = new GameObject("CosmeticsPanelController");
+            var cosmeticsController = cosmeticsControllerObject.AddComponent<CosmeticsPanelController>();
+            cosmeticsController.Initialize(customizeButton, cosmeticsPanelRootObject, cosmeticsCloseButton,
+                themeStatusLabels, themeApplyButtons,
+                eventPanelRootObject.GetComponent<Image>(), councilPanelRootObject.GetComponent<Image>(), panelRootObject.GetComponent<Image>(),
+                manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton);
+
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
             Directory.CreateDirectory("Assets/Scenes");
@@ -570,6 +630,17 @@ namespace UnderstudyKingdom.EditorTools
             if (eventController == null)
             {
                 Debug.LogError("CoreLoopSceneBuilder.Verify: no EventPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var cosmeticsController = Object.FindFirstObjectByType<CosmeticsPanelController>();
+            if (cosmeticsController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no CosmeticsPanelController found in the scene.");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
