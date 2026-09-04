@@ -19,7 +19,6 @@ namespace UnderstudyKingdom.UI
     /// </summary>
     public class EventPanelController : MonoBehaviour
     {
-        private const string RewardJustAppliedMessage = "This week's efforts have heartened your ruler! (+15 mood, +15 loyalty)";
         private const string RewardAlreadyClaimedMessage = "Claimed";
 
         [SerializeField] private Button eventsButton;
@@ -113,6 +112,10 @@ namespace UnderstudyKingdom.UI
             panelRoot.SetActive(true);
             claimButton.interactable = false;
             statusMessageText.text = "Loading...";
+            nameLabel.text = string.Empty;
+            narrationLabel.text = string.Empty;
+            progressLabel.text = string.Empty;
+            latestResponse = null;
 
             coordinator.RequestActiveEvent(HandleResult, HandleError);
         }
@@ -133,6 +136,7 @@ namespace UnderstudyKingdom.UI
 
         private void HandleError(string error)
         {
+            latestResponse = null;
             statusMessageText.text = error;
             claimButton.interactable = false;
         }
@@ -150,7 +154,7 @@ namespace UnderstudyKingdom.UI
             screenController.RefreshStatusLabels();
 
             claimButton.interactable = false;
-            statusMessageText.text = RewardJustAppliedMessage;
+            statusMessageText.text = $"This week's efforts have heartened your ruler! (+{latestResponse.rewardMood} mood, +{latestResponse.rewardLoyalty} loyalty)";
         }
 
         private void OnClose()

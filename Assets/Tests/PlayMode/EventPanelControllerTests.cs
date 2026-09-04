@@ -266,6 +266,35 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void EventsButtonClicked_AfterPriorResult_BlanksStaleLabelsBeforeErrorPath()
+        {
+            InvokeHandleResult(new EventResponse
+            {
+                eventId = "W2026-37",
+                name = "Harvest Tithe",
+                narration = "The harvest is bountiful.",
+                objectiveDecisionCount = 3,
+                decisionsCompleted = 3,
+                rewardMood = 15,
+                rewardLoyalty = 15
+            });
+
+            Assert.AreEqual("Harvest Tithe", nameLabel.text);
+
+            // Re-open (or refresh) the panel -- coordinator has no session,
+            // so this synchronously falls through to HandleError. F-1: the
+            // stale labels from the previous fetch must be blanked
+            // immediately in OnEventsButtonClicked, not left showing next
+            // to the error message.
+            eventsButton.onClick.Invoke();
+
+            Assert.AreEqual(string.Empty, nameLabel.text);
+            Assert.AreEqual(string.Empty, narrationLabel.text);
+            Assert.AreEqual(string.Empty, progressLabel.text);
+            Assert.AreEqual("No session available yet -- try again in a moment.", statusMessageText.text);
+        }
+
+        [Test]
         public void HandleResult_ForAlreadyClaimedEvent_ClaimButtonStaysDisabledAndShowsClaimedStatus()
         {
             ruler.State.ClaimedEventWeekId = "W2026-37";
