@@ -119,11 +119,17 @@ namespace UnderstudyKingdom.Tests
         public void Load_SaveFileMissingClaimedEventWeekId_DefaultsToEmptyStringNotNull()
         {
             // Simulates a save file written before this milestone shipped --
-            // RulerSaveData's ClaimedEventWeekId field is left at its C#
-            // default (null) since it's never explicitly set here, matching
-            // how a real pre-milestone-10 save would deserialize.
-            var preMilestone10Save = new RulerSaveData { Mood = 50, Loyalty = 50, Agenda = 0 };
-            System.IO.File.WriteAllText(SaveService.SavePath, UnityEngine.JsonUtility.ToJson(preMilestone10Save));
+            // literal JSON with no "ClaimedEventWeekId" key at all. Building
+            // this via JsonUtility.ToJson on a RulerSaveData with the field
+            // left at its C# default (null) does NOT reproduce this: Unity's
+            // JsonUtility serializes a null string field as an empty string
+            // VALUE with the key still present ("ClaimedEventWeekId":""), so
+            // JsonUtility.FromJson would never leave the field at true C#
+            // null and the ?? string.Empty guard below would never be
+            // exercised. Writing the JSON text directly guarantees the key
+            // is genuinely absent, matching how a real pre-milestone-10 save
+            // would deserialize.
+            System.IO.File.WriteAllText(SaveService.SavePath, "{\"Mood\":50,\"Loyalty\":50,\"Agenda\":0}");
 
             var state = SaveService.Load();
 
