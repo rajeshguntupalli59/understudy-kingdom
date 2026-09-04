@@ -20,6 +20,7 @@ namespace UnderstudyKingdom.Tests
         private Button submitButton;
         private Button challengeButton;
         private Button councilButton;
+        private Button eventsButton;
         private Button viewHistoryButton;
         private Button closeButton;
         private TextMeshProUGUI[] rowTexts;
@@ -54,6 +55,10 @@ namespace UnderstudyKingdom.Tests
             councilButtonObject.transform.SetParent(canvasObject.transform, false);
             councilButton = councilButtonObject.GetComponent<Button>();
 
+            var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
+            eventsButtonObject.transform.SetParent(canvasObject.transform, false);
+            eventsButton = eventsButtonObject.GetComponent<Button>();
+
             var viewHistoryButtonObject = new GameObject("ViewHistoryButton", typeof(Image), typeof(Button));
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
             viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
@@ -76,7 +81,7 @@ namespace UnderstudyKingdom.Tests
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton);
         }
 
         [TearDown]
@@ -111,6 +116,7 @@ namespace UnderstudyKingdom.Tests
             Assert.IsFalse(submitButton.interactable);
             Assert.IsFalse(challengeButton.interactable);
             Assert.IsFalse(councilButton.interactable);
+            Assert.IsFalse(eventsButton.interactable);
             Assert.IsTrue(panelRootObject.activeSelf);
             Assert.AreEqual("No session available yet -- try again in a moment.", rowTexts[0].text);
         }
@@ -128,6 +134,7 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(submitButton.interactable);
             Assert.IsTrue(challengeButton.interactable);
             Assert.IsTrue(councilButton.interactable);
+            Assert.IsTrue(eventsButton.interactable);
             Assert.IsFalse(panelRootObject.activeSelf);
         }
 

@@ -107,6 +107,10 @@ namespace UnderstudyKingdom.Tests
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
             var viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
 
+            var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
+            eventsButtonObject.transform.SetParent(canvasObject.transform, false);
+            var eventsButton = eventsButtonObject.GetComponent<Button>();
+
             var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
             councilButtonObject.transform.SetParent(canvasObject.transform, false);
             councilButton = councilButtonObject.GetComponent<Button>();
@@ -153,7 +157,7 @@ namespace UnderstudyKingdom.Tests
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton);
         }
 
         [TearDown]
