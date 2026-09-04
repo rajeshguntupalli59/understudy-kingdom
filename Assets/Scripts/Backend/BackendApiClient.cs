@@ -273,6 +273,51 @@ namespace UnderstudyKingdom.Backend
             onSuccess?.Invoke(response);
         }
 
+        /// <summary>
+        /// The third GET-based call in this project (see GetDecisionHistory,
+        /// GetCouncilStatus). Mirrors SendGetCouncilStatus's shape exactly.
+        /// </summary>
+        public void GetActiveEvent(string accessToken, Action<EventResponse> onSuccess, Action<string> onError)
+        {
+            StartCoroutine(SendGetActiveEvent(accessToken, onSuccess, onError));
+        }
+
+        private IEnumerator SendGetActiveEvent(string accessToken, Action<EventResponse> onSuccess, Action<string> onError)
+        {
+            string url = $"{BackendBaseUrl}/api/v1/events/active";
+            using var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Active event request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
+                yield break;
+            }
+
+            EventResponse response;
+            try
+            {
+                response = JsonUtility.FromJson<EventResponse>(request.downloadHandler.text);
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke($"Active event response parse failed: {ex.Message}");
+                yield break;
+            }
+
+            if (response == null || response.eventId == null)
+            {
+                onError?.Invoke("Active event response missing expected fields");
+                yield break;
+            }
+
+            onSuccess?.Invoke(response);
+        }
+
         private static string TryExtractServerErrorMessage(string responseBody)
         {
             if (string.IsNullOrEmpty(responseBody)) return null;
