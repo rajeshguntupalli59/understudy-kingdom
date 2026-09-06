@@ -324,11 +324,6 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   deliberately deferred — no currency/IAP system exists yet to attach a
   premium tier to; see
   `docs/superpowers/specs/2026-09-03-live-ops-events-design.md`.
-- Milestone #10's `EventPanelController` is not `DuelModalGate`-aware —
-  it doesn't consult the shared duel-in-flight/modal-open gate that
-  History/Council already do (milestone #9), because `feat/live-ops-events`
-  branched before milestone #9 merged. Needs `DuelModalGate` threaded into
-  `EventPanelController` once milestone #9 merges.
 - Milestone #10's final whole-branch review caught a critical bug (C-1):
   `DecisionCycleManager`'s cycle counter was pure in-memory state that reset
   to 0 on every relaunch while the player's kingdom/decisions persisted
@@ -363,12 +358,24 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   `WaitForSeconds(3f)` for two sequential real round-trips is a latent
   flake source under a slow network, matching this project's existing
   convention for real-data test fixtures elsewhere.
-- Milestone #11's `CosmeticsPanelController` is likewise not
-  `DuelModalGate`-aware, for the same reason as milestone #10's
-  `EventPanelController` — `feat/cosmetics-customization` branched before
-  milestone #9 merged. Needs `DuelModalGate` threaded into
-  `CosmeticsPanelController` once milestone #9 merges, alongside the
-  same fix for `EventPanelController`.
+- **Resolved:** `EventPanelController` and `CosmeticsPanelController` are
+  now `DuelModalGate`-aware (both had branched before milestone #9 merged,
+  so neither originally consulted the shared duel-in-flight/modal-open
+  gate History/Council already did). `Initialize(...)` on both gained the
+  same trailing `DuelModalGate gate` parameter as History/Council; their
+  open/close handlers set `gate.IsModalOpen`; `SetCoreLoopControlsInteractable`
+  skips re-enabling `challengeButton` while `gate.IsDuelInFlight` is still
+  true — identical shape to the existing History/Council fix. `CoreLoopSceneBuilder.Build()`
+  had to be rerun to regenerate the committed `CoreLoop.unity` scene itself
+  (not just the builder script) — Unity's scene serializer silently drops
+  a `[SerializeField]` reference that was never actually re-baked into the
+  scene, which is exactly the C-1 class of bug milestone #9 hit for the
+  same reason; `CoreLoopSceneBuilder.Verify()` confirms it's live. New
+  `Close_WithDuelInFlight_LeavesChallengeButtonDisabled` tests added to
+  both controllers' PlayMode suites, mirroring Council's existing coverage.
+  Full regression green: server 70/70 + typecheck clean, Unity EditMode
+  74/74, Unity PlayMode 71/71 (69 + 2 new). Manual Play Mode checkpoint
+  still outstanding — no automated agent can drive the interactive Editor.
 - **Real, confirmed, but currently non-reproducible production-reliability
   gap in `POST /api/v1/decisions`** (found during milestone #9's merge,
   pre-existing since milestone #7, not caused by the merge itself — see

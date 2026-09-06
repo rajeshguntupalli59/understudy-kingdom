@@ -30,6 +30,7 @@ namespace UnderstudyKingdom.Tests
         private GameObject canvasObject;
         private GameObject panelRootObject;
         private GameObject directApiClientObject;
+        private GameObject gateObject;
         private RulerNpcController ruler;
         private Button eventsButton;
         private Button claimButton;
@@ -137,11 +138,14 @@ namespace UnderstudyKingdom.Tests
             claimButtonObject.transform.SetParent(panelRootObject.transform, false);
             claimButton = claimButtonObject.GetComponent<Button>();
 
+            gateObject = new GameObject("DuelModalGate");
+            var gate = gateObject.AddComponent<DuelModalGate>();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<EventPanelController>();
             controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
                 progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate);
         }
 
         [TearDown]
@@ -154,6 +158,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
             Object.DestroyImmediate(directApiClientObject);
+            Object.DestroyImmediate(gateObject);
 
             if (File.Exists(SaveService.SavePath))
             {

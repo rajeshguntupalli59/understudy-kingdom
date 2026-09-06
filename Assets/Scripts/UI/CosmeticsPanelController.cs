@@ -11,8 +11,9 @@ namespace UnderstudyKingdom.UI
     /// RulerState flag milestones #7 (CouncilRewardApplied) and #10
     /// (ClaimedEventWeekId) already persist. Recolors the History/Council/
     /// Events panel backgrounds only; individual action buttons keep their
-    /// existing distinct colors. NOT DuelModalGate-aware this pass -- see
-    /// docs/superpowers/specs/2026-09-04-cosmetics-customization-design.md.
+    /// existing distinct colors. DuelModalGate-aware since milestone #9
+    /// merged -- see
+    /// docs/superpowers/specs/2026-09-03-duel-modal-gate-design.md.
     /// </summary>
     public class CosmeticsPanelController : MonoBehaviour
     {
@@ -69,6 +70,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button viewHistoryButton;
         [SerializeField] private Button councilButton;
         [SerializeField] private Button eventsButton;
+        [SerializeField] private DuelModalGate gate;
 
         private void Start()
         {
@@ -97,7 +99,8 @@ namespace UnderstudyKingdom.UI
             Button challengeButton,
             Button viewHistoryButton,
             Button councilButton,
-            Button eventsButton)
+            Button eventsButton,
+            DuelModalGate gate)
         {
             this.customizeButton = customizeButton;
             this.panelRoot = panelRoot;
@@ -116,6 +119,7 @@ namespace UnderstudyKingdom.UI
             this.viewHistoryButton = viewHistoryButton;
             this.councilButton = councilButton;
             this.eventsButton = eventsButton;
+            this.gate = gate;
 
             Bind();
         }
@@ -143,6 +147,7 @@ namespace UnderstudyKingdom.UI
 
         private void OnCustomizeButtonClicked()
         {
+            gate.IsModalOpen = true;
             SetCoreLoopControlsInteractable(false);
             panelRoot.SetActive(true);
             RenderThemeRows();
@@ -180,6 +185,7 @@ namespace UnderstudyKingdom.UI
         private void OnClose()
         {
             panelRoot.SetActive(false);
+            gate.IsModalOpen = false;
             SetCoreLoopControlsInteractable(true);
         }
 
@@ -231,6 +237,14 @@ namespace UnderstudyKingdom.UI
             tradeSlider.interactable = interactable;
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
+
+            // challengeButton has two independent disablers (this modal, and
+            // Duel's own in-flight state) -- see
+            // docs/superpowers/specs/2026-09-03-duel-modal-gate-design.md.
+            if (interactable && gate.IsDuelInFlight)
+            {
+                return;
+            }
             challengeButton.interactable = interactable;
         }
     }

@@ -19,6 +19,8 @@ namespace UnderstudyKingdom.Tests
         private GameObject controllerObject;
         private GameObject canvasObject;
         private GameObject panelRootObject;
+        private GameObject gateObject;
+        private DuelModalGate gate;
         private RulerNpcController ruler;
         private Slider armySlider;
         private Slider tradeSlider;
@@ -113,11 +115,14 @@ namespace UnderstudyKingdom.Tests
             claimButtonObject.transform.SetParent(panelRootObject.transform, false);
             claimButton = claimButtonObject.GetComponent<Button>();
 
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
+
             controllerObject = new GameObject("Controller");
             controller = controllerObject.AddComponent<EventPanelController>();
             controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
                 progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate);
         }
 
         [TearDown]
@@ -129,6 +134,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(coordinatorObject);
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
+            Object.DestroyImmediate(gateObject);
 
             if (System.IO.File.Exists(SaveService.SavePath))
             {
@@ -197,6 +203,26 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(submitButton.interactable);
             Assert.IsTrue(challengeButton.interactable);
             Assert.IsFalse(panelRootObject.activeSelf);
+        }
+
+        [Test]
+        public void Close_WithDuelInFlight_LeavesChallengeButtonDisabled()
+        {
+            gate.IsDuelInFlight = true;
+
+            eventsButton.onClick.Invoke();
+            closeButton.onClick.Invoke();
+
+            Assert.IsTrue(eventsButton.interactable);
+            Assert.IsTrue(viewHistoryButton.interactable);
+            Assert.IsTrue(councilButton.interactable);
+            Assert.IsTrue(customizeButton.interactable);
+            Assert.IsTrue(armySlider.interactable);
+            Assert.IsTrue(tradeSlider.interactable);
+            Assert.IsTrue(religionSlider.interactable);
+            Assert.IsTrue(submitButton.interactable);
+            Assert.IsFalse(challengeButton.interactable,
+                "closing Events while a duel is still in flight must NOT re-enable Challenge -- this is the exact bug DuelModalGate fixes");
         }
 
         [Test]

@@ -235,7 +235,7 @@ namespace UnderstudyKingdom.EditorTools
             var eventController = eventControllerObject.AddComponent<EventPanelController>();
             eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
                 eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton, duelModalGate);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -520,7 +520,7 @@ namespace UnderstudyKingdom.EditorTools
             cosmeticsController.Initialize(customizeButton, cosmeticsPanelRootObject, cosmeticsCloseButton,
                 themeStatusLabels, themeApplyButtons,
                 eventPanelRootObject.GetComponent<Image>(), councilPanelRootObject.GetComponent<Image>(), panelRootObject.GetComponent<Image>(),
-                manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton);
+                manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 

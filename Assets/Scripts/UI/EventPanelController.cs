@@ -12,10 +12,9 @@ namespace UnderstudyKingdom.UI
     /// count only; this controller is the ONLY place that ever applies the
     /// event reward, client-side, exactly once, gated by
     /// RulerState.ClaimedEventWeekId -- same pattern as
-    /// CouncilPanelController's reward handling. NOT DuelModalGate-aware
-    /// this pass -- see
-    /// docs/superpowers/specs/2026-09-03-live-ops-events-design.md's
-    /// "Known Gap Flagged, Not Fixed Here" section.
+    /// CouncilPanelController's reward handling. DuelModalGate-aware since
+    /// milestone #9 merged -- see
+    /// docs/superpowers/specs/2026-09-03-duel-modal-gate-design.md.
     /// </summary>
     public class EventPanelController : MonoBehaviour
     {
@@ -40,6 +39,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button viewHistoryButton;
         [SerializeField] private Button councilButton;
         [SerializeField] private Button customizeButton;
+        [SerializeField] private DuelModalGate gate;
 
         private EventResponse latestResponse;
 
@@ -72,7 +72,8 @@ namespace UnderstudyKingdom.UI
             Button challengeButton,
             Button viewHistoryButton,
             Button councilButton,
-            Button customizeButton)
+            Button customizeButton,
+            DuelModalGate gate)
         {
             this.eventsButton = eventsButton;
             this.panelRoot = panelRoot;
@@ -93,6 +94,7 @@ namespace UnderstudyKingdom.UI
             this.viewHistoryButton = viewHistoryButton;
             this.councilButton = councilButton;
             this.customizeButton = customizeButton;
+            this.gate = gate;
 
             Bind();
         }
@@ -111,6 +113,7 @@ namespace UnderstudyKingdom.UI
 
         private void OnEventsButtonClicked()
         {
+            gate.IsModalOpen = true;
             SetCoreLoopControlsInteractable(false);
             panelRoot.SetActive(true);
             claimButton.interactable = false;
@@ -163,6 +166,7 @@ namespace UnderstudyKingdom.UI
         private void OnClose()
         {
             panelRoot.SetActive(false);
+            gate.IsModalOpen = false;
             SetCoreLoopControlsInteractable(true);
         }
 
@@ -175,8 +179,16 @@ namespace UnderstudyKingdom.UI
             tradeSlider.interactable = interactable;
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
-            challengeButton.interactable = interactable;
             customizeButton.interactable = interactable;
+
+            // challengeButton has two independent disablers (this modal, and
+            // Duel's own in-flight state) -- see
+            // docs/superpowers/specs/2026-09-03-duel-modal-gate-design.md.
+            if (interactable && gate.IsDuelInFlight)
+            {
+                return;
+            }
+            challengeButton.interactable = interactable;
         }
     }
 }

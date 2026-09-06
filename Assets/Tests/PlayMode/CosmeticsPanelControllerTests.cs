@@ -15,6 +15,8 @@ namespace UnderstudyKingdom.Tests
         private GameObject controllerObject;
         private GameObject canvasObject;
         private GameObject panelRootObject;
+        private GameObject gateObject;
+        private DuelModalGate gate;
         private RulerNpcController ruler;
         private Slider armySlider;
         private Slider tradeSlider;
@@ -102,11 +104,14 @@ namespace UnderstudyKingdom.Tests
                 applyButtons[i] = applyButtonObject.GetComponent<Button>();
             }
 
+            gateObject = new GameObject("DuelModalGate");
+            gate = gateObject.AddComponent<DuelModalGate>();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<CosmeticsPanelController>();
             controller.Initialize(customizeButton, panelRootObject, closeButton, statusLabels, applyButtons,
                 eventPanelImage, councilPanelImage, historyPanelImage, manager,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate);
         }
 
         [TearDown]
@@ -116,6 +121,7 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(canvasObject);
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
+            Object.DestroyImmediate(gateObject);
 
             if (System.IO.File.Exists(SaveService.SavePath))
             {
@@ -175,6 +181,26 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(submitButton.interactable);
             Assert.IsTrue(challengeButton.interactable);
             Assert.IsFalse(panelRootObject.activeSelf);
+        }
+
+        [Test]
+        public void Close_WithDuelInFlight_LeavesChallengeButtonDisabled()
+        {
+            gate.IsDuelInFlight = true;
+
+            customizeButton.onClick.Invoke();
+            closeButton.onClick.Invoke();
+
+            Assert.IsTrue(customizeButton.interactable);
+            Assert.IsTrue(viewHistoryButton.interactable);
+            Assert.IsTrue(councilButton.interactable);
+            Assert.IsTrue(eventsButton.interactable);
+            Assert.IsTrue(armySlider.interactable);
+            Assert.IsTrue(tradeSlider.interactable);
+            Assert.IsTrue(religionSlider.interactable);
+            Assert.IsTrue(submitButton.interactable);
+            Assert.IsFalse(challengeButton.interactable,
+                "closing Cosmetics while a duel is still in flight must NOT re-enable Challenge -- this is the exact bug DuelModalGate fixes");
         }
 
         [Test]
@@ -279,7 +305,7 @@ namespace UnderstudyKingdom.Tests
             freshController.Initialize(customizeButton, panelRootObject, closeButton, statusLabels, applyButtons,
                 eventPanelImage, councilPanelImage, historyPanelImage,
                 managerObject.GetComponent<DecisionCycleManager>(),
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate);
 
             Color expected = new Color(0.22f, 0.08f, 0.16f, 0.95f);
             Assert.AreEqual(expected, eventPanelImage.color);
