@@ -73,9 +73,7 @@ namespace UnderstudyKingdom.EditorTools
             sceneBackgroundRect.offsetMax = Vector2.zero;
             var sceneBackgroundImage = sceneBackgroundObject.GetComponent<Image>();
             sceneBackgroundImage.preserveAspect = false;
-            // Real sprites are wired in Task 2 (LoadBackgroundSprites()) --
-            // this task only proves the field/signature plumbing compiles.
-            Sprite[] backgroundSprites = new Sprite[3];
+            Sprite[] backgroundSprites = LoadBackgroundSprites();
 
             Slider armySlider = CreateSlider(canvasObject.transform, "ArmySlider", 40f, 40f);
             Slider tradeSlider = CreateSlider(canvasObject.transform, "TradeSlider", 90f, 30f);
@@ -702,6 +700,39 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
+            FieldInfo backgroundSpritesField = typeof(CosmeticsPanelController).GetField("backgroundSprites", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (backgroundSpritesField == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private backgroundSprites field (renamed?).");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            var backgroundSprites = (Sprite[])backgroundSpritesField.GetValue(cosmeticsController);
+            if (backgroundSprites == null || backgroundSprites.Length != 3)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element backgroundSprites array, found {(backgroundSprites == null ? "null" : backgroundSprites.Length.ToString())}.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            for (int j = 0; j < backgroundSprites.Length; j++)
+            {
+                if (backgroundSprites[j] == null)
+                {
+                    Debug.LogError($"CoreLoopSceneBuilder.Verify: backgroundSprites[{j}] is null.");
+                    if (Application.isBatchMode)
+                    {
+                        EditorApplication.Exit(1);
+                    }
+                    return;
+                }
+            }
+
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
         }
 
@@ -819,6 +850,39 @@ namespace UnderstudyKingdom.EditorTools
             }
 
             return portraits;
+        }
+
+        private static Sprite LoadBackgroundSprite(string path)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null && importer.textureType != TextureImporterType.Sprite)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        // Order matches the existing Themes array exactly (Default, Council,
+        // Event) -- CosmeticsPanelController.GetBackgroundSprite indexes into
+        // this array using the same Themes array as its lookup key.
+        private static Sprite[] LoadBackgroundSprites()
+        {
+            string[] themeIds = { "default", "council", "event" };
+            var sprites = new Sprite[3];
+            for (int i = 0; i < themeIds.Length; i++)
+            {
+                string path = $"Assets/Art/Backgrounds/background_{themeIds[i]}.png";
+                sprites[i] = LoadBackgroundSprite(path);
+            }
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                if (sprites[i] == null)
+                {
+                    Debug.LogError($"CoreLoopSceneBuilder.LoadBackgroundSprites: failed to load background sprite at index {i}");
+                }
+            }
+            return sprites;
         }
 
         private static TMP_InputField CreateInputField(Transform parent, string name, string placeholderText)

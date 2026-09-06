@@ -118,6 +118,33 @@ namespace UnderstudyKingdom.Tests
                 "Expected the ruler portrait to have a non-null sprite after Submit.");
         }
 
+        /// <summary>
+        /// Regression guard mirroring
+        /// LoadedCoreLoopScene_Portrait_HasNonNullSpriteAfterSubmit above: a
+        /// fully-non-null-array-but-all-elements-null backgroundSprites state
+        /// wouldn't throw on its own, so this loads the real scene and
+        /// asserts the scene background actually has a sprite.
+        /// CosmeticsPanelController.ApplyTheme() runs from Bind() on scene
+        /// load, so no click is needed to observe it.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_SceneBackground_HasNonNullSpriteOnLoad()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            GameObject backgroundObject = FindChildByName(canvas.transform, "SceneBackground");
+            Assert.IsNotNull(backgroundObject, "SceneBackground not found in the loaded CoreLoop scene.");
+            Image backgroundImage = backgroundObject.GetComponent<Image>();
+            Assert.IsNotNull(backgroundImage, "SceneBackground has no Image component.");
+
+            Assert.IsNotNull(backgroundImage.sprite,
+                "Expected the scene background to have a non-null sprite after scene load.");
+        }
+
         [UnityTest]
         public IEnumerator LoadedCoreLoopScene_EventsButton_OpensPanelWithoutThrowing()
         {
