@@ -62,6 +62,21 @@ namespace UnderstudyKingdom.EditorTools
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
+            // Created before every other canvas child so it renders behind
+            // all of them (Unity draws uGUI siblings in child order).
+            var sceneBackgroundObject = new GameObject("SceneBackground", typeof(Image));
+            sceneBackgroundObject.transform.SetParent(canvasObject.transform, false);
+            var sceneBackgroundRect = sceneBackgroundObject.GetComponent<RectTransform>();
+            sceneBackgroundRect.anchorMin = Vector2.zero;
+            sceneBackgroundRect.anchorMax = Vector2.one;
+            sceneBackgroundRect.offsetMin = Vector2.zero;
+            sceneBackgroundRect.offsetMax = Vector2.zero;
+            var sceneBackgroundImage = sceneBackgroundObject.GetComponent<Image>();
+            sceneBackgroundImage.preserveAspect = false;
+            // Real sprites are wired in Task 2 (LoadBackgroundSprites()) --
+            // this task only proves the field/signature plumbing compiles.
+            Sprite[] backgroundSprites = new Sprite[3];
+
             Slider armySlider = CreateSlider(canvasObject.transform, "ArmySlider", 40f, 40f);
             Slider tradeSlider = CreateSlider(canvasObject.transform, "TradeSlider", 90f, 30f);
             Slider religionSlider = CreateSlider(canvasObject.transform, "ReligionSlider", 140f, 30f);
@@ -531,7 +546,8 @@ namespace UnderstudyKingdom.EditorTools
             cosmeticsController.Initialize(customizeButton, cosmeticsPanelRootObject, cosmeticsCloseButton,
                 themeStatusLabels, themeApplyButtons,
                 eventPanelRootObject.GetComponent<Image>(), councilPanelRootObject.GetComponent<Image>(), panelRootObject.GetComponent<Image>(),
-                manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate);
+                manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
+                sceneBackgroundImage, backgroundSprites);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 

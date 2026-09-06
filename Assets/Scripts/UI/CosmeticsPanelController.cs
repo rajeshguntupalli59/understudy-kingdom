@@ -71,6 +71,8 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button councilButton;
         [SerializeField] private Button eventsButton;
         [SerializeField] private DuelModalGate gate;
+        [SerializeField] private Image sceneBackgroundImage;
+        [SerializeField] private Sprite[] backgroundSprites;
 
         private void Start()
         {
@@ -100,7 +102,9 @@ namespace UnderstudyKingdom.UI
             Button viewHistoryButton,
             Button councilButton,
             Button eventsButton,
-            DuelModalGate gate)
+            DuelModalGate gate,
+            Image sceneBackgroundImage,
+            Sprite[] backgroundSprites)
         {
             this.customizeButton = customizeButton;
             this.panelRoot = panelRoot;
@@ -120,6 +124,8 @@ namespace UnderstudyKingdom.UI
             this.councilButton = councilButton;
             this.eventsButton = eventsButton;
             this.gate = gate;
+            this.sceneBackgroundImage = sceneBackgroundImage;
+            this.backgroundSprites = backgroundSprites;
 
             Bind();
         }
@@ -210,6 +216,7 @@ namespace UnderstudyKingdom.UI
             eventPanelImage.color = color;
             councilPanelImage.color = color;
             historyPanelImage.color = color;
+            sceneBackgroundImage.sprite = GetBackgroundSprite(themeId, backgroundSprites);
         }
 
         // Unrecognized ids (e.g. a future save-file edge case) resolve to
@@ -225,6 +232,22 @@ namespace UnderstudyKingdom.UI
             }
 
             return Themes[0].PanelColor;
+        }
+
+        // Same fallback shape as GetThemeColor -- a missing/null sprite for
+        // an unrecognized or not-yet-loaded theme resolves to Default's
+        // background (index 0) rather than leaving the background blank.
+        private static Sprite GetBackgroundSprite(string themeId, Sprite[] sprites)
+        {
+            for (int i = 0; i < Themes.Length; i++)
+            {
+                if (Themes[i].Id == themeId)
+                {
+                    return sprites[i] != null ? sprites[i] : sprites[0];
+                }
+            }
+
+            return sprites[0];
         }
 
         private void SetCoreLoopControlsInteractable(bool interactable)

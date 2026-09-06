@@ -33,6 +33,8 @@ namespace UnderstudyKingdom.Tests
         private Image eventPanelImage;
         private Image councilPanelImage;
         private Image historyPanelImage;
+        private Image sceneBackgroundImage;
+        private Sprite[] backgroundSprites;
 
         [SetUp]
         public void SetUp()
@@ -107,11 +109,28 @@ namespace UnderstudyKingdom.Tests
             gateObject = new GameObject("DuelModalGate");
             gate = gateObject.AddComponent<DuelModalGate>();
 
+            var sceneBackgroundObject = new GameObject("SceneBackground", typeof(Image));
+            sceneBackgroundObject.transform.SetParent(canvasObject.transform, false);
+            sceneBackgroundImage = sceneBackgroundObject.GetComponent<Image>();
+
+            backgroundSprites = new Sprite[3];
+            for (int i = 0; i < backgroundSprites.Length; i++)
+            {
+                backgroundSprites[i] = CreateDummySprite();
+            }
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<CosmeticsPanelController>();
             controller.Initialize(customizeButton, panelRootObject, closeButton, statusLabels, applyButtons,
                 eventPanelImage, councilPanelImage, historyPanelImage, manager,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate,
+                sceneBackgroundImage, backgroundSprites);
+        }
+
+        private static Sprite CreateDummySprite()
+        {
+            var texture = new Texture2D(1, 1);
+            return Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f));
         }
 
         [TearDown]
@@ -250,6 +269,7 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual(expected, eventPanelImage.color);
             Assert.AreEqual(expected, councilPanelImage.color);
             Assert.AreEqual(expected, historyPanelImage.color);
+            Assert.AreSame(backgroundSprites[1], sceneBackgroundImage.sprite);
             Assert.AreEqual("Council", ruler.State.SelectedTheme);
 
             RulerState persisted = SaveService.Load();
@@ -305,12 +325,14 @@ namespace UnderstudyKingdom.Tests
             freshController.Initialize(customizeButton, panelRootObject, closeButton, statusLabels, applyButtons,
                 eventPanelImage, councilPanelImage, historyPanelImage,
                 managerObject.GetComponent<DecisionCycleManager>(),
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate,
+                sceneBackgroundImage, backgroundSprites);
 
             Color expected = new Color(0.22f, 0.08f, 0.16f, 0.95f);
             Assert.AreEqual(expected, eventPanelImage.color);
             Assert.AreEqual(expected, councilPanelImage.color);
             Assert.AreEqual(expected, historyPanelImage.color);
+            Assert.AreSame(backgroundSprites[1], sceneBackgroundImage.sprite);
 
             Object.DestroyImmediate(freshControllerObject);
         }
