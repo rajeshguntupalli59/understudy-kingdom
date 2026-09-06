@@ -28,6 +28,8 @@ namespace UnderstudyKingdom.Tests
         private Button challengeButton;
         private Button councilButton;
         private Button viewHistoryButton;
+        private Button eventsButton;
+        private Button customizeButton;
         private Button closeButton;
         private TextMeshProUGUI resultText;
         private TextMeshProUGUI[] rowTexts;
@@ -68,6 +70,14 @@ namespace UnderstudyKingdom.Tests
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
             viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
 
+            var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
+            eventsButtonObject.transform.SetParent(canvasObject.transform, false);
+            eventsButton = eventsButtonObject.GetComponent<Button>();
+
+            var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
+            customizeButtonObject.transform.SetParent(canvasObject.transform, false);
+            customizeButton = customizeButtonObject.GetComponent<Button>();
+
             var resultObject = new GameObject("ResultText", typeof(TextMeshProUGUI));
             resultObject.transform.SetParent(canvasObject.transform, false);
             resultText = resultObject.GetComponent<TextMeshProUGUI>();
@@ -97,7 +107,7 @@ namespace UnderstudyKingdom.Tests
             historyControllerObject = new GameObject("HistoryController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate);
         }
 
         [TearDown]

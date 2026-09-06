@@ -24,6 +24,8 @@ namespace UnderstudyKingdom.Tests
         private Button submitButton;
         private Button challengeButton;
         private Button viewHistoryButton;
+        private Button eventsButton;
+        private Button customizeButton;
         private Button councilButton;
         private Button closeButton;
         private Button createButton;
@@ -84,6 +86,14 @@ namespace UnderstudyKingdom.Tests
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
             viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
 
+            var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
+            eventsButtonObject.transform.SetParent(canvasObject.transform, false);
+            eventsButton = eventsButtonObject.GetComponent<Button>();
+
+            var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
+            customizeButtonObject.transform.SetParent(canvasObject.transform, false);
+            customizeButton = customizeButtonObject.GetComponent<Button>();
+
             var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
             councilButtonObject.transform.SetParent(canvasObject.transform, false);
             councilButton = councilButtonObject.GetComponent<Button>();
@@ -133,7 +143,7 @@ namespace UnderstudyKingdom.Tests
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate);
         }
 
         [TearDown]
@@ -174,6 +184,8 @@ namespace UnderstudyKingdom.Tests
 
             Assert.IsFalse(councilButton.interactable);
             Assert.IsFalse(viewHistoryButton.interactable);
+            Assert.IsFalse(eventsButton.interactable);
+            Assert.IsFalse(customizeButton.interactable);
             Assert.IsFalse(armySlider.interactable);
             Assert.IsFalse(tradeSlider.interactable);
             Assert.IsFalse(religionSlider.interactable);
@@ -191,6 +203,8 @@ namespace UnderstudyKingdom.Tests
 
             Assert.IsTrue(councilButton.interactable);
             Assert.IsTrue(viewHistoryButton.interactable);
+            Assert.IsTrue(eventsButton.interactable);
+            Assert.IsTrue(customizeButton.interactable);
             Assert.IsTrue(armySlider.interactable);
             Assert.IsTrue(tradeSlider.interactable);
             Assert.IsTrue(religionSlider.interactable);

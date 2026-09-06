@@ -22,6 +22,8 @@ namespace UnderstudyKingdom.Tests
         private Button challengeButton;
         private Button viewHistoryButton;
         private Button councilButton;
+        private Button eventsButton;
+        private Button customizeButton;
         private Button nextButton;
         private TextMeshProUGUI nextButtonLabel;
         private Button skipButton;
@@ -50,6 +52,8 @@ namespace UnderstudyKingdom.Tests
             challengeButton = CreateButton("ChallengeButton");
             viewHistoryButton = CreateButton("ViewHistoryButton");
             councilButton = CreateButton("CouncilButton");
+            eventsButton = CreateButton("EventsButton");
+            customizeButton = CreateButton("CustomizeButton");
 
             panelRootObject = new GameObject("PanelRoot");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -108,7 +112,7 @@ namespace UnderstudyKingdom.Tests
             var controller = controllerObject.AddComponent<TutorialOverlayController>();
             controller.Initialize(panelRootObject, stepIndicatorLabel, titleLabel, bodyLabel,
                 nextButton, nextButtonLabel, skipButton, manager,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, customizeButton);
             return controller;
         }
 
@@ -126,6 +130,8 @@ namespace UnderstudyKingdom.Tests
             Assert.IsFalse(challengeButton.interactable);
             Assert.IsFalse(viewHistoryButton.interactable);
             Assert.IsFalse(councilButton.interactable);
+            Assert.IsFalse(eventsButton.interactable);
+            Assert.IsFalse(customizeButton.interactable);
             Assert.AreEqual("Your Resources", titleLabel.text);
             Assert.AreEqual("Step 1 of 4", stepIndicatorLabel.text);
             Assert.AreEqual("Next", nextButtonLabel.text);
@@ -151,6 +157,8 @@ namespace UnderstudyKingdom.Tests
             challengeButton.interactable = false;
             viewHistoryButton.interactable = false;
             councilButton.interactable = false;
+            eventsButton.interactable = false;
+            customizeButton.interactable = false;
 
             Initialize();
 
@@ -162,6 +170,8 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(challengeButton.interactable);
             Assert.IsTrue(viewHistoryButton.interactable);
             Assert.IsTrue(councilButton.interactable);
+            Assert.IsTrue(eventsButton.interactable);
+            Assert.IsTrue(customizeButton.interactable);
         }
 
         [Test]
@@ -197,6 +207,8 @@ namespace UnderstudyKingdom.Tests
             Assert.IsFalse(panelRootObject.activeSelf);
             Assert.IsTrue(armySlider.interactable);
             Assert.IsTrue(councilButton.interactable);
+            Assert.IsTrue(eventsButton.interactable);
+            Assert.IsTrue(customizeButton.interactable);
 
             RulerState persisted = SaveService.Load();
             Assert.IsTrue(persisted.TutorialCompleted);

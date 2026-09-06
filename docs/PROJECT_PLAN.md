@@ -258,14 +258,32 @@ real local Postgres integration tests (no mocking):
 | #6 Relationship History Log | `feat/decision-history` | FR-06 | Done |
 | #7 Council / Social | `feat/council-social` | FR-07, FR-08 | Done |
 | #8 Onboarding Tutorial | `feat/onboarding-tutorial` | FR-13 | Done |
+| #9 Duel/Modal Gate Fix | `feat/duel-modal-gate` | Shared duel-in-flight/modal gate for History/Council panels | Done |
+| #10 Live-Ops Events | `feat/live-ops-events` | FR-10, FR-11 (narrowed) | Done |
+| #11 Cosmetics Customization | `feat/cosmetics-customization` | FR-12 | Done |
+
+*(Milestone #9 merged after a manual playtest was still outstanding —
+same limitation as milestones #10/#11: no automated agent can drive the
+interactive Unity Editor UI. Everything automated (server tests,
+typecheck, Unity EditMode, Unity PlayMode) is green; see "Known follow-up
+items" below for the one pre-existing, non-blocking issue found and
+investigated during this merge.)*
 
 **FR status:** FR-01, FR-02 (loyalty/agenda-weighted, not mood — see FR-02
-note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09, FR-13 implemented and live.
-FR-05 (templated ruler dialogue) implemented as part of milestones
-#1/#2/#5/#6's narration work. FR-13's "before any monetization prompt"
-gating is currently vacuous (FR-14/FR-15 don't exist yet — nothing to gate
-against); revisit once they land. FR-10 through FR-12, FR-14, FR-15
-(live-ops, cosmetics, monetization guardrails) not yet started.
+note), FR-03, FR-04, FR-06, FR-07, FR-08, FR-09, FR-10, FR-11 (narrowed —
+see below), FR-12, FR-13 implemented and live. FR-05 (templated ruler
+dialogue) implemented as part of milestones #1/#2/#5/#6's narration work.
+FR-13's "before any monetization prompt" gating is currently vacuous
+(FR-14/FR-15 don't exist yet — nothing to gate against); revisit once
+they land. FR-11 shipped narrowed to a single, unconditionally
+F2P-completable reward per event — the "premium spend unlocks
+cosmetic/time-skip rewards" clause is deliberately deferred, since no
+currency/IAP system exists yet to attach a premium tier to; see
+`docs/superpowers/specs/2026-09-03-live-ops-events-design.md`. FR-12
+shipped as a 3-theme color picker recoloring existing panel backgrounds,
+zero new art, zero currency system — see
+`docs/superpowers/specs/2026-09-04-cosmetics-customization-design.md`.
+FR-14, FR-15 (monetization guardrails) not yet started.
 
 **Known follow-up items, deliberately deferred (not bugs):**
 - Milestone #5's `defenderRulerSnapshot` is always the schema default
@@ -302,6 +320,84 @@ against); revisit once they land. FR-10 through FR-12, FR-14, FR-15
   show up as a diff-level defect. Fixed, and a permanent rule comment was
   added directly above `CreateLabel()` in `CoreLoopSceneBuilder.cs` so every
   future label call site carries an explicit floor to check against.
+- Milestone #10's FR-11 shipped with the premium/IAP reward tier
+  deliberately deferred — no currency/IAP system exists yet to attach a
+  premium tier to; see
+  `docs/superpowers/specs/2026-09-03-live-ops-events-design.md`.
+- Milestone #10's `EventPanelController` is not `DuelModalGate`-aware —
+  it doesn't consult the shared duel-in-flight/modal-open gate that
+  History/Council already do (milestone #9), because `feat/live-ops-events`
+  branched before milestone #9 merged. Needs `DuelModalGate` threaded into
+  `EventPanelController` once milestone #9 merges.
+- Milestone #10's final whole-branch review caught a critical bug (C-1):
+  `DecisionCycleManager`'s cycle counter was pure in-memory state that reset
+  to 0 on every relaunch while the player's kingdom/decisions persisted
+  server-side, so a returning player's submissions silently collided with
+  cycle numbers already used and were dropped (server's
+  `onConflictDoNothing`) -- live-ops event progress could never advance past
+  a player's first-ever session. Fixed: the counter is now self-healing via
+  a server round-trip (`GET /api/v1/decisions?limit=1`) on session
+  bootstrap, seeding the counter up to the most recently *inserted*
+  server decision's cycle number (never backward). Not purely local
+  anymore. Any player with an out-of-sync install from before this fix
+  self-heals automatically on their next launch once this ships.
+- The C-1 fix's re-review found 4 non-blocking Low/informational
+  follow-ups, none of which weaken the fix itself: (N-1) the seed reads
+  the newest-by-`created_at` decision rather than `MAX(cycle_number)` --
+  these coincide under normal sequential play, but could theoretically
+  diverge under a rare double-refresh-callback race
+  (`DrainPendingRefreshCallbacks` firing two queued syncs back-to-back),
+  landing the seed one cycle low; same silent-drop failure class as C-1
+  itself, narrow and self-recovering (one dropped decision, corrected on
+  the next launch) but worth switching to an explicit
+  `ORDER BY cycle_number DESC` / `MAX(cycle_number)` query before this
+  sees meaningful player traffic. (N-2) the seed fetch is bootstrap-only
+  with no in-session retry if `EnsureKingdom` fails at launch (unlike the
+  duel/history/event request paths, which do retry via
+  `EnsureKingdomThenSend*`); its own log message ("will resync on next
+  attempt") is misleading since the only next attempt is the next app
+  launch. (N-3) the new regression test
+  (`DecisionCycleManagerSessionResumeTests`) relies on prior test
+  fixtures' teardown for session isolation rather than calling
+  `SessionStore.Clear()` itself at setup. (N-4) a fixed
+  `WaitForSeconds(3f)` for two sequential real round-trips is a latent
+  flake source under a slow network, matching this project's existing
+  convention for real-data test fixtures elsewhere.
+- Milestone #11's `CosmeticsPanelController` is likewise not
+  `DuelModalGate`-aware, for the same reason as milestone #10's
+  `EventPanelController` — `feat/cosmetics-customization` branched before
+  milestone #9 merged. Needs `DuelModalGate` threaded into
+  `CosmeticsPanelController` once milestone #9 merges, alongside the
+  same fix for `EventPanelController`.
+- **Real, confirmed, but currently non-reproducible production-reliability
+  gap in `POST /api/v1/decisions`** (found during milestone #9's merge,
+  pre-existing since milestone #7, not caused by the merge itself — see
+  `docs/HANDOVER_2026-09-03.md` §2a): `BackendApiClient.PostDecision`
+  treats HTTP 409 as an accepted/successful outcome for idempotency, and
+  two separate full-suite `CouncilPanelControllerRealDataTests` runs were
+  directly verified (via a throwaway script querying the real Postgres DB)
+  to have reported `posted = true` for all 10 decisions while the DB held
+  **zero** rows for that kingdom — i.e. the client can believe a decision
+  was recorded when it silently wasn't, under concurrent server load. A
+  same-session follow-up investigation (temporary request-level debug
+  logging in `decisions.ts`, plus a standalone script firing up to 120
+  concurrent `POST /api/v1/decisions` calls across 12 kingdoms outside
+  Unity) could **not** reproduce it — 4 additional full Unity PlayMode
+  suite runs and the scripted concurrent-load repro all came back clean
+  (69/69, no mismatches). The underlying route logic
+  (`decisions.ts`, `kingdoms.ts`'s conflict-safe insert, the
+  `drizzle-orm` node-postgres transaction wrapper) was read closely and
+  looks structurally sound — no leaked/unreleased pool connection, no
+  shared mutable request state. Given it reproduced twice under real
+  conditions before and zero times since across meaningful additional
+  attempts, treat as a real, timing-dependent gap rather than resolved.
+  Recommended before this sees real player traffic: enable Fastify's
+  built-in request logger (currently `logger: false` in `app.ts`, which is
+  exactly why this session's own investigation had no request trail to
+  work from) so a future occurrence leaves a diagnosable paper trail, and
+  wire up or remove the currently-unwired `ALLOW_TEST_DB_TRUNCATE` env var
+  so the ever-growing, never-reset shared test DB doesn't keep making
+  `maybeAdvanceCouncilMilestone`'s unbounded join slower over time.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger

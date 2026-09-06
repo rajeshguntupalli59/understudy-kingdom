@@ -86,6 +86,50 @@ namespace UnderstudyKingdom.Tests
                 "Expected the narration label to have laid out renderable characters after ForceMeshUpdate.");
         }
 
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_EventsButton_OpensPanelWithoutThrowing()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button eventsButton = FindButton(canvas, "EventsButton");
+            Assert.IsNotNull(eventsButton, "EventsButton not found in the loaded CoreLoop scene.");
+
+            GameObject eventPanel = FindChildByName(canvas.transform, "EventPanel");
+            Assert.IsNotNull(eventPanel, "EventPanel not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(eventPanel.activeSelf, "Expected EventPanel to start inactive.");
+
+            eventsButton.onClick.Invoke();
+
+            Assert.IsTrue(eventPanel.activeSelf,
+                "Expected EventPanel to become active after EventsButton is clicked.");
+        }
+
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_CustomizeButton_OpensPanelWithoutThrowing()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button customizeButton = FindButton(canvas, "CustomizeButton");
+            Assert.IsNotNull(customizeButton, "CustomizeButton not found in the loaded CoreLoop scene.");
+
+            GameObject cosmeticsPanel = FindChildByName(canvas.transform, "CosmeticsPanel");
+            Assert.IsNotNull(cosmeticsPanel, "CosmeticsPanel not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(cosmeticsPanel.activeSelf, "Expected CosmeticsPanel to start inactive.");
+
+            customizeButton.onClick.Invoke();
+
+            Assert.IsTrue(cosmeticsPanel.activeSelf,
+                "Expected CosmeticsPanel to become active after CustomizeButton is clicked.");
+        }
+
         private static TextMeshProUGUI FindLabel(Canvas canvas, string name)
         {
             foreach (TextMeshProUGUI label in canvas.GetComponentsInChildren<TextMeshProUGUI>(true))
@@ -192,7 +236,7 @@ namespace UnderstudyKingdom.Tests
 
         private static Button FindButton(Canvas canvas, string name)
         {
-            foreach (Button candidate in Object.FindObjectsByType<Button>(FindObjectsSortMode.None))
+            foreach (Button candidate in canvas.GetComponentsInChildren<Button>(true))
             {
                 if (candidate.gameObject.name == name)
                 {
@@ -200,19 +244,21 @@ namespace UnderstudyKingdom.Tests
                 }
             }
 
+            Assert.Fail($"No Button named '{name}' found under the Canvas.");
             return null;
         }
 
-        private static GameObject FindChildByName(Transform root, string name)
+        private static GameObject FindChildByName(Transform parent, string name)
         {
-            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            foreach (Transform child in parent.GetComponentsInChildren<Transform>(true))
             {
-                if (child.gameObject.name == name)
+                if (child.name == name)
                 {
                     return child.gameObject;
                 }
             }
 
+            Assert.Fail($"No child named '{name}' found under {parent.name}.");
             return null;
         }
     }

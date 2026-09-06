@@ -32,7 +32,9 @@ namespace UnderstudyKingdom.Core
                 Loyalty = state.Loyalty,
                 Agenda = (int)state.Agenda,
                 CouncilRewardApplied = state.CouncilRewardApplied,
-                TutorialCompleted = state.TutorialCompleted
+                TutorialCompleted = state.TutorialCompleted,
+                ClaimedEventWeekId = state.ClaimedEventWeekId,
+                SelectedTheme = state.SelectedTheme
             };
             File.WriteAllText(SavePath, JsonUtility.ToJson(data));
         }
@@ -71,7 +73,9 @@ namespace UnderstudyKingdom.Core
                     Loyalty = data.Loyalty,
                     Agenda = agenda,
                     CouncilRewardApplied = data.CouncilRewardApplied,
-                    TutorialCompleted = data.TutorialCompleted
+                    TutorialCompleted = data.TutorialCompleted,
+                    ClaimedEventWeekId = data.ClaimedEventWeekId ?? string.Empty,
+                    SelectedTheme = data.SelectedTheme ?? "Default"
                 };
 
                 // Clamp Mood/Loyalty into [0,100] in case the file was corrupted with an

@@ -13,15 +13,14 @@ using UnderstudyKingdom.UI;
 namespace UnderstudyKingdom.Tests
 {
     /// <summary>
-    /// Real end-to-end: real Supabase sign-in, real local server/, a real
-    /// council crossing its real milestone threshold. Council creation and
-    /// decision submission happen directly through BackendSyncCoordinator/
-    /// BackendApiClient (not through nameInputField/typed UI, which this
-    /// project has no existing automated-testing precedent for -- see Task
-    /// 8/9's scope note); only councilButton is actually clicked, exactly
-    /// mirroring HistoryPanelControllerRealDataTests' own structure.
+    /// Real end-to-end: real Supabase sign-in, real local server/, 3 real
+    /// decisions posted via BackendApiClient directly (mirroring
+    /// CouncilPanelControllerRealDataTests' precedent of posting decisions
+    /// directly rather than through slider/Submit UI, which this project
+    /// has no existing automated-testing precedent for) -- only eventsButton
+    /// and claimButton are actually clicked.
     /// </summary>
-    public class CouncilPanelControllerRealDataTests
+    public class EventPanelControllerRealDataTests
     {
         private GameObject rulerObject;
         private GameObject managerObject;
@@ -32,10 +31,10 @@ namespace UnderstudyKingdom.Tests
         private GameObject panelRootObject;
         private GameObject directApiClientObject;
         private RulerNpcController ruler;
-        private Button councilButton;
-        private TextMeshProUGUI rewardStatusLabel;
-        private GameObject gateObject;
-        private DuelModalGate gate;
+        private Button eventsButton;
+        private Button claimButton;
+        private TextMeshProUGUI progressLabel;
+        private TextMeshProUGUI statusMessageText;
 
         [UnitySetUp]
         public IEnumerator UnitySetUp()
@@ -63,11 +62,12 @@ namespace UnderstudyKingdom.Tests
             var directApiClient = directApiClientObject.AddComponent<BackendApiClient>();
             directApiClient.BackendBaseUrl = "http://localhost:3000";
 
-            bool councilCreated = false;
-            coordinator.RequestCreateCouncil("Grinders", _ => councilCreated = true, err => Assert.Fail($"RequestCreateCouncil failed: {err}"));
-            yield return new WaitUntil(() => councilCreated);
-
-            for (int cycle = 1; cycle <= 10; cycle++)
+            // Every hardcoded event this milestone defines has
+            // objectiveDecisionCount = 3 -- see
+            // server/src/game/liveOpsEvents.ts -- so 3 real decisions always
+            // clears the objective regardless of which event is currently
+            // active.
+            for (int cycle = 1; cycle <= 3; cycle++)
             {
                 var dto = new DecisionSyncRequest
                 {
@@ -109,64 +109,39 @@ namespace UnderstudyKingdom.Tests
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
             var viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
 
-            var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
-            eventsButtonObject.transform.SetParent(canvasObject.transform, false);
-            var eventsButton = eventsButtonObject.GetComponent<Button>();
+            var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
+            councilButtonObject.transform.SetParent(canvasObject.transform, false);
+            var councilButton = councilButtonObject.GetComponent<Button>();
 
             var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
             customizeButtonObject.transform.SetParent(canvasObject.transform, false);
             var customizeButton = customizeButtonObject.GetComponent<Button>();
 
-            var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
-            councilButtonObject.transform.SetParent(canvasObject.transform, false);
-            councilButton = councilButtonObject.GetComponent<Button>();
+            var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
+            eventsButtonObject.transform.SetParent(canvasObject.transform, false);
+            eventsButton = eventsButtonObject.GetComponent<Button>();
 
-            panelRootObject = new GameObject("CouncilPanel");
+            panelRootObject = new GameObject("EventPanel");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
 
             var closeButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
             closeButtonObject.transform.SetParent(panelRootObject.transform, false);
             var closeButton = closeButtonObject.GetComponent<Button>();
 
-            var notInCouncilViewObject = new GameObject("NotInCouncilView");
-            notInCouncilViewObject.transform.SetParent(panelRootObject.transform, false);
+            var nameLabel = CreateLabel("NameLabel", panelRootObject.transform);
+            var narrationLabel = CreateLabel("NarrationLabel", panelRootObject.transform);
+            progressLabel = CreateLabel("ProgressLabel", panelRootObject.transform);
+            statusMessageText = CreateLabel("StatusMessageText", panelRootObject.transform);
 
-            var nameInputObject = new GameObject("NameInput", typeof(TMP_InputField));
-            nameInputObject.transform.SetParent(notInCouncilViewObject.transform, false);
-            var nameInputField = nameInputObject.GetComponent<TMP_InputField>();
-
-            var createButtonObject = new GameObject("CreateButton", typeof(Image), typeof(Button));
-            createButtonObject.transform.SetParent(notInCouncilViewObject.transform, false);
-            var createButton = createButtonObject.GetComponent<Button>();
-
-            var joinCodeInputObject = new GameObject("JoinCodeInput", typeof(TMP_InputField));
-            joinCodeInputObject.transform.SetParent(notInCouncilViewObject.transform, false);
-            var joinCodeInputField = joinCodeInputObject.GetComponent<TMP_InputField>();
-
-            var joinButtonObject = new GameObject("JoinButton", typeof(Image), typeof(Button));
-            joinButtonObject.transform.SetParent(notInCouncilViewObject.transform, false);
-            var joinButton = joinButtonObject.GetComponent<Button>();
-
-            var inCouncilViewObject = new GameObject("InCouncilView");
-            inCouncilViewObject.transform.SetParent(panelRootObject.transform, false);
-
-            var nameLabel = CreateLabel("NameLabel", inCouncilViewObject.transform);
-            var joinCodeLabel = CreateLabel("JoinCodeLabel", inCouncilViewObject.transform);
-            var memberCountLabel = CreateLabel("MemberCountLabel", inCouncilViewObject.transform);
-            var progressLabel = CreateLabel("ProgressLabel", inCouncilViewObject.transform);
-            rewardStatusLabel = CreateLabel("RewardStatusLabel", inCouncilViewObject.transform);
-            var statusMessageText = CreateLabel("StatusMessageText", panelRootObject.transform);
-
-            gateObject = new GameObject("DuelModalGate");
-            gate = gateObject.AddComponent<DuelModalGate>();
+            var claimButtonObject = new GameObject("ClaimButton", typeof(Image), typeof(Button));
+            claimButtonObject.transform.SetParent(panelRootObject.transform, false);
+            claimButton = claimButtonObject.GetComponent<Button>();
 
             controllerObject = new GameObject("Controller");
-            var controller = controllerObject.AddComponent<CouncilPanelController>();
-            controller.Initialize(councilButton, panelRootObject, closeButton, notInCouncilViewObject, inCouncilViewObject,
-                nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
-                nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
-                coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate);
+            var controller = controllerObject.AddComponent<EventPanelController>();
+            controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
+                progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton);
         }
 
         [TearDown]
@@ -179,7 +154,6 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
             Object.DestroyImmediate(directApiClientObject);
-            Object.DestroyImmediate(gateObject);
 
             if (File.Exists(SaveService.SavePath))
             {
@@ -208,30 +182,31 @@ namespace UnderstudyKingdom.Tests
         }
 
         [UnityTest]
-        public IEnumerator CouncilButton_AfterRealThresholdCrossing_AppliesRewardAndPersists()
+        public IEnumerator EventsButton_AfterThreeRealDecisions_ShowsObjectiveMetAndClaimApplies()
         {
-            councilButton.onClick.Invoke();
+            eventsButton.onClick.Invoke();
 
-            // rewardStatusLabel starts unset (null, not ""), and is only ever
-            // written by HandleStatusResult once the real RequestCouncilStatus
-            // round-trip completes -- waiting on "!= string.Empty" alone would
-            // trip immediately on that initial null (null != "" is true),
-            // asserting before the real network response ever arrives. Mirrors
-            // HistoryPanelControllerRealDataTests' identical fix for
-            // OnViewHistory's synchronous placeholder.
-            yield return new WaitUntil(() => !string.IsNullOrEmpty(rewardStatusLabel.text));
+            yield return new WaitUntil(() => !string.IsNullOrEmpty(progressLabel.text));
 
-            Assert.AreEqual(
-                "Your council's shared effort has lifted your ruler's spirits! (+10 mood, +10 loyalty)",
-                rewardStatusLabel.text);
-            Assert.AreEqual(60, ruler.State.Mood);
-            Assert.AreEqual(60, ruler.State.Loyalty);
-            Assert.IsTrue(ruler.State.CouncilRewardApplied);
+            // Every hardcoded event has objectiveDecisionCount = 3, and 3
+            // real decisions were posted in UnitySetUp above, so the
+            // objective is exactly met.
+            Assert.IsTrue(claimButton.interactable, $"Expected Claim to be interactable with progress '{progressLabel.text}'");
+
+            int moodBefore = ruler.State.Mood;
+            int loyaltyBefore = ruler.State.Loyalty;
+
+            claimButton.onClick.Invoke();
+
+            Assert.AreEqual(moodBefore + 15, ruler.State.Mood);
+            Assert.AreEqual(loyaltyBefore + 15, ruler.State.Loyalty);
+            Assert.IsFalse(string.IsNullOrEmpty(ruler.State.ClaimedEventWeekId));
+            Assert.IsFalse(claimButton.interactable);
 
             RulerState persisted = SaveService.Load();
-            Assert.IsTrue(persisted.CouncilRewardApplied);
-            Assert.AreEqual(60, persisted.Mood);
-            Assert.AreEqual(60, persisted.Loyalty);
+            Assert.AreEqual(ruler.State.ClaimedEventWeekId, persisted.ClaimedEventWeekId);
+            Assert.AreEqual(moodBefore + 15, persisted.Mood);
+            Assert.AreEqual(loyaltyBefore + 15, persisted.Loyalty);
         }
     }
 }

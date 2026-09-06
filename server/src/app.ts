@@ -5,6 +5,7 @@ import kingdomsRoutes from './routes/kingdoms';
 import decisionsRoutes from './routes/decisions';
 import duelsRoutes from './routes/duels';
 import councilsRoutes from './routes/councils';
+import eventsRoutes from './routes/events';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({ logger: false });
@@ -36,6 +37,7 @@ export function buildApp(): FastifyInstance {
     await protectedRoutes.register(decisionsRoutes);
     await protectedRoutes.register(duelsRoutes);
     await protectedRoutes.register(councilsRoutes);
+    await protectedRoutes.register(eventsRoutes);
   });
 
   return app;
