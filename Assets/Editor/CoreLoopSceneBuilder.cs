@@ -77,10 +77,7 @@ namespace UnderstudyKingdom.EditorTools
             rulerPortraitRect.sizeDelta = new Vector2(200f, 260f);
             var rulerPortraitImage = rulerPortraitObject.GetComponent<Image>();
             rulerPortraitImage.preserveAspect = true;
-            // Real sprites are wired in Task 3 (LoadRulerPortraits()) -- this
-            // task only proves the field/signature plumbing compiles and
-            // RefreshStatusLabels() doesn't throw on a real scene load.
-            Sprite[] rulerPortraits = new Sprite[15];
+            Sprite[] rulerPortraits = LoadRulerPortraits();
 
             var buttonObject = new GameObject("SubmitButton", typeof(Image), typeof(Button));
             buttonObject.transform.SetParent(canvasObject.transform, false);
@@ -735,6 +732,43 @@ namespace UnderstudyKingdom.EditorTools
             label.color = Color.white;
 
             return label;
+        }
+
+        // The 15 portrait PNGs were added to the project as raw files (not
+        // through Unity's asset-creation menu), so their TextureImporter
+        // defaults to Default (Texture2D), not Sprite -- AssetDatabase.
+        // LoadAssetAtPath<Sprite> silently returns null for a Default-typed
+        // texture. This fixes the import type once (idempotent -- skips the
+        // reimport if it's already correct) before loading.
+        private static Sprite LoadPortraitSprite(string path)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null && importer.textureType != TextureImporterType.Sprite)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        }
+
+        // Mood-major order matches CoreLoopScreenController.RefreshStatusLabels()'s
+        // GetMoodTier(mood) * 3 + GetLoyaltyTier(loyalty) indexing exactly.
+        private static Sprite[] LoadRulerPortraits()
+        {
+            string[] moods = { "furious", "displeased", "neutral", "pleased", "delighted" };
+            string[] loyalties = { "low", "medium", "high" };
+            var portraits = new Sprite[15];
+            int i = 0;
+            foreach (string mood in moods)
+            {
+                foreach (string loyalty in loyalties)
+                {
+                    string path = $"Assets/Art/RulerPortraits/ruler_{mood}_{loyalty}.png";
+                    portraits[i] = LoadPortraitSprite(path);
+                    i++;
+                }
+            }
+            return portraits;
         }
 
         private static TMP_InputField CreateInputField(Transform parent, string name, string placeholderText)
