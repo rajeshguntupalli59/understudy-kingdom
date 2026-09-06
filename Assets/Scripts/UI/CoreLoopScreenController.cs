@@ -117,5 +117,21 @@ namespace UnderstudyKingdom.UI
             loyaltyLabel.text = $"Loyalty: {manager.Ruler.State.Loyalty}";
             agendaLabel.text = $"Agenda: {manager.Ruler.State.Agenda}";
         }
+
+        private static int GetMoodTier(int mood)
+        {
+            if (mood <= 20) return 0; // Furious
+            if (mood <= 40) return 1; // Displeased
+            if (mood <= 60) return 2; // Neutral
+            if (mood <= 80) return 3; // Pleased
+            return 4;                 // Delighted
+        }
+
+        private static int GetLoyaltyTier(int loyalty)
+        {
+            if (loyalty <= 33) return 0; // Low
+            if (loyalty <= 66) return 1; // Medium
+            return 2;                    // High
+        }
     }
 }
