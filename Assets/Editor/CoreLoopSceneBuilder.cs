@@ -64,15 +64,28 @@ namespace UnderstudyKingdom.EditorTools
 
             // Created before every other canvas child so it renders behind
             // all of them (Unity draws uGUI siblings in child order).
-            var sceneBackgroundObject = new GameObject("SceneBackground", typeof(Image));
+            var sceneBackgroundObject = new GameObject("SceneBackground", typeof(Image), typeof(AspectRatioFitter));
             sceneBackgroundObject.transform.SetParent(canvasObject.transform, false);
             var sceneBackgroundRect = sceneBackgroundObject.GetComponent<RectTransform>();
-            sceneBackgroundRect.anchorMin = Vector2.zero;
-            sceneBackgroundRect.anchorMax = Vector2.one;
-            sceneBackgroundRect.offsetMin = Vector2.zero;
-            sceneBackgroundRect.offsetMax = Vector2.zero;
+            // Point-anchored at center (not stretch) -- AspectRatioFitter drives
+            // sizeDelta directly in EnvelopeParent mode, resizing to fully cover
+            // the parent while preserving the art's real aspect ratio (crops
+            // excess instead of squeezing/stretching it).
+            sceneBackgroundRect.anchorMin = new Vector2(0.5f, 0.5f);
+            sceneBackgroundRect.anchorMax = new Vector2(0.5f, 0.5f);
+            sceneBackgroundRect.pivot = new Vector2(0.5f, 0.5f);
+            var sceneBackgroundFitter = sceneBackgroundObject.GetComponent<AspectRatioFitter>();
+            sceneBackgroundFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            // Matches the committed background art's actual aspect ratio
+            // (1024x1792) -- update this if the art is ever re-exported at a
+            // different ratio.
+            sceneBackgroundFitter.aspectRatio = 1024f / 1792f;
             var sceneBackgroundImage = sceneBackgroundObject.GetComponent<Image>();
             sceneBackgroundImage.preserveAspect = false;
+            // Full-screen decorative background sitting behind every other UI
+            // element -- never the front-most hit target, but skipping it in
+            // every raycast is free and correct for a purely visual element.
+            sceneBackgroundImage.raycastTarget = false;
             Sprite[] backgroundSprites = LoadBackgroundSprites();
 
             Slider armySlider = CreateSlider(canvasObject.transform, "ArmySlider", 40f, 40f);
@@ -700,6 +713,27 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
+            FieldInfo sceneBackgroundImageField = typeof(CosmeticsPanelController).GetField("sceneBackgroundImage", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (sceneBackgroundImageField == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private sceneBackgroundImage field (renamed?).");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            var sceneBackgroundImage = (Image)sceneBackgroundImageField.GetValue(cosmeticsController);
+            if (sceneBackgroundImage == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController's sceneBackgroundImage is null.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
             FieldInfo backgroundSpritesField = typeof(CosmeticsPanelController).GetField("backgroundSprites", BindingFlags.NonPublic | BindingFlags.Instance);
             if (backgroundSpritesField == null)
             {
@@ -802,6 +836,12 @@ namespace UnderstudyKingdom.EditorTools
             label.fontSize = 24f;
             label.alignment = TextAlignmentOptions.Center;
             label.color = Color.white;
+            // A black outline keeps white text readable regardless of which
+            // scene background theme is active -- measured contrast against
+            // the Harvest Hall background without this was ~3.8:1, below
+            // WCAG AA's 4.5:1 minimum.
+            label.outlineWidth = 0.2f;
+            label.outlineColor = Color.black;
 
             return label;
         }

@@ -216,7 +216,10 @@ namespace UnderstudyKingdom.UI
             eventPanelImage.color = color;
             councilPanelImage.color = color;
             historyPanelImage.color = color;
-            sceneBackgroundImage.sprite = GetBackgroundSprite(themeId, backgroundSprites);
+            if (sceneBackgroundImage != null)
+            {
+                sceneBackgroundImage.sprite = GetBackgroundSprite(themeId, backgroundSprites);
+            }
         }
 
         // Unrecognized ids (e.g. a future save-file edge case) resolve to
@@ -239,7 +242,12 @@ namespace UnderstudyKingdom.UI
         // background (index 0) rather than leaving the background blank.
         private static Sprite GetBackgroundSprite(string themeId, Sprite[] sprites)
         {
-            for (int i = 0; i < Themes.Length; i++)
+            if (sprites == null || sprites.Length == 0)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < Themes.Length && i < sprites.Length; i++)
             {
                 if (Themes[i].Id == themeId)
                 {
