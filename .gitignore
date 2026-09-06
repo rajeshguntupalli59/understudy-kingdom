@@ -8,6 +8,7 @@
 [Uu]serSettings/
 [Mm]emoryCaptures/
 [Tt]estResults/
+.utmp/
 *.csproj
 *.unityproj
 *.sln
