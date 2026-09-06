@@ -23,6 +23,8 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private TextMeshProUGUI agendaLabel;
         [SerializeField] private TextMeshProUGUI narrationText;
         [SerializeField] private Button submitButton;
+        [SerializeField] private Image rulerPortraitImage;
+        [SerializeField] private Sprite[] rulerPortraits;
 
         private bool rebalancing;
 
@@ -46,7 +48,9 @@ namespace UnderstudyKingdom.UI
             TextMeshProUGUI loyaltyLabel,
             TextMeshProUGUI agendaLabel,
             TextMeshProUGUI narrationText,
-            Button submitButton)
+            Button submitButton,
+            Image rulerPortraitImage,
+            Sprite[] rulerPortraits)
         {
             this.manager = manager;
             this.armySlider = armySlider;
@@ -57,6 +61,8 @@ namespace UnderstudyKingdom.UI
             this.agendaLabel = agendaLabel;
             this.narrationText = narrationText;
             this.submitButton = submitButton;
+            this.rulerPortraitImage = rulerPortraitImage;
+            this.rulerPortraits = rulerPortraits;
 
             Bind();
         }
@@ -116,6 +122,12 @@ namespace UnderstudyKingdom.UI
             moodLabel.text = $"Mood: {manager.Ruler.State.Mood}";
             loyaltyLabel.text = $"Loyalty: {manager.Ruler.State.Loyalty}";
             agendaLabel.text = $"Agenda: {manager.Ruler.State.Agenda}";
+
+            // Neutral/Medium (index 7) is the fallback for a missing slot --
+            // matches CosmeticsPanelController.GetThemeColor's fallback to the
+            // Default theme rather than leaving a UI element blank/unset.
+            int portraitIndex = GetMoodTier(manager.Ruler.State.Mood) * 3 + GetLoyaltyTier(manager.Ruler.State.Loyalty);
+            rulerPortraitImage.sprite = rulerPortraits[portraitIndex] != null ? rulerPortraits[portraitIndex] : rulerPortraits[7];
         }
 
         private static int GetMoodTier(int mood)

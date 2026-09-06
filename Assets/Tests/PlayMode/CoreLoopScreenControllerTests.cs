@@ -24,6 +24,9 @@ namespace UnderstudyKingdom.Tests
         private TextMeshProUGUI agendaLabel;
         private TextMeshProUGUI narrationText;
         private Button submitButton;
+        private Image rulerPortraitImage;
+        private Sprite[] rulerPortraits;
+        private CoreLoopScreenController controller;
 
         [SetUp]
         public void SetUp()
@@ -50,10 +53,21 @@ namespace UnderstudyKingdom.Tests
             buttonObject.transform.SetParent(canvasObject.transform, false);
             submitButton = buttonObject.GetComponent<Button>();
 
+            var rulerPortraitObject = new GameObject("RulerPortraitImage", typeof(Image));
+            rulerPortraitObject.transform.SetParent(canvasObject.transform, false);
+            rulerPortraitImage = rulerPortraitObject.GetComponent<Image>();
+
+            rulerPortraits = new Sprite[15];
+            for (int i = 0; i < rulerPortraits.Length; i++)
+            {
+                rulerPortraits[i] = CreateDummySprite();
+            }
+
             controllerObject = new GameObject("Controller");
-            var controller = controllerObject.AddComponent<CoreLoopScreenController>();
+            controller = controllerObject.AddComponent<CoreLoopScreenController>();
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
-                moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton);
+                moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton,
+                rulerPortraitImage, rulerPortraits);
         }
 
         [TearDown]
@@ -89,6 +103,12 @@ namespace UnderstudyKingdom.Tests
             return labelObject.GetComponent<TextMeshProUGUI>();
         }
 
+        private static Sprite CreateDummySprite()
+        {
+            var texture = new Texture2D(1, 1);
+            return Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f));
+        }
+
         [Test]
         public void ChangingOneSlider_RebalancesOtherTwoToKeepSumAt100()
         {
@@ -121,6 +141,30 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual($"Mood: {manager.Ruler.State.Mood}", moodLabel.text);
             Assert.AreEqual($"Loyalty: {manager.Ruler.State.Loyalty}", loyaltyLabel.text);
             Assert.AreEqual($"Agenda: {manager.Ruler.State.Agenda}", agendaLabel.text);
+        }
+
+        [Test]
+        public void RefreshStatusLabels_SelectsPortraitMatchingMoodAndLoyaltyTier()
+        {
+            manager.Ruler.State.Mood = 90;
+            manager.Ruler.State.Loyalty = 10;
+
+            controller.RefreshStatusLabels();
+
+            // Delighted (tier 4) x Low (tier 0) = index 4*3+0 = 12
+            Assert.AreSame(rulerPortraits[12], rulerPortraitImage.sprite);
+        }
+
+        [Test]
+        public void RefreshStatusLabels_WithMissingSelectedPortrait_FallsBackToNeutralMediumPortrait()
+        {
+            manager.Ruler.State.Mood = 90;
+            manager.Ruler.State.Loyalty = 10;
+            rulerPortraits[12] = null;
+
+            controller.RefreshStatusLabels();
+
+            Assert.AreSame(rulerPortraits[7], rulerPortraitImage.sprite);
         }
     }
 }

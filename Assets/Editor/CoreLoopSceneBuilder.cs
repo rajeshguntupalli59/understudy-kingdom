@@ -70,6 +70,18 @@ namespace UnderstudyKingdom.EditorTools
             TextMeshProUGUI agendaLabel = CreateLabel(canvasObject.transform, "AgendaLabel", 280f, "Agenda: Expansionist");
             TextMeshProUGUI narrationText = CreateLabel(canvasObject.transform, "NarrationText", 340f, string.Empty);
 
+            var rulerPortraitObject = new GameObject("RulerPortraitImage", typeof(Image));
+            rulerPortraitObject.transform.SetParent(canvasObject.transform, false);
+            var rulerPortraitRect = rulerPortraitObject.GetComponent<RectTransform>();
+            rulerPortraitRect.anchoredPosition = new Vector2(-250f, -170f);
+            rulerPortraitRect.sizeDelta = new Vector2(200f, 260f);
+            var rulerPortraitImage = rulerPortraitObject.GetComponent<Image>();
+            rulerPortraitImage.preserveAspect = true;
+            // Real sprites are wired in Task 3 (LoadRulerPortraits()) -- this
+            // task only proves the field/signature plumbing compiles and
+            // RefreshStatusLabels() doesn't throw on a real scene load.
+            Sprite[] rulerPortraits = new Sprite[15];
+
             var buttonObject = new GameObject("SubmitButton", typeof(Image), typeof(Button));
             buttonObject.transform.SetParent(canvasObject.transform, false);
             var buttonRect = buttonObject.GetComponent<RectTransform>();
@@ -90,7 +102,8 @@ namespace UnderstudyKingdom.EditorTools
             var controllerObject = new GameObject("CoreLoopScreenController");
             var controller = controllerObject.AddComponent<CoreLoopScreenController>();
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
-                moodLabel, loyaltyLabel, agendaLabel, narrationText, button);
+                moodLabel, loyaltyLabel, agendaLabel, narrationText, button,
+                rulerPortraitImage, rulerPortraits);
 
             var duelModalGateObject = new GameObject("DuelModalGate");
             var duelModalGate = duelModalGateObject.AddComponent<DuelModalGate>();

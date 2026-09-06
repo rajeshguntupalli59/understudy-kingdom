@@ -76,8 +76,14 @@ namespace UnderstudyKingdom.Tests
 
             screenControllerObject = new GameObject("ScreenController");
             var screenController = screenControllerObject.AddComponent<CoreLoopScreenController>();
+
+            var rulerPortraitObject = new GameObject("RulerPortraitImage", typeof(Image));
+            rulerPortraitObject.transform.SetParent(canvasObject.transform, false);
+            var rulerPortraitImage = rulerPortraitObject.GetComponent<Image>();
+
             screenController.Initialize(manager, armySlider, tradeSlider, religionSlider,
-                moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton);
+                moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton,
+                rulerPortraitImage, new Sprite[15]);
 
             var challengeButtonObject = new GameObject("ChallengeButton", typeof(Image), typeof(Button));
             challengeButtonObject.transform.SetParent(canvasObject.transform, false);
