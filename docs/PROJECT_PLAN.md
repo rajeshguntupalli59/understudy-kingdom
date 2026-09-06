@@ -261,8 +261,11 @@ real local Postgres integration tests (no mocking):
 | #9 Duel/Modal Gate Fix | `feat/duel-modal-gate` | Shared duel-in-flight/modal gate for History/Council panels | Done |
 | #10 Live-Ops Events | `feat/live-ops-events` | FR-10, FR-11 (narrowed) | Done |
 | #11 Cosmetics Customization | `feat/cosmetics-customization` | FR-12 | Done |
+| #12 Ruler Portrait System | `feat/ruler-portrait` | Visual art phase 1: painted ruler portrait reacting to Mood/Loyalty | Done |
 
-*(Milestone #9 merged after a manual playtest was still outstanding —
+*(Milestone #12 is the first increment of a broader visual-art phase —
+see "Known follow-up items" below for the rest of that phase, not yet
+started. Milestone #9 merged after a manual playtest was still outstanding —
 same limitation as milestones #10/#11: no automated agent can drive the
 interactive Unity Editor UI. Everything automated (server tests,
 typecheck, Unity EditMode, Unity PlayMode) is green; see "Known follow-up
@@ -405,6 +408,30 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   wire up or remove the currently-unwired `ALLOW_TEST_DB_TRUNCATE` env var
   so the ever-growing, never-reset shared test DB doesn't keep making
   `maybeAdvanceCouncilMilestone`'s unbounded join slower over time.
+- **Milestone #12 (Ruler Portrait System)** shipped the first increment of
+  a broader visual-art phase: 15 AI-generated portraits (5 Mood tiers x 3
+  Loyalty tiers) that `CoreLoopScreenController.RefreshStatusLabels()`
+  swaps in every time those stats change. Generated free via Hugging
+  Face (public FLUX.1-schnell Space, then the authenticated router API
+  after hitting the anonymous quota wall) rather than Higgsfield (out of
+  credits). A final whole-branch review caught a real defect before merge
+  — 3 of the 15 images had a different aspect ratio than the other 12,
+  which under `preserveAspect = true` made the portrait visibly resize as
+  mood changed — fixed by cropping and independently re-verified
+  (PNG dimensions decoded byte-for-byte, not just trusted). Remaining
+  non-blocking Minor items from that review, not yet acted on: no
+  automated guard preventing a future art re-export from reintroducing
+  the aspect-ratio bug (an EditMode test asserting all 15 sprites share
+  one `rect.size` would close this); `CoreLoopScreenControllerTests`'s
+  dummy sprites/textures aren't destroyed in `TearDown` (harmless test
+  leak); the portrait's rect has only ~30px of accidental clearance from
+  the status labels next to it (`CoreLoopSceneBuilder.cs`), not real
+  margin — a longer/localized label could slide under it; all 15 sprites
+  are 1024px sources displayed at 200x260 (no mobile-platform texture
+  size override yet, worth doing before a store build). The rest of the
+  visual-art phase (scene/background art, button icons, panel art) has
+  not been started. See `docs/superpowers/specs/2026-09-06-ruler-portrait-design.md`
+  and `docs/superpowers/plans/2026-09-06-ruler-portrait-system.md`.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
