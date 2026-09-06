@@ -86,6 +86,38 @@ namespace UnderstudyKingdom.Tests
                 "Expected the narration label to have laid out renderable characters after ForceMeshUpdate.");
         }
 
+        /// <summary>
+        /// Regression guard for the ruler-portrait final-review finding: a
+        /// fully-non-null-array-but-all-elements-null rulerPortraits state (e.g.
+        /// every LoadPortraitSprite call silently failing) doesn't throw, so
+        /// none of the C-1 NRE-based guard tests above can detect it. This test
+        /// loads the real scene, clicks the real Submit button, and asserts the
+        /// portrait Image actually ends up with a non-null sprite -- the one
+        /// place a well-formed-but-empty portraits array would be caught.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_Portrait_HasNonNullSpriteAfterSubmit()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button submitButton = FindButton(canvas, "SubmitButton");
+            Assert.IsNotNull(submitButton, "SubmitButton not found in the loaded CoreLoop scene.");
+
+            GameObject portraitObject = FindChildByName(canvas.transform, "RulerPortraitImage");
+            Assert.IsNotNull(portraitObject, "RulerPortraitImage not found in the loaded CoreLoop scene.");
+            Image portraitImage = portraitObject.GetComponent<Image>();
+            Assert.IsNotNull(portraitImage, "RulerPortraitImage has no Image component.");
+
+            submitButton.onClick.Invoke();
+
+            Assert.IsNotNull(portraitImage.sprite,
+                "Expected the ruler portrait to have a non-null sprite after Submit.");
+        }
+
         [UnityTest]
         public IEnumerator LoadedCoreLoopScene_EventsButton_OpensPanelWithoutThrowing()
         {

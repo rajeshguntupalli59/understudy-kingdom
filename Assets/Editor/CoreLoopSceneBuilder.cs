@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -606,6 +607,30 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
+            FieldInfo portraitsField = typeof(CoreLoopScreenController).GetField("rulerPortraits", BindingFlags.NonPublic | BindingFlags.Instance);
+            var rulerPortraits = (Sprite[])portraitsField.GetValue(controller);
+            if (rulerPortraits == null || rulerPortraits.Length != 15)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 15-element rulerPortraits array, found {(rulerPortraits == null ? "null" : rulerPortraits.Length.ToString())}.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            for (int j = 0; j < rulerPortraits.Length; j++)
+            {
+                if (rulerPortraits[j] == null)
+                {
+                    Debug.LogError($"CoreLoopSceneBuilder.Verify: rulerPortraits[{j}] is null.");
+                    if (Application.isBatchMode)
+                    {
+                        EditorApplication.Exit(1);
+                    }
+                    return;
+                }
+            }
+
             var historyController = Object.FindFirstObjectByType<HistoryPanelController>();
             if (historyController == null)
             {
@@ -768,6 +793,15 @@ namespace UnderstudyKingdom.EditorTools
                     i++;
                 }
             }
+
+            for (int j = 0; j < portraits.Length; j++)
+            {
+                if (portraits[j] == null)
+                {
+                    Debug.LogError($"CoreLoopSceneBuilder.LoadRulerPortraits: failed to load portrait sprite at index {j}");
+                }
+            }
+
             return portraits;
         }
 
