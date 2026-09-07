@@ -558,7 +558,8 @@ namespace UnderstudyKingdom.EditorTools
                 themeStatusLabels, themeApplyButtons,
                 eventPanelRootObject.GetComponent<Image>(), councilPanelRootObject.GetComponent<Image>(), panelRootObject.GetComponent<Image>(),
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
-                sceneBackgroundImage, backgroundSprites);
+                sceneBackgroundImage, backgroundSprites,
+                new Sprite[0], new Sprite[0], new Sprite[0]);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 

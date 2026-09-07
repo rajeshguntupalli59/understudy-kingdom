@@ -73,6 +73,9 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private DuelModalGate gate;
         [SerializeField] private Image sceneBackgroundImage;
         [SerializeField] private Sprite[] backgroundSprites;
+        [SerializeField] private Sprite[] historyPanelSprites;
+        [SerializeField] private Sprite[] councilPanelSprites;
+        [SerializeField] private Sprite[] eventPanelSprites;
 
         private void Start()
         {
@@ -104,7 +107,10 @@ namespace UnderstudyKingdom.UI
             Button eventsButton,
             DuelModalGate gate,
             Image sceneBackgroundImage,
-            Sprite[] backgroundSprites)
+            Sprite[] backgroundSprites,
+            Sprite[] historyPanelSprites,
+            Sprite[] councilPanelSprites,
+            Sprite[] eventPanelSprites)
         {
             this.customizeButton = customizeButton;
             this.panelRoot = panelRoot;
@@ -126,6 +132,9 @@ namespace UnderstudyKingdom.UI
             this.gate = gate;
             this.sceneBackgroundImage = sceneBackgroundImage;
             this.backgroundSprites = backgroundSprites;
+            this.historyPanelSprites = historyPanelSprites;
+            this.councilPanelSprites = councilPanelSprites;
+            this.eventPanelSprites = eventPanelSprites;
 
             Bind();
         }
@@ -216,6 +225,9 @@ namespace UnderstudyKingdom.UI
             eventPanelImage.color = color;
             councilPanelImage.color = color;
             historyPanelImage.color = color;
+            eventPanelImage.sprite = GetBackgroundSprite(themeId, eventPanelSprites);
+            councilPanelImage.sprite = GetBackgroundSprite(themeId, councilPanelSprites);
+            historyPanelImage.sprite = GetBackgroundSprite(themeId, historyPanelSprites);
             if (sceneBackgroundImage != null)
             {
                 sceneBackgroundImage.sprite = GetBackgroundSprite(themeId, backgroundSprites);
