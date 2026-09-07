@@ -343,6 +343,31 @@ namespace UnderstudyKingdom.Tests
                 "Expected CouncilPanel to become active after CouncilButton is clicked.");
         }
 
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_ButtonIcons_HaveNonNullSpritesOnLoad()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            GameObject submitButton = FindChildByName(canvas.transform, "SubmitButton");
+            GameObject challengeButton = FindChildByName(canvas.transform, "ChallengeButton");
+            GameObject viewHistoryButton = FindChildByName(canvas.transform, "ViewHistoryButton");
+            GameObject councilButton = FindChildByName(canvas.transform, "CouncilButton");
+
+            GameObject submitIcon = FindChildByName(submitButton.transform, "Icon");
+            GameObject challengeIcon = FindChildByName(challengeButton.transform, "Icon");
+            GameObject viewHistoryIcon = FindChildByName(viewHistoryButton.transform, "Icon");
+            GameObject councilIcon = FindChildByName(councilButton.transform, "Icon");
+
+            Assert.IsNotNull(submitIcon.GetComponent<Image>().sprite, "Expected SubmitButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(challengeIcon.GetComponent<Image>().sprite, "Expected ChallengeButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(viewHistoryIcon.GetComponent<Image>().sprite, "Expected ViewHistoryButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(councilIcon.GetComponent<Image>().sprite, "Expected CouncilButton's Icon to have a non-null sprite.");
+        }
+
         private static Button FindButton(Canvas canvas, string name)
         {
             foreach (Button candidate in canvas.GetComponentsInChildren<Button>(true))

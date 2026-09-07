@@ -120,14 +120,26 @@ namespace UnderstudyKingdom.EditorTools
             var buttonLabelRect = buttonLabel.GetComponent<RectTransform>();
             buttonLabelRect.anchorMin = Vector2.zero;
             buttonLabelRect.anchorMax = Vector2.one;
-            buttonLabelRect.sizeDelta = Vector2.zero;
-            buttonLabelRect.anchoredPosition = Vector2.zero;
+            buttonLabelRect.offsetMin = new Vector2(40f, 0f);
+            buttonLabelRect.offsetMax = Vector2.zero;
+
+            var submitIconObject = new GameObject("Icon", typeof(Image));
+            submitIconObject.transform.SetParent(buttonObject.transform, false);
+            var submitIconRect = submitIconObject.GetComponent<RectTransform>();
+            submitIconRect.anchorMin = new Vector2(0f, 0.5f);
+            submitIconRect.anchorMax = new Vector2(0f, 0.5f);
+            submitIconRect.pivot = new Vector2(0f, 0.5f);
+            submitIconRect.anchoredPosition = new Vector2(8f, 0f);
+            submitIconRect.sizeDelta = new Vector2(32f, 32f);
+            var submitIconImage = submitIconObject.GetComponent<Image>();
+            submitIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/submit.png");
+            submitIconImage.raycastTarget = false;
 
             var controllerObject = new GameObject("CoreLoopScreenController");
             var controller = controllerObject.AddComponent<CoreLoopScreenController>();
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, button,
-                rulerPortraitImage, rulerPortraits, null);
+                rulerPortraitImage, rulerPortraits, submitIconImage);
 
             var duelModalGateObject = new GameObject("DuelModalGate");
             var duelModalGate = duelModalGateObject.AddComponent<DuelModalGate>();
@@ -143,14 +155,26 @@ namespace UnderstudyKingdom.EditorTools
             var duelButtonLabelRect = duelButtonLabel.GetComponent<RectTransform>();
             duelButtonLabelRect.anchorMin = Vector2.zero;
             duelButtonLabelRect.anchorMax = Vector2.one;
-            duelButtonLabelRect.sizeDelta = Vector2.zero;
-            duelButtonLabelRect.anchoredPosition = Vector2.zero;
+            duelButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            duelButtonLabelRect.offsetMax = Vector2.zero;
+
+            var challengeIconObject = new GameObject("Icon", typeof(Image));
+            challengeIconObject.transform.SetParent(duelButtonObject.transform, false);
+            var challengeIconRect = challengeIconObject.GetComponent<RectTransform>();
+            challengeIconRect.anchorMin = new Vector2(0f, 0.5f);
+            challengeIconRect.anchorMax = new Vector2(0f, 0.5f);
+            challengeIconRect.pivot = new Vector2(0f, 0.5f);
+            challengeIconRect.anchoredPosition = new Vector2(8f, 0f);
+            challengeIconRect.sizeDelta = new Vector2(32f, 32f);
+            var challengeIconImage = challengeIconObject.GetComponent<Image>();
+            challengeIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/challenge.png");
+            challengeIconImage.raycastTarget = false;
 
             TextMeshProUGUI duelResultText = CreateLabel(canvasObject.transform, "DuelResultText", 540f, string.Empty);
 
             var duelControllerObject = new GameObject("DuelButtonController");
             var duelController = duelControllerObject.AddComponent<DuelButtonController>();
-            duelController.Initialize(armySlider, tradeSlider, religionSlider, duelButton, duelResultText, backendCoordinator, duelModalGate, null);
+            duelController.Initialize(armySlider, tradeSlider, religionSlider, duelButton, duelResultText, backendCoordinator, duelModalGate, challengeIconImage);
 
             var viewHistoryButtonObject = new GameObject("ViewHistoryButton", typeof(Image), typeof(Button));
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
@@ -163,8 +187,20 @@ namespace UnderstudyKingdom.EditorTools
             var viewHistoryLabelRect = viewHistoryLabel.GetComponent<RectTransform>();
             viewHistoryLabelRect.anchorMin = Vector2.zero;
             viewHistoryLabelRect.anchorMax = Vector2.one;
-            viewHistoryLabelRect.sizeDelta = Vector2.zero;
-            viewHistoryLabelRect.anchoredPosition = Vector2.zero;
+            viewHistoryLabelRect.offsetMin = new Vector2(40f, 0f);
+            viewHistoryLabelRect.offsetMax = Vector2.zero;
+
+            var viewHistoryIconObject = new GameObject("Icon", typeof(Image));
+            viewHistoryIconObject.transform.SetParent(viewHistoryButtonObject.transform, false);
+            var viewHistoryIconRect = viewHistoryIconObject.GetComponent<RectTransform>();
+            viewHistoryIconRect.anchorMin = new Vector2(0f, 0.5f);
+            viewHistoryIconRect.anchorMax = new Vector2(0f, 0.5f);
+            viewHistoryIconRect.pivot = new Vector2(0f, 0.5f);
+            viewHistoryIconRect.anchoredPosition = new Vector2(8f, 0f);
+            viewHistoryIconRect.sizeDelta = new Vector2(32f, 32f);
+            var viewHistoryIconImage = viewHistoryIconObject.GetComponent<Image>();
+            viewHistoryIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/history.png");
+            viewHistoryIconImage.raycastTarget = false;
 
             var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
             councilButtonObject.transform.SetParent(canvasObject.transform, false);
@@ -177,8 +213,20 @@ namespace UnderstudyKingdom.EditorTools
             var councilButtonLabelRect = councilButtonLabel.GetComponent<RectTransform>();
             councilButtonLabelRect.anchorMin = Vector2.zero;
             councilButtonLabelRect.anchorMax = Vector2.one;
-            councilButtonLabelRect.sizeDelta = Vector2.zero;
-            councilButtonLabelRect.anchoredPosition = Vector2.zero;
+            councilButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            councilButtonLabelRect.offsetMax = Vector2.zero;
+
+            var councilIconObject = new GameObject("Icon", typeof(Image));
+            councilIconObject.transform.SetParent(councilButtonObject.transform, false);
+            var councilIconRect = councilIconObject.GetComponent<RectTransform>();
+            councilIconRect.anchorMin = new Vector2(0f, 0.5f);
+            councilIconRect.anchorMax = new Vector2(0f, 0.5f);
+            councilIconRect.pivot = new Vector2(0f, 0.5f);
+            councilIconRect.anchoredPosition = new Vector2(8f, 0f);
+            councilIconRect.sizeDelta = new Vector2(32f, 32f);
+            var councilIconImage = councilIconObject.GetComponent<Image>();
+            councilIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/council.png");
+            councilIconImage.raycastTarget = false;
 
             var eventsButtonObject = new GameObject("EventsButton", typeof(Image), typeof(Button));
             eventsButtonObject.transform.SetParent(canvasObject.transform, false);
@@ -408,7 +456,7 @@ namespace UnderstudyKingdom.EditorTools
                 nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
                 councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
                 backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, null);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage);
 
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -466,7 +514,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, null);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage);
 
             var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
             tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);
@@ -869,7 +917,108 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
+            var coreLoopController = Object.FindFirstObjectByType<CoreLoopScreenController>();
+            if (coreLoopController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no CoreLoopScreenController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(coreLoopController, "submitIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var duelButtonController = Object.FindFirstObjectByType<DuelButtonController>();
+            if (duelButtonController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no DuelButtonController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(duelButtonController, "challengeIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var historyPanelController = Object.FindFirstObjectByType<HistoryPanelController>();
+            if (historyPanelController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no HistoryPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(historyPanelController, "viewHistoryIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var councilPanelController = Object.FindFirstObjectByType<CouncilPanelController>();
+            if (councilPanelController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no CouncilPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(councilPanelController, "councilIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
+        }
+
+        // Confirms an icon Image field is non-null AND its .sprite is non-null --
+        // icons have no fallback/intentionally-missing slot (unlike the themed
+        // panel art), so both checks apply here.
+        private static bool VerifyIconField(Component controller, string fieldName)
+        {
+            FieldInfo field = controller.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: {controller.GetType().Name} has no private {fieldName} field (renamed?).");
+                return false;
+            }
+            var image = (Image)field.GetValue(controller);
+            if (image == null)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: {controller.GetType().Name}.{fieldName} is null.");
+                return false;
+            }
+            if (image.sprite == null)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: {controller.GetType().Name}.{fieldName}'s Image has a null sprite.");
+                return false;
+            }
+            return true;
         }
 
         private static bool TryGetThemedSpriteArray(CosmeticsPanelController controller, string fieldName, out Sprite[] array)
@@ -1065,6 +1214,26 @@ namespace UnderstudyKingdom.EditorTools
                 }
             }
             return sprites;
+        }
+
+        // Icons are static (no theme/state variation), so this is a single-file
+        // loader, not the array-based LoadThemedSprites shape -- mirrors how
+        // LoadPortraitSprite/LoadRulerPortraits coexist as their own shape for
+        // their own differently-keyed asset set.
+        private static Sprite LoadIconSprite(string path)
+        {
+            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null && importer.textureType != TextureImporterType.Sprite)
+            {
+                importer.textureType = TextureImporterType.Sprite;
+                importer.SaveAndReimport();
+            }
+            Sprite sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sprite == null)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.LoadIconSprite: failed to load icon sprite at {path}");
+            }
+            return sprite;
         }
 
         private static TMP_InputField CreateInputField(Transform parent, string name, string placeholderText)
