@@ -345,27 +345,31 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   anymore. Any player with an out-of-sync install from before this fix
   self-heals automatically on their next launch once this ships.
 - The C-1 fix's re-review found 4 non-blocking Low/informational
-  follow-ups, none of which weaken the fix itself: (N-1) the seed reads
-  the newest-by-`created_at` decision rather than `MAX(cycle_number)` --
-  these coincide under normal sequential play, but could theoretically
-  diverge under a rare double-refresh-callback race
-  (`DrainPendingRefreshCallbacks` firing two queued syncs back-to-back),
-  landing the seed one cycle low; same silent-drop failure class as C-1
-  itself, narrow and self-recovering (one dropped decision, corrected on
-  the next launch) but worth switching to an explicit
-  `ORDER BY cycle_number DESC` / `MAX(cycle_number)` query before this
-  sees meaningful player traffic. (N-2) the seed fetch is bootstrap-only
-  with no in-session retry if `EnsureKingdom` fails at launch (unlike the
-  duel/history/event request paths, which do retry via
-  `EnsureKingdomThenSend*`); its own log message ("will resync on next
-  attempt") is misleading since the only next attempt is the next app
-  launch. (N-3) the new regression test
-  (`DecisionCycleManagerSessionResumeTests`) relies on prior test
-  fixtures' teardown for session isolation rather than calling
-  `SessionStore.Clear()` itself at setup. (N-4) a fixed
-  `WaitForSeconds(3f)` for two sequential real round-trips is a latent
-  flake source under a slow network, matching this project's existing
-  convention for real-data test fixtures elsewhere.
+  follow-ups, none of which weakened the fix itself. **N-1, N-2, N-3
+  resolved (commit `94f8e8e`):** (N-1) the seed read the newest-by-
+  `created_at` decision rather than `MAX(cycle_number)` -- these coincide
+  under normal sequential play, but could theoretically diverge under a
+  rare double-refresh-callback race (`DrainPendingRefreshCallbacks`
+  firing two queued syncs back-to-back), landing the seed one cycle low.
+  Fixed via a new dedicated `GET /api/v1/decisions/latest-cycle` route
+  (`MAX(cycle_number)`, sidestepping the race instead of relying on
+  insertion-order-adjacent timestamps) and a matching
+  `BackendApiClient.GetLatestCycleNumber` on the Unity side, replacing
+  the reused `GetDecisionHistory(limit: 1)` call. (N-2) the seed fetch is
+  still bootstrap-only with no in-session retry if `EnsureKingdom` fails
+  at launch (unlike the duel/history/event request paths, which do retry
+  via `EnsureKingdomThenSend*`) -- that part is deliberately NOT fixed
+  (a real retry mechanism is more scope than this pass), but the
+  previously-misleading log message ("will resync on next attempt," when
+  the only next attempt is actually the next app launch) now says so
+  correctly. (N-3) `DecisionCycleManagerSessionResumeTests` now calls
+  `SessionStore.Clear()` in its own `UnitySetUp` instead of relying on a
+  prior test's `TearDown` for isolation. **(N-4) still open, not a bug:**
+  a fixed `WaitForSeconds(3f)` for two sequential real round-trips is a
+  latent flake source under a slow network, matching this project's
+  existing convention for real-data test fixtures elsewhere -- left as
+  environmental risk, consistent with how every other real-data test in
+  this codebase handles the same tradeoff.
 - **Resolved:** `EventPanelController` and `CosmeticsPanelController` are
   now `DuelModalGate`-aware (both had branched before milestone #9 merged,
   so neither originally consulted the shared duel-in-flight/modal-open
@@ -406,13 +410,19 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   shared mutable request state. Given it reproduced twice under real
   conditions before and zero times since across meaningful additional
   attempts, treat as a real, timing-dependent gap rather than resolved.
-  Recommended before this sees real player traffic: enable Fastify's
-  built-in request logger (currently `logger: false` in `app.ts`, which is
-  exactly why this session's own investigation had no request trail to
-  work from) so a future occurrence leaves a diagnosable paper trail, and
-  wire up or remove the currently-unwired `ALLOW_TEST_DB_TRUNCATE` env var
-  so the ever-growing, never-reset shared test DB doesn't keep making
-  `maybeAdvanceCouncilMilestone`'s unbounded join slower over time.
+  **Partially addressed:** Fastify's request logger is now on
+  (`logger: true` in `app.ts`, commit `94f8e8e`) so a future occurrence
+  leaves a diagnosable paper trail — this session's own investigation had
+  none to work from. The `ALLOW_TEST_DB_TRUNCATE` half of this note was
+  stale when written: the env var was already wired
+  (`server/test/integration/helpers/db.ts`'s `truncateTables()`, gated
+  behind it, called in all 6 integration test files' `afterEach`) and set
+  to `true` in this environment's real `.env` — the TypeScript
+  integration suite's own test DB already resets between runs and was
+  never the unbounded-growth source this note assumed. The real remaining
+  risk (Unity PlayMode `*RealDataTests` hitting the same live server
+  outside that TS-side truncation) is unquantified — not yet investigated
+  further.
 - **Milestone #12 (Ruler Portrait System)** shipped the first increment of
   a broader visual-art phase: 15 AI-generated portraits (5 Mood tiers x 3
   Loyalty tiers) that `CoreLoopScreenController.RefreshStatusLabels()`
