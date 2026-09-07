@@ -84,6 +84,28 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
 
+            // CreateDummySprite() allocates a Sprite + backing Texture2D per
+            // element (15 of them) -- neither is scene-owned, so neither gets
+            // cleaned up by the GameObject destroys above. Harmless leak
+            // within a single test run, but 15 per test adds up across the
+            // suite.
+            if (rulerPortraits != null)
+            {
+                foreach (Sprite portrait in rulerPortraits)
+                {
+                    if (portrait == null)
+                    {
+                        continue;
+                    }
+                    Texture2D texture = portrait.texture;
+                    Object.DestroyImmediate(portrait);
+                    if (texture != null)
+                    {
+                        Object.DestroyImmediate(texture);
+                    }
+                }
+            }
+
             if (System.IO.File.Exists(SaveService.SavePath))
             {
                 System.IO.File.Delete(SaveService.SavePath);

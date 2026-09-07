@@ -1172,15 +1172,21 @@ namespace UnderstudyKingdom.EditorTools
             // enabling TMP's OUTLINE_ON keyword -- the outline silently
             // never rendered, and created one unique material instance per
             // label, breaking UI batching) keeps white text readable
-            // regardless of which scene background theme is active --
-            // measured contrast against the Harvest Hall background without
-            // an outline was ~3.8:1, below WCAG AA's 4.5:1 minimum. This is
+            // regardless of which scene background theme is active -- the
+            // pre-fix baseline measured ~3.8:1 against the Harvest Hall
+            // background without an outline, below WCAG AA's 4.5:1 minimum
+            // (not re-measured against the current outline width; this is
             // TMP's own shipped outline preset for this font, already
-            // carrying OUTLINE_ON.
-            var outlineMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Outline.mat");
+            // carrying OUTLINE_ON, not a value this project chose/tuned).
+            const string outlineMaterialPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Outline.mat";
+            var outlineMaterial = AssetDatabase.LoadAssetAtPath<Material>(outlineMaterialPath);
             if (outlineMaterial != null)
             {
                 label.fontSharedMaterial = outlineMaterial;
+            }
+            else
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.CreateLabel: failed to load outline material at {outlineMaterialPath} -- '{name}' will render without the WCAG-contrast outline.");
             }
 
             return label;
