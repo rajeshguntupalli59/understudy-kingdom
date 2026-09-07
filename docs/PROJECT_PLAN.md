@@ -262,10 +262,11 @@ real local Postgres integration tests (no mocking):
 | #10 Live-Ops Events | `feat/live-ops-events` | FR-10, FR-11 (narrowed) | Done |
 | #11 Cosmetics Customization | `feat/cosmetics-customization` | FR-12 | Done |
 | #12 Ruler Portrait System | `feat/ruler-portrait` | Visual art phase 1: painted ruler portrait reacting to Mood/Loyalty | Done |
+| #13 Themed Scene Backgrounds | `feat/scene-backgrounds` | Visual art phase 2: full-screen throne-room backdrop matching the 3 Cosmetics themes | Done |
 
-*(Milestone #12 is the first increment of a broader visual-art phase —
-see "Known follow-up items" below for the rest of that phase, not yet
-started. Milestone #9 merged after a manual playtest was still outstanding —
+*(Milestones #12-13 are the first two increments of a broader visual-art
+phase — button icons and panel art are still not started, see "Known
+follow-up items" below. Milestone #9 merged after a manual playtest was still outstanding —
 same limitation as milestones #10/#11: no automated agent can drive the
 interactive Unity Editor UI. Everything automated (server tests,
 typecheck, Unity EditMode, Unity PlayMode) is green; see "Known follow-up
@@ -428,10 +429,76 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   the status labels next to it (`CoreLoopSceneBuilder.cs`), not real
   margin — a longer/localized label could slide under it; all 15 sprites
   are 1024px sources displayed at 200x260 (no mobile-platform texture
-  size override yet, worth doing before a store build). The rest of the
-  visual-art phase (scene/background art, button icons, panel art) has
-  not been started. See `docs/superpowers/specs/2026-09-06-ruler-portrait-design.md`
-  and `docs/superpowers/plans/2026-09-06-ruler-portrait-system.md`.
+  size override yet, worth doing before a store build). See
+  `docs/superpowers/specs/2026-09-06-ruler-portrait-design.md` and
+  `docs/superpowers/plans/2026-09-06-ruler-portrait-system.md`.
+- **Milestone #13 (Themed Scene Backgrounds)** shipped the second
+  increment of the visual-art phase: a full-screen throne-room backdrop
+  that swaps with the player's selected Cosmetics theme
+  (Default/Council Chamber/Harvest Hall), via one new line in
+  `CosmeticsPanelController.ApplyTheme()`. This branch's final
+  whole-branch review needed **two** fix-and-reverify rounds before
+  merging — worth reading in full as a cautionary example:
+  - Round 1 fixed 3 Important findings: (a) the shipped art was
+    1024x1792, not the ~1024x2048 the design spec's stretch-to-fill
+    reasoning assumed, causing a real ~19% horizontal squeeze on typical
+    phones under `preserveAspect = false` -- fixed by switching to
+    Unity's `AspectRatioFitter` in `EnvelopeParent` mode (crops instead
+    of distorting); (b) white status labels measured ~3.8:1 contrast
+    against the Harvest Hall background (below WCAG AA's 4.5:1); (c) no
+    null/length guard on the new `backgroundSprites` array lookup -- the
+    same class of gap that had already cost implementer time twice in
+    milestone #12, hit here for a third time.
+  - The contrast fix in round 1 **did not work**: it set
+    `TextMeshProUGUI.outlineWidth`/`outlineColor`, which only set shader
+    properties without enabling TMP's `OUTLINE_ON` keyword the mobile
+    shader gates the whole outline render path behind -- the code
+    compiled, both test suites stayed green, and the outline was
+    genuinely invisible. It also silently created 55 per-label material
+    instances, breaking UI batching (0 -> 55 `Material:` blocks in the
+    scene). This was only caught because the re-review independently
+    decoded the actual shader/material source rather than trusting a
+    "tests pass" report -- worth remembering that a passing test suite
+    proved nothing about this specific defect, since no test asserted
+    anything about rendered outline visibility.
+  - Round 2 fixed it by assigning TMP's own shipped, pre-configured
+    `LiberationSans SDF - Outline.mat` (already has `OUTLINE_ON`) via
+    `fontSharedMaterial` -- one shared material for every label, fixing
+    the invisibility and the batching regression together. Re-verified
+    by decoding the regenerated scene's serialized material references
+    directly (55 GUID references to the shared asset, 0 inline instances)
+    rather than trusting the fix report a second time.
+  - Non-blocking follow-ups from the round-2 re-review, not yet acted
+    on: the outline material load has a silent no-op if the hardcoded
+    TMP asset path ever fails to resolve (inconsistent with this file's
+    other asset loaders, which all `Debug.LogError` on failure -- exactly
+    the kind of silent failure this milestone already got bitten by
+    once); the WCAG comment cites the pre-fix ~3.8:1 measurement against
+    an outline width that changed (Unity's preset is 0.1, the original
+    finding measured against a hypothetical 0.2) and was never
+    re-measured; 4 TMP input-field text objects still use the
+    non-outlined default material (likely fine, sit on opaque input
+    backgrounds, not directly on the scene art); no EditMode test
+    guards against a future re-export reintroducing the aspect-ratio
+    mismatch (same open recommendation as milestone #12's). See
+    `docs/superpowers/specs/2026-09-06-scene-backgrounds-design.md` and
+    `docs/superpowers/plans/2026-09-06-scene-backgrounds.md`.
+- **Recurring pattern across milestones #12 and #13, not yet fixed:**
+  the "new `[SerializeField]` deserializes as null/empty on the old
+  committed scene, and the field is indexed without a null-array guard"
+  failure has now cost implementer time in 3 separate task
+  implementations (ruler-portrait Task 2, scene-backgrounds Task 1, and
+  scene-backgrounds Task 2 avoided it only because Task 1 already forced
+  the rebuild). Each time, the immediate fix was "regenerate the scene
+  one task early" rather than "guard the array access" -- the guard
+  itself only landed for scene-backgrounds' `backgroundSprites` (as
+  Important finding I-3), not more broadly. Worth a deliberate pass
+  before a 3rd visual-art milestone: either add null-array guards
+  wherever a plan prescribes an unguarded `SerializeField` array/object
+  index (not just null-element fallbacks), or explicitly design future
+  plans to regenerate the scene inside the first task that adds any new
+  serialized field, rather than treating each occurrence as a
+  surprise.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
