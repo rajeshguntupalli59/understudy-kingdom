@@ -43,6 +43,13 @@ namespace UnderstudyKingdom.Tests
         [UnitySetUp]
         public IEnumerator UnitySetUp()
         {
+            // Self-contained isolation: don't rely on a prior test's TearDown
+            // having already cleared this -- a leftover session from an
+            // interrupted run, a different test class, or a reordered suite
+            // would otherwise let BootstrapSession silently reuse a stale
+            // session instead of the fresh one this test constructs below.
+            SessionStore.Clear();
+
             // --- Session 1: bootstrap a real session and post real decisions. ---
             coordinator1Object = new GameObject("Coordinator1");
             var coordinator1 = coordinator1Object.AddComponent<BackendSyncCoordinator>();

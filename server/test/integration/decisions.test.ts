@@ -235,4 +235,56 @@ describe('decisions routes', () => {
     expect(secondBody.decisions[0].cycleNumber).toBe(1);
     expect(secondBody.nextCursor).toBeNull();
   });
+
+  it('GET /api/v1/decisions/latest-cycle returns 404 if the caller has no kingdom yet', async () => {
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/decisions/latest-cycle',
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+
+    expect(response.statusCode).toBe(404);
+  });
+
+  it('GET /api/v1/decisions/latest-cycle reports has_decisions=false when the kingdom has no decisions yet', async () => {
+    await createKingdom();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/decisions/latest-cycle',
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.hasDecisions).toBe(false);
+    expect(body.cycleNumber).toBe(0);
+  });
+
+  it('GET /api/v1/decisions/latest-cycle returns the highest cycle_number regardless of insert order', async () => {
+    await createKingdom();
+    // Insert out of cycle_number order -- a real double-refresh-callback race
+    // could POST cycle_number 5 before cycle_number 3, so createdAt order
+    // and cycle_number order can diverge. This endpoint must still return
+    // the highest cycle_number (5), not the most recently inserted row.
+    for (const cycle of [3, 5, 1]) {
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/decisions',
+        headers: { authorization: `Bearer ${jwt}` },
+        payload: { cycle_number: cycle, player_recommendation: {}, ruler_outcome: {}, overridden: false },
+      });
+    }
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/decisions/latest-cycle',
+      headers: { authorization: `Bearer ${jwt}` },
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.hasDecisions).toBe(true);
+    expect(body.cycleNumber).toBe(5);
+  });
 });

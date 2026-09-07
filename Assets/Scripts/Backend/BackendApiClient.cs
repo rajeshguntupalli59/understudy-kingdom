@@ -169,6 +169,56 @@ namespace UnderstudyKingdom.Backend
         }
 
         /// <summary>
+        /// Dedicated to the session-bootstrap cycle-counter seed -- see
+        /// DecisionCycleManager.SeedCycleNumberIfHigher. Deliberately not
+        /// GetDecisionHistory(limit: 1): that endpoint orders by createdAt (for
+        /// its own cursor-pagination contract), which is not guaranteed to
+        /// surface the highest cycle_number under a rare insert-order race. The
+        /// server's /latest-cycle route uses an explicit MAX(cycle_number)
+        /// instead.
+        /// </summary>
+        public void GetLatestCycleNumber(string accessToken, Action<LatestCycleResponse> onSuccess, Action<string> onError)
+        {
+            StartCoroutine(SendGetLatestCycleNumber(accessToken, onSuccess, onError));
+        }
+
+        private IEnumerator SendGetLatestCycleNumber(string accessToken, Action<LatestCycleResponse> onSuccess, Action<string> onError)
+        {
+            string url = $"{BackendBaseUrl}/api/v1/decisions/latest-cycle";
+            using var request = UnityWebRequest.Get(url);
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Latest-cycle request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
+                yield break;
+            }
+
+            LatestCycleResponse response;
+            try
+            {
+                response = JsonUtility.FromJson<LatestCycleResponse>(request.downloadHandler.text);
+            }
+            catch (Exception ex)
+            {
+                onError?.Invoke($"Latest-cycle response parse failed: {ex.Message}");
+                yield break;
+            }
+
+            if (response == null)
+            {
+                onError?.Invoke("Latest-cycle response missing expected fields");
+                yield break;
+            }
+
+            onSuccess?.Invoke(response);
+        }
+
+        /// <summary>
         /// Mirrors PostDuel's response-parsing shape (SendDuelRequest) -- the
         /// response body carries real council data, not just a status code.
         /// </summary>

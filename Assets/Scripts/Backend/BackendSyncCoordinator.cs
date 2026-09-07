@@ -109,15 +109,20 @@ namespace UnderstudyKingdom.Backend
                     // already-tolerated, same as every other failure mode here.
                     if (DecisionCycleManager != null)
                     {
-                        apiClient.GetDecisionHistory(currentSession.AccessToken, 1,
-                            onSuccess: entries =>
+                        apiClient.GetLatestCycleNumber(currentSession.AccessToken,
+                            onSuccess: response =>
                             {
-                                if (entries.Length > 0)
+                                if (response.hasDecisions)
                                 {
-                                    DecisionCycleManager.SeedCycleNumberIfHigher(entries[0].cycleNumber);
+                                    DecisionCycleManager.SeedCycleNumberIfHigher(response.cycleNumber);
                                 }
                             },
-                            onError: err => Debug.LogWarning($"BackendSyncCoordinator: cycle-number seed fetch failed, will resync on next attempt: {err}"));
+                            // Bootstrap-only, no in-session retry: if this fails, the
+                            // counter simply stays unseeded until the next app launch
+                            // (the next bootstrap), not "the next attempt" within this
+                            // session -- unlike the duel/history/event request paths,
+                            // which do retry via EnsureKingdomThenSend*.
+                            onError: err => Debug.LogWarning($"BackendSyncCoordinator: cycle-number seed fetch failed, will retry on next app launch: {err}"));
                     }
                 },
                 onError: err => Debug.LogWarning($"BackendSyncCoordinator: EnsureKingdom failed: {err}"));

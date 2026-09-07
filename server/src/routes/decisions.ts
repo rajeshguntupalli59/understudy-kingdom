@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
-import { and, count, desc, eq, lt } from 'drizzle-orm';
+import { and, count, desc, eq, lt, max } from 'drizzle-orm';
 import { db } from '../db/client';
 import { kingdoms, decisions, councils, councilMembers } from '../db/schema';
 
@@ -170,6 +170,36 @@ const decisionsRoutes: FastifyPluginAsync = async (fastify) => {
       return { decisions: rows, nextCursor };
     },
   );
+
+  // Dedicated to the client's session-bootstrap cycle-counter seed (see
+  // DecisionCycleManager.SeedCycleNumberIfHigher on the Unity side) --
+  // deliberately NOT reusing GET /api/v1/decisions?limit=1, which orders by
+  // createdAt (needed for that endpoint's cursor pagination contract) rather
+  // than cycle_number. Under a rare race (two decisions inserted in quick
+  // succession with createdAt timestamps that don't perfectly match insert
+  // order), createdAt-DESC's first row is not guaranteed to be the highest
+  // cycle_number -- an explicit MAX(cycle_number) sidesteps that entirely
+  // rather than relying on insertion-order-adjacent timestamps. See
+  // docs/PROJECT_PLAN.md's milestone #10 follow-up note (N-1).
+  fastify.get('/api/v1/decisions/latest-cycle', async (request, reply) => {
+    const kingdomRows = await db.select().from(kingdoms).where(eq(kingdoms.userId, request.userId)).limit(1);
+    if (kingdomRows.length === 0) {
+      reply.code(404);
+      return { error: 'No kingdom found for this user' };
+    }
+    const kingdom = kingdomRows[0];
+
+    const [{ value }] = await db
+      .select({ value: max(decisions.cycleNumber) })
+      .from(decisions)
+      .where(eq(decisions.kingdomId, kingdom.id));
+
+    // hasDecisions + a non-nullable cycleNumber (0 when false), not a
+    // nullable cycleNumber -- the Unity client parses this with
+    // JsonUtility, which doesn't reliably round-trip a JSON `null` into a
+    // C# value-type field.
+    return { hasDecisions: value !== null, cycleNumber: value ?? 0 };
+  });
 };
 
 export default decisionsRoutes;
