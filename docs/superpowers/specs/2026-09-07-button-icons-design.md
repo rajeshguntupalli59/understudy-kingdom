@@ -1,6 +1,6 @@
 # Design: Button Icons
 
-**Date:** 2026-09-07 | **Status:** Approved, pending implementation plan
+**Date:** 2026-09-07 | **Status:** Approved, reduced scope, pending implementation plan
 
 ## Purpose
 
@@ -15,9 +15,18 @@ closing out the visual-art roadmap.
 
 Confirmed interactively before any design work began:
 
-- **All 15 buttons get icons**, not just the 6 primary CoreLoop action-bar
-  buttons -- includes secondary/modal buttons (Close x4, Claim Reward,
-  Create/Join Council, Skip/Next).
+- **All 15 buttons were meant to get icons**, not just the 6 primary
+  CoreLoop action-bar buttons -- includes secondary/modal buttons (Close
+  x4, Claim Reward, Create/Join Council, Skip/Next). **Reduced after art
+  generation began** (see "Reduced Scope" below): only 4 of the 12 unique
+  icons were generated before Hugging Face's monthly credit cap was hit
+  again -- Submit Recommendation, Challenge a Rival Kingdom, View
+  History, and Council. This pass implements icons for those 4 buttons
+  only. The remaining 9 button slots (Events, Customize, Claim, Create,
+  Join, Skip, Next, and the 4 shared-Close buttons) keep their current
+  text-only appearance until more generation credit is available -- no
+  code changes needed to add them later, just generating the art and
+  wiring it the same way this pass wires the first 4.
 - **Painterly style, matching the existing three increments** -- same
   warm, hand-painted oil-illustration prompt template already used for
   the ruler portrait/backgrounds/panel art, not a clean vector/flat icon
@@ -49,22 +58,28 @@ Confirmed interactively before any design work began:
 
 Each of the 15 buttons is owned by exactly one controller (confirmed by
 tracing which controller's `Initialize(...)` call in
-`CoreLoopSceneBuilder.Build()` receives each button as a primary element):
+`CoreLoopSceneBuilder.Build()` receives each button as a primary element).
+**This pass only implements the 4 rows marked (this pass)** -- see Scope
+Decisions above for why; the rest is the full original design, kept here
+as the reference for whoever picks up the deferred 9 later.
 
-| Controller | Icons it owns | Count |
-|---|---|---|
-| `CoreLoopScreenController` | Submit Recommendation | 1 |
-| `DuelButtonController` | Challenge a Rival Kingdom | 1 |
-| `HistoryPanelController` | View History, its own Close | 2 |
-| `CouncilPanelController` | Council, its own Close, Create Council, Join Council | 4 |
-| `EventPanelController` | This Week's Event, its own Close, Claim Reward | 3 |
-| `CosmeticsPanelController` | Customize, its own Close | 2 |
-| `TutorialOverlayController` | Skip, Next | 2 |
+| Controller | Icons it owns | Count | This pass? |
+|---|---|---|---|
+| `CoreLoopScreenController` | Submit Recommendation | 1 | Yes |
+| `DuelButtonController` | Challenge a Rival Kingdom | 1 | Yes |
+| `HistoryPanelController` | View History, its own Close | 2 | View History only -- its Close icon is deferred (shared Close art not generated) |
+| `CouncilPanelController` | Council, its own Close, Create Council, Join Council | 4 | Council only -- Close/Create/Join deferred |
+| `EventPanelController` | This Week's Event, its own Close, Claim Reward | 3 | Deferred entirely |
+| `CosmeticsPanelController` | Customize, its own Close | 2 | Deferred entirely |
+| `TutorialOverlayController` | Skip, Next | 2 | Deferred entirely |
 
-Total: 15 `Image` fields across 7 controllers, no cross-controller
-duplication (no controller needs an icon reference for a button it
-doesn't own, even though several already hold pass-through `Button`
-references to other controllers' buttons for
+This pass: 4 `Image` fields across 4 controllers
+(`CoreLoopScreenController`, `DuelButtonController`,
+`HistoryPanelController`, `CouncilPanelController` -- each gaining
+exactly one new icon field, not the 2/4 they'll eventually own). No
+cross-controller duplication (no controller needs an icon reference for
+a button it doesn't own, even though several already hold pass-through
+`Button` references to other controllers' buttons for
 `SetCoreLoopControlsInteractable`-style toggling -- those stay `Button`
 references only, unchanged).
 
@@ -84,28 +99,30 @@ storybook illustration style, no text, no border, simple and readable
 at small size.
 ```
 
-| Button(s) | Subject |
-|---|---|
-| Submit Recommendation | A wax seal being pressed onto a decree |
-| Challenge a Rival Kingdom | Crossed swords |
-| View History | An open book |
-| Council | A round table |
-| This Week's Event | A hanging banner |
-| Customize | A paintbrush and palette |
-| Claim Reward | A treasure chest |
-| Create Council | A banner with a rising seal |
-| Join Council | An open castle gate |
-| Skip (tutorial) | A double forward chevron |
-| Next (tutorial) | A single forward chevron |
-| Close (shared, all 4 panels) | A broken wax seal / X mark |
+| Button(s) | Subject | Generated? |
+|---|---|---|
+| Submit Recommendation | A wax seal being pressed onto a decree | Yes -- `submit.png` |
+| Challenge a Rival Kingdom | Crossed swords | Yes -- `challenge.png` |
+| View History | An open book | Yes -- `history.png` |
+| Council | A round table | Yes -- `council.png` |
+| This Week's Event | A hanging banner | Deferred -- HF credit cap hit |
+| Customize | A paintbrush and palette | Deferred -- HF credit cap hit |
+| Claim Reward | A treasure chest | Deferred -- HF credit cap hit |
+| Create Council | A banner with a rising seal | Deferred -- HF credit cap hit |
+| Join Council | An open castle gate | Deferred -- HF credit cap hit |
+| Skip (tutorial) | A double forward chevron | Deferred -- HF credit cap hit |
+| Next (tutorial) | A single forward chevron | Deferred -- HF credit cap hit |
+| Close (shared, all 4 panels) | A broken wax seal / X mark | Deferred -- HF credit cap hit |
 
 Generated square (matching the ruler portrait's precedent of a
 fixed-aspect small UI element, not the tall 1024x1792 used for
 backgrounds/panels which exists purely to match phone-portrait
 full-screen/large-panel proportions -- icons are small and square, no
-reason to inherit that aspect). The first icon (Submit Recommendation) is
+reason to inherit that aspect). The first icon (Submit Recommendation) was
 generated and shown to the user for approval on style/composition before
-the other 11, matching the pattern all three prior increments used.
+the other 11 were attempted, matching the pattern all three prior
+increments used. Only 3 of the remaining 11 (Challenge, History, Council)
+generated before the credit cap was hit -- see Scope Decisions.
 
 ## Approach
 
@@ -143,7 +160,11 @@ idempotent-texture-import-type-fix shape as every other sprite loader in
 needed since icons aren't theme-keyed -- this is a deliberately simpler
 shape than `LoadThemedSprites`, matching how `LoadPortraitSprite` already
 coexists as its own shape rather than being folded into the themed
-loader.
+loader. This pass loads exactly 4 files:
+`Assets/Art/ButtonIcons/submit.png`,
+`Assets/Art/ButtonIcons/challenge.png`,
+`Assets/Art/ButtonIcons/history.png`,
+`Assets/Art/ButtonIcons/council.png`.
 
 ## Error Handling
 
@@ -158,22 +179,31 @@ sensible "default icon" to substitute for a missing Challenge-sword icon).
 ## Testing
 
 **EditMode/PlayMode:** each owning controller's existing test file gets
-one new assertion per icon it owns: `Assert.AreSame(expectedIconSprite,
-iconImage.sprite)` after `Initialize(...)`, mirroring how the themed art
-features extended their own controllers' existing tests rather than
-adding parallel test files.
+one new assertion per icon it owns this pass (4 total, one each in
+`CoreLoopScreenControllerTests`, `DuelButtonControllerTests`,
+`HistoryPanelControllerTests`, `CouncilPanelControllerTests`):
+`Assert.AreSame(expectedIconSprite, iconImage.sprite)` after
+`Initialize(...)`, mirroring how the themed art features extended their
+own controllers' existing tests rather than adding parallel test files.
 
 **Verify() and regression test.** `CoreLoopSceneBuilder.Verify()` gains a
-non-null check for each of the 15 icon `Image` references (via the same
-reflection pattern used for `sceneBackgroundImage`) -- since icons have no
-"intentionally missing" slot the way `event_event.png` did, a full
-non-null check (not just presence/length) is correct here. One new
-PlayMode regression test loads the real scene and confirms all 15 icon
+non-null check for each of the 4 icon `Image` references this pass adds
+(via the same reflection pattern used for `sceneBackgroundImage`) -- since
+icons have no "intentionally missing" slot the way `event_event.png` did,
+a full non-null check (not just presence/length) is correct here. One new
+PlayMode regression test loads the real scene and confirms all 4 icon
 `Image`s have non-null sprites, mirroring the existing
 `LoadedCoreLoopScene_SceneBackground_HasNonNullSpriteOnLoad`-style tests.
 
 ## Explicitly Out of Scope for This Pass
 
+- The other 11 buttons/8 remaining unique icons (Events, Customize,
+  Claim, Create, Join, Skip, Next, shared Close) -- HF credit cap hit
+  mid-generation, only 4 of 12 unique icons exist. Revisit once free
+  art-generation credits are available again; no code-shape changes
+  needed to add them, just generating the art and repeating this same
+  pass's wiring pattern for each remaining controller/button in the
+  Ownership Breakdown table above.
 - Any dynamic/theme-based icon variation -- the controller-level wiring
   exists so a future milestone *could* add this without another interface
   change, but no theming logic is implemented now.
