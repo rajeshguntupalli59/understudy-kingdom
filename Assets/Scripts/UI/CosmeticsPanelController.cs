@@ -76,6 +76,9 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Sprite[] historyPanelSprites;
         [SerializeField] private Sprite[] councilPanelSprites;
         [SerializeField] private Sprite[] eventPanelSprites;
+        [SerializeField] private Image historyArtImage;
+        [SerializeField] private Image councilArtImage;
+        [SerializeField] private Image eventArtImage;
 
         private void Start()
         {
@@ -110,7 +113,10 @@ namespace UnderstudyKingdom.UI
             Sprite[] backgroundSprites,
             Sprite[] historyPanelSprites,
             Sprite[] councilPanelSprites,
-            Sprite[] eventPanelSprites)
+            Sprite[] eventPanelSprites,
+            Image historyArtImage,
+            Image councilArtImage,
+            Image eventArtImage)
         {
             this.customizeButton = customizeButton;
             this.panelRoot = panelRoot;
@@ -135,6 +141,9 @@ namespace UnderstudyKingdom.UI
             this.historyPanelSprites = historyPanelSprites;
             this.councilPanelSprites = councilPanelSprites;
             this.eventPanelSprites = eventPanelSprites;
+            this.historyArtImage = historyArtImage;
+            this.councilArtImage = councilArtImage;
+            this.eventArtImage = eventArtImage;
 
             Bind();
         }
@@ -225,9 +234,9 @@ namespace UnderstudyKingdom.UI
             eventPanelImage.color = color;
             councilPanelImage.color = color;
             historyPanelImage.color = color;
-            eventPanelImage.sprite = GetBackgroundSprite(themeId, eventPanelSprites);
-            councilPanelImage.sprite = GetBackgroundSprite(themeId, councilPanelSprites);
-            historyPanelImage.sprite = GetBackgroundSprite(themeId, historyPanelSprites);
+            eventArtImage.sprite = GetBackgroundSprite(themeId, eventPanelSprites);
+            councilArtImage.sprite = GetBackgroundSprite(themeId, councilPanelSprites);
+            historyArtImage.sprite = GetBackgroundSprite(themeId, historyPanelSprites);
             if (sceneBackgroundImage != null)
             {
                 sceneBackgroundImage.sprite = GetBackgroundSprite(themeId, backgroundSprites);

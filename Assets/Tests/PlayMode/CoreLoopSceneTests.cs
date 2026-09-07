@@ -179,14 +179,20 @@ namespace UnderstudyKingdom.Tests
             Assert.IsNotNull(councilPanel, "CouncilPanel not found in the loaded CoreLoop scene.");
             Assert.IsNotNull(eventPanel, "EventPanel not found in the loaded CoreLoop scene.");
 
-            Image historyImage = historyPanel.GetComponent<Image>();
-            Image councilImage = councilPanel.GetComponent<Image>();
-            Image eventImage = eventPanel.GetComponent<Image>();
+            GameObject historyArt = FindChildByName(historyPanel.transform, "PanelArt");
+            GameObject councilArt = FindChildByName(councilPanel.transform, "PanelArt");
+            GameObject eventArt = FindChildByName(eventPanel.transform, "PanelArt");
 
-            Assert.IsNotNull(historyImage.sprite, "Expected HistoryPanel to have a non-null sprite under the Event theme.");
-            Assert.IsNotNull(councilImage.sprite, "Expected CouncilPanel to have a non-null sprite under the Event theme.");
-            Assert.IsNotNull(eventImage.sprite,
-                "Expected EventPanel to have a non-null sprite under the Event theme -- event_event.png is deliberately missing, so this passes via GetBackgroundSprite's fallback to event_default, not a populated slot.");
+            Image historyArtImage = historyArt.GetComponent<Image>();
+            Image councilArtImage = councilArt.GetComponent<Image>();
+            Image eventArtImage = eventArt.GetComponent<Image>();
+
+            Assert.AreEqual("history_event_0", historyArtImage.sprite.name,
+                "Expected HistoryPanel's art layer to show the real Event-theme art.");
+            Assert.AreEqual("council_event_0", councilArtImage.sprite.name,
+                "Expected CouncilPanel's art layer to show the real Event-theme art.");
+            Assert.AreEqual("event_default_0", eventArtImage.sprite.name,
+                "Expected EventPanel's art layer to show event_default via the fallback -- event_event.png is deliberately missing.");
         }
 
         [UnityTest]

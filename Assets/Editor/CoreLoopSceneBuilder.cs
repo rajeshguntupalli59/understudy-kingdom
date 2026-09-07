@@ -214,6 +214,18 @@ namespace UnderstudyKingdom.EditorTools
             eventPanelRect.anchoredPosition = Vector2.zero;
             eventPanelRect.sizeDelta = new Vector2(700f, 800f);
             eventPanelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+            eventPanelRootObject.AddComponent<RectMask2D>();
+            var eventArtObject = new GameObject("PanelArt", typeof(Image), typeof(AspectRatioFitter));
+            eventArtObject.transform.SetParent(eventPanelRootObject.transform, false);
+            var eventArtRect = eventArtObject.GetComponent<RectTransform>();
+            eventArtRect.pivot = new Vector2(0.5f, 0.5f);
+            var eventArtFitter = eventArtObject.GetComponent<AspectRatioFitter>();
+            eventArtFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            eventArtFitter.aspectRatio = 1024f / 1792f;
+            var eventArtImage = eventArtObject.GetComponent<Image>();
+            eventArtImage.preserveAspect = false;
+            eventArtImage.raycastTarget = false;
+            eventArtObject.transform.SetAsFirstSibling();
 
             var eventCloseButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
             eventCloseButtonObject.transform.SetParent(eventPanelRootObject.transform, false);
@@ -280,6 +292,18 @@ namespace UnderstudyKingdom.EditorTools
             councilPanelRect.anchoredPosition = Vector2.zero;
             councilPanelRect.sizeDelta = new Vector2(700f, 800f);
             councilPanelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+            councilPanelRootObject.AddComponent<RectMask2D>();
+            var councilArtObject = new GameObject("PanelArt", typeof(Image), typeof(AspectRatioFitter));
+            councilArtObject.transform.SetParent(councilPanelRootObject.transform, false);
+            var councilArtRect = councilArtObject.GetComponent<RectTransform>();
+            councilArtRect.pivot = new Vector2(0.5f, 0.5f);
+            var councilArtFitter = councilArtObject.GetComponent<AspectRatioFitter>();
+            councilArtFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            councilArtFitter.aspectRatio = 1024f / 1792f;
+            var councilArtImage = councilArtObject.GetComponent<Image>();
+            councilArtImage.preserveAspect = false;
+            councilArtImage.raycastTarget = false;
+            councilArtObject.transform.SetAsFirstSibling();
 
             var councilCloseButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
             councilCloseButtonObject.transform.SetParent(councilPanelRootObject.transform, false);
@@ -392,6 +416,18 @@ namespace UnderstudyKingdom.EditorTools
             panelRect.anchoredPosition = Vector2.zero;
             panelRect.sizeDelta = new Vector2(700f, 800f);
             panelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+            panelRootObject.AddComponent<RectMask2D>();
+            var historyArtObject = new GameObject("PanelArt", typeof(Image), typeof(AspectRatioFitter));
+            historyArtObject.transform.SetParent(panelRootObject.transform, false);
+            var historyArtRect = historyArtObject.GetComponent<RectTransform>();
+            historyArtRect.pivot = new Vector2(0.5f, 0.5f);
+            var historyArtFitter = historyArtObject.GetComponent<AspectRatioFitter>();
+            historyArtFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            historyArtFitter.aspectRatio = 1024f / 1792f;
+            var historyArtImage = historyArtObject.GetComponent<Image>();
+            historyArtImage.preserveAspect = false;
+            historyArtImage.raycastTarget = false;
+            historyArtObject.transform.SetAsFirstSibling();
 
             var closeButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
             closeButtonObject.transform.SetParent(panelRootObject.transform, false);
@@ -554,7 +590,7 @@ namespace UnderstudyKingdom.EditorTools
 
             Sprite[] historyPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "history");
             Sprite[] councilPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "council");
-            Sprite[] eventPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "event");
+            Sprite[] eventPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "event", 2);
 
             var cosmeticsControllerObject = new GameObject("CosmeticsPanelController");
             var cosmeticsController = cosmeticsControllerObject.AddComponent<CosmeticsPanelController>();
@@ -563,7 +599,8 @@ namespace UnderstudyKingdom.EditorTools
                 eventPanelRootObject.GetComponent<Image>(), councilPanelRootObject.GetComponent<Image>(), panelRootObject.GetComponent<Image>(),
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
                 sceneBackgroundImage, backgroundSprites,
-                historyPanelSprites, councilPanelSprites, eventPanelSprites);
+                historyPanelSprites, councilPanelSprites, eventPanelSprites,
+                historyArtImage, councilArtImage, eventArtImage);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
@@ -778,41 +815,17 @@ namespace UnderstudyKingdom.EditorTools
             // this pass (see docs/superpowers/specs/2026-09-06-panel-art-design.md),
             // so a per-element check would fail Verify() on a correctly-shipped
             // state.
-            FieldInfo historyPanelSpritesField = typeof(CosmeticsPanelController).GetField("historyPanelSprites", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (historyPanelSpritesField == null)
+            if (!TryGetThemedSpriteArray(cosmeticsController, "historyPanelSprites", out var historyPanelSprites))
             {
-                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private historyPanelSprites field (renamed?).");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
                 }
                 return;
             }
-            var historyPanelSprites = (Sprite[])historyPanelSpritesField.GetValue(cosmeticsController);
-            if (historyPanelSprites == null || historyPanelSprites.Length != 3)
+            if (historyPanelSprites[0] == null || historyPanelSprites[1] == null || historyPanelSprites[2] == null)
             {
-                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element historyPanelSprites array, found {(historyPanelSprites == null ? "null" : historyPanelSprites.Length.ToString())}.");
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-                return;
-            }
-
-            FieldInfo councilPanelSpritesField = typeof(CosmeticsPanelController).GetField("councilPanelSprites", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (councilPanelSpritesField == null)
-            {
-                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private councilPanelSprites field (renamed?).");
-                if (Application.isBatchMode)
-                {
-                    EditorApplication.Exit(1);
-                }
-                return;
-            }
-            var councilPanelSprites = (Sprite[])councilPanelSpritesField.GetValue(cosmeticsController);
-            if (councilPanelSprites == null || councilPanelSprites.Length != 3)
-            {
-                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element councilPanelSprites array, found {(councilPanelSprites == null ? "null" : councilPanelSprites.Length.ToString())}.");
+                Debug.LogError("CoreLoopSceneBuilder.Verify: historyPanelSprites has an unexpected null element.");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
@@ -820,20 +833,35 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
 
-            FieldInfo eventPanelSpritesField = typeof(CosmeticsPanelController).GetField("eventPanelSprites", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (eventPanelSpritesField == null)
+            if (!TryGetThemedSpriteArray(cosmeticsController, "councilPanelSprites", out var councilPanelSprites))
             {
-                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private eventPanelSprites field (renamed?).");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
                 }
                 return;
             }
-            var eventPanelSprites = (Sprite[])eventPanelSpritesField.GetValue(cosmeticsController);
-            if (eventPanelSprites == null || eventPanelSprites.Length != 3)
+            if (councilPanelSprites[0] == null || councilPanelSprites[1] == null || councilPanelSprites[2] == null)
             {
-                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element eventPanelSprites array, found {(eventPanelSprites == null ? "null" : eventPanelSprites.Length.ToString())}.");
+                Debug.LogError("CoreLoopSceneBuilder.Verify: councilPanelSprites has an unexpected null element.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            if (!TryGetThemedSpriteArray(cosmeticsController, "eventPanelSprites", out var eventPanelSprites))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (eventPanelSprites[0] == null || eventPanelSprites[1] == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: eventPanelSprites has an unexpected null element (checking only indices 0-1; index 2 -- event_event.png -- is deliberately missing this pass, see docs/superpowers/specs/2026-09-06-panel-art-design.md).");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
@@ -842,6 +870,24 @@ namespace UnderstudyKingdom.EditorTools
             }
 
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
+        }
+
+        private static bool TryGetThemedSpriteArray(CosmeticsPanelController controller, string fieldName, out Sprite[] array)
+        {
+            FieldInfo field = typeof(CosmeticsPanelController).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field == null)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private {fieldName} field (renamed?).");
+                array = null;
+                return false;
+            }
+            array = (Sprite[])field.GetValue(controller);
+            if (array == null || array.Length != 3)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element {fieldName} array, found {(array == null ? "null" : array.Length.ToString())}.");
+                return false;
+            }
+            return true;
         }
 
         private static Slider CreateSlider(Transform parent, string name, float yOffset, float initialValue)
@@ -996,7 +1042,7 @@ namespace UnderstudyKingdom.EditorTools
         // deliberately not committed -- see that spec's Scope Decisions) logs
         // an error here and leaves that index null; CosmeticsPanelController's
         // existing GetBackgroundSprite falls back to index 0 for it.
-        private static Sprite[] LoadThemedSprites(string folder, string fileNamePrefix)
+        private static Sprite[] LoadThemedSprites(string folder, string fileNamePrefix, params int[] optionalIndices)
         {
             string[] themeIds = { "default", "council", "event" };
             var sprites = new Sprite[3];
@@ -1008,7 +1054,14 @@ namespace UnderstudyKingdom.EditorTools
             {
                 if (sprites[i] == null)
                 {
-                    Debug.LogError($"CoreLoopSceneBuilder.LoadThemedSprites: failed to load sprite at index {i} for {fileNamePrefix} in {folder}");
+                    if (System.Array.IndexOf(optionalIndices, i) >= 0)
+                    {
+                        Debug.LogWarning($"CoreLoopSceneBuilder.LoadThemedSprites: sprite at index {i} for {fileNamePrefix} in {folder} is intentionally missing.");
+                    }
+                    else
+                    {
+                        Debug.LogError($"CoreLoopSceneBuilder.LoadThemedSprites: failed to load sprite at index {i} for {fileNamePrefix} in {folder}");
+                    }
                 }
             }
             return sprites;
