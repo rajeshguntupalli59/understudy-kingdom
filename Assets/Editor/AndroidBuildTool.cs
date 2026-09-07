@@ -21,6 +21,13 @@ namespace UnderstudyKingdom.EditorTools
         {
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, PackageName);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.X86_64;
+            // Local backend runs on plain HTTP -- Unity blocks all non-HTTPS
+            // UnityWebRequest traffic on Android by default (InvalidOperationException:
+            // "Insecure connection not allowed"), which silently strands every
+            // backend call (Council/History/Duel) on this test build otherwise.
+            // AlwaysAllowed (not DevelopmentOnly) because this build uses
+            // BuildOptions.None, not a Development build.
+            PlayerSettings.insecureHttpOption = InsecureHttpOption.AlwaysAllowed;
 
             var options = new BuildPlayerOptions
             {
@@ -36,10 +43,12 @@ namespace UnderstudyKingdom.EditorTools
             Debug.Log($"AndroidBuildTool.BuildApk: result={summary.result}, totalErrors={summary.totalErrors}, " +
                       $"totalWarnings={summary.totalWarnings}, size={summary.totalSize} bytes, outputPath={summary.outputPath}");
 
-            if (summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
-            {
-                EditorApplication.Exit(1);
-            }
+            // -executeMethod does not auto-quit batchmode on return -- without an
+            // explicit exit here, a successful run leaves the process alive
+            // holding the project lock, causing the next invocation to fail
+            // instantly instead of building.
+            bool succeeded = summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded;
+            EditorApplication.Exit(succeeded ? 0 : 1);
         }
     }
 }
