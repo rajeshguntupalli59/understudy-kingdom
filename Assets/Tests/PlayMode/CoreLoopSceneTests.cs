@@ -375,6 +375,20 @@ namespace UnderstudyKingdom.Tests
             Assert.IsNotNull(eventsIcon.GetComponent<Image>().sprite, "Expected EventsButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(customizeIcon.GetComponent<Image>().sprite, "Expected CustomizeButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(claimIcon.GetComponent<Image>().sprite, "Expected ClaimButton's Icon to have a non-null sprite.");
+
+            // Geometry guard flagged by milestone #15's final review as
+            // untested: the 8px-inset, 32x32, left-center-anchored shape every
+            // icon is supposed to share (CoreLoopSceneBuilder.cs) had no
+            // automated check -- only the non-null-sprite assertions above did.
+            foreach (GameObject icon in new[] { submitIcon, challengeIcon, viewHistoryIcon, councilIcon, eventsIcon, customizeIcon, claimIcon })
+            {
+                var rect = icon.GetComponent<RectTransform>();
+                Assert.AreEqual(new Vector2(0f, 0.5f), rect.anchorMin, $"{icon.transform.parent.name}'s Icon has an unexpected anchorMin.");
+                Assert.AreEqual(new Vector2(0f, 0.5f), rect.anchorMax, $"{icon.transform.parent.name}'s Icon has an unexpected anchorMax.");
+                Assert.AreEqual(new Vector2(0f, 0.5f), rect.pivot, $"{icon.transform.parent.name}'s Icon has an unexpected pivot.");
+                Assert.AreEqual(new Vector2(8f, 0f), rect.anchoredPosition, $"{icon.transform.parent.name}'s Icon has an unexpected anchoredPosition.");
+                Assert.AreEqual(new Vector2(32f, 32f), rect.sizeDelta, $"{icon.transform.parent.name}'s Icon has an unexpected sizeDelta.");
+            }
         }
 
         private static Button FindButton(Canvas canvas, string name)
