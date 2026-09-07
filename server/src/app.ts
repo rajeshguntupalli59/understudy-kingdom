@@ -8,7 +8,11 @@ import councilsRoutes from './routes/councils';
 import eventsRoutes from './routes/events';
 
 export function buildApp(): FastifyInstance {
-  const app = Fastify({ logger: false });
+  // Request logging is on so a future recurrence of the decisions-endpoint
+  // reliability gap (see docs/PROJECT_PLAN.md's "Known follow-up items")
+  // leaves a diagnosable trail -- it was off when that gap was first
+  // investigated, and the investigation had no request history to work from.
+  const app = Fastify({ logger: true });
 
   // Any error a route handler doesn't explicitly reply to (a thrown
   // exception, a DB failure) lands here. 4xx errors set by routes/schema
