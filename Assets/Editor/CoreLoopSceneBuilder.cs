@@ -67,12 +67,12 @@ namespace UnderstudyKingdom.EditorTools
             var sceneBackgroundObject = new GameObject("SceneBackground", typeof(Image), typeof(AspectRatioFitter));
             sceneBackgroundObject.transform.SetParent(canvasObject.transform, false);
             var sceneBackgroundRect = sceneBackgroundObject.GetComponent<RectTransform>();
-            // Point-anchored at center (not stretch) -- AspectRatioFitter drives
-            // sizeDelta directly in EnvelopeParent mode, resizing to fully cover
-            // the parent while preserving the art's real aspect ratio (crops
-            // excess instead of squeezing/stretching it).
-            sceneBackgroundRect.anchorMin = new Vector2(0.5f, 0.5f);
-            sceneBackgroundRect.anchorMax = new Vector2(0.5f, 0.5f);
+            // AspectRatioFitter in EnvelopeParent mode drives anchors,
+            // anchoredPosition, and sizeDelta itself on its first layout pass
+            // (resetting anchors to full-stretch), so only the pivot needs
+            // setting here -- it resizes to fully cover the parent while
+            // preserving the art's real aspect ratio (crops excess instead
+            // of squeezing/stretching it).
             sceneBackgroundRect.pivot = new Vector2(0.5f, 0.5f);
             var sceneBackgroundFitter = sceneBackgroundObject.GetComponent<AspectRatioFitter>();
             sceneBackgroundFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
@@ -836,12 +836,21 @@ namespace UnderstudyKingdom.EditorTools
             label.fontSize = 24f;
             label.alignment = TextAlignmentOptions.Center;
             label.color = Color.white;
-            // A black outline keeps white text readable regardless of which
-            // scene background theme is active -- measured contrast against
-            // the Harvest Hall background without this was ~3.8:1, below
-            // WCAG AA's 4.5:1 minimum.
-            label.outlineWidth = 0.2f;
-            label.outlineColor = Color.black;
+            // A shared outline material (not per-instance outlineWidth/
+            // outlineColor, which only set shader properties without
+            // enabling TMP's OUTLINE_ON keyword -- the outline silently
+            // never rendered, and created one unique material instance per
+            // label, breaking UI batching) keeps white text readable
+            // regardless of which scene background theme is active --
+            // measured contrast against the Harvest Hall background without
+            // an outline was ~3.8:1, below WCAG AA's 4.5:1 minimum. This is
+            // TMP's own shipped outline preset for this font, already
+            // carrying OUTLINE_ON.
+            var outlineMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF - Outline.mat");
+            if (outlineMaterial != null)
+            {
+                label.fontSharedMaterial = outlineMaterial;
+            }
 
             return label;
         }
