@@ -7,6 +7,7 @@ using UnityEngine.TestTools;
 using UnityEngine.UI;
 using TMPro;
 using UnderstudyKingdom.Core;
+using UnderstudyKingdom.Npc;
 using UnderstudyKingdom.UI;
 
 namespace UnderstudyKingdom.Tests
@@ -143,6 +144,49 @@ namespace UnderstudyKingdom.Tests
 
             Assert.IsNotNull(backgroundImage.sprite,
                 "Expected the scene background to have a non-null sprite after scene load.");
+        }
+
+        /// <summary>
+        /// Regression guard mirroring the scene-background/portrait non-null-sprite
+        /// checks above, extended to the intentionally-missing event_event.png
+        /// slot: this pre-selects the Event theme via a seeded save file (the same
+        /// save-then-reload shape a real relaunch takes -- see
+        /// DecisionCycleManager.LoadPersistedStateIfPresent, called from Awake())
+        /// so the scene loads with eventPanelSprites[2] == null, exercising
+        /// GetBackgroundSprite's fallback-to-Default path for the Events panel
+        /// specifically. History and Council both have real Event-theme art and
+        /// are asserted the same way as a sanity check, but the Events panel's
+        /// non-null sprite here is proof the fallback works, not proof of a
+        /// populated slot -- event_event.png is deliberately not committed (see
+        /// docs/superpowers/specs/2026-09-06-panel-art-design.md).
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_PanelArt_HasNonNullSpritesUnderEventTheme()
+        {
+            var seedState = new RulerState { SelectedTheme = "Event" };
+            SaveService.Save(seedState);
+
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            GameObject historyPanel = FindChildByName(canvas.transform, "HistoryPanel");
+            GameObject councilPanel = FindChildByName(canvas.transform, "CouncilPanel");
+            GameObject eventPanel = FindChildByName(canvas.transform, "EventPanel");
+            Assert.IsNotNull(historyPanel, "HistoryPanel not found in the loaded CoreLoop scene.");
+            Assert.IsNotNull(councilPanel, "CouncilPanel not found in the loaded CoreLoop scene.");
+            Assert.IsNotNull(eventPanel, "EventPanel not found in the loaded CoreLoop scene.");
+
+            Image historyImage = historyPanel.GetComponent<Image>();
+            Image councilImage = councilPanel.GetComponent<Image>();
+            Image eventImage = eventPanel.GetComponent<Image>();
+
+            Assert.IsNotNull(historyImage.sprite, "Expected HistoryPanel to have a non-null sprite under the Event theme.");
+            Assert.IsNotNull(councilImage.sprite, "Expected CouncilPanel to have a non-null sprite under the Event theme.");
+            Assert.IsNotNull(eventImage.sprite,
+                "Expected EventPanel to have a non-null sprite under the Event theme -- event_event.png is deliberately missing, so this passes via GetBackgroundSprite's fallback to event_default, not a populated slot.");
         }
 
         [UnityTest]

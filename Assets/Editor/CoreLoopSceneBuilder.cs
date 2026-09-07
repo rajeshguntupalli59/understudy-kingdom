@@ -86,7 +86,7 @@ namespace UnderstudyKingdom.EditorTools
             // element -- never the front-most hit target, but skipping it in
             // every raycast is free and correct for a purely visual element.
             sceneBackgroundImage.raycastTarget = false;
-            Sprite[] backgroundSprites = LoadBackgroundSprites();
+            Sprite[] backgroundSprites = LoadThemedSprites("Assets/Art/Backgrounds", "background");
 
             Slider armySlider = CreateSlider(canvasObject.transform, "ArmySlider", 40f, 40f);
             Slider tradeSlider = CreateSlider(canvasObject.transform, "TradeSlider", 90f, 30f);
@@ -552,6 +552,10 @@ namespace UnderstudyKingdom.EditorTools
                 themeApplyButtons[i] = applyButton;
             }
 
+            Sprite[] historyPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "history");
+            Sprite[] councilPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "council");
+            Sprite[] eventPanelSprites = LoadThemedSprites("Assets/Art/PanelArt", "event");
+
             var cosmeticsControllerObject = new GameObject("CosmeticsPanelController");
             var cosmeticsController = cosmeticsControllerObject.AddComponent<CosmeticsPanelController>();
             cosmeticsController.Initialize(customizeButton, cosmeticsPanelRootObject, cosmeticsCloseButton,
@@ -559,7 +563,7 @@ namespace UnderstudyKingdom.EditorTools
                 eventPanelRootObject.GetComponent<Image>(), councilPanelRootObject.GetComponent<Image>(), panelRootObject.GetComponent<Image>(),
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
                 sceneBackgroundImage, backgroundSprites,
-                new Sprite[0], new Sprite[0], new Sprite[0]);
+                historyPanelSprites, councilPanelSprites, eventPanelSprites);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
@@ -768,6 +772,75 @@ namespace UnderstudyKingdom.EditorTools
                 }
             }
 
+            // Panel-art arrays deliberately get presence/length checks only, NOT
+            // the per-element null loop backgroundSprites gets above --
+            // eventPanelSprites[2] (event_event.png) is intentionally missing
+            // this pass (see docs/superpowers/specs/2026-09-06-panel-art-design.md),
+            // so a per-element check would fail Verify() on a correctly-shipped
+            // state.
+            FieldInfo historyPanelSpritesField = typeof(CosmeticsPanelController).GetField("historyPanelSprites", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (historyPanelSpritesField == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private historyPanelSprites field (renamed?).");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            var historyPanelSprites = (Sprite[])historyPanelSpritesField.GetValue(cosmeticsController);
+            if (historyPanelSprites == null || historyPanelSprites.Length != 3)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element historyPanelSprites array, found {(historyPanelSprites == null ? "null" : historyPanelSprites.Length.ToString())}.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            FieldInfo councilPanelSpritesField = typeof(CosmeticsPanelController).GetField("councilPanelSprites", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (councilPanelSpritesField == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private councilPanelSprites field (renamed?).");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            var councilPanelSprites = (Sprite[])councilPanelSpritesField.GetValue(cosmeticsController);
+            if (councilPanelSprites == null || councilPanelSprites.Length != 3)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element councilPanelSprites array, found {(councilPanelSprites == null ? "null" : councilPanelSprites.Length.ToString())}.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            FieldInfo eventPanelSpritesField = typeof(CosmeticsPanelController).GetField("eventPanelSprites", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (eventPanelSpritesField == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: CosmeticsPanelController has no private eventPanelSprites field (renamed?).");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            var eventPanelSprites = (Sprite[])eventPanelSpritesField.GetValue(cosmeticsController);
+            if (eventPanelSprites == null || eventPanelSprites.Length != 3)
+            {
+                Debug.LogError($"CoreLoopSceneBuilder.Verify: expected a 3-element eventPanelSprites array, found {(eventPanelSprites == null ? "null" : eventPanelSprites.Length.ToString())}.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
         }
 
@@ -902,7 +975,7 @@ namespace UnderstudyKingdom.EditorTools
             return portraits;
         }
 
-        private static Sprite LoadBackgroundSprite(string path)
+        private static Sprite LoadThemedSprite(string path)
         {
             var importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer != null && importer.textureType != TextureImporterType.Sprite)
@@ -915,21 +988,27 @@ namespace UnderstudyKingdom.EditorTools
 
         // Order matches the existing Themes array exactly (Default, Council,
         // Event) -- CosmeticsPanelController.GetBackgroundSprite indexes into
-        // this array using the same Themes array as its lookup key.
-        private static Sprite[] LoadBackgroundSprites()
+        // this array using the same Themes array as its lookup key. Generic
+        // over folder/fileNamePrefix so it serves the scene background AND
+        // all three panel-art sets (history/council/event) -- see
+        // docs/superpowers/specs/2026-09-06-panel-art-design.md's Loader
+        // consolidation section. A missing file (event_event.png is
+        // deliberately not committed -- see that spec's Scope Decisions) logs
+        // an error here and leaves that index null; CosmeticsPanelController's
+        // existing GetBackgroundSprite falls back to index 0 for it.
+        private static Sprite[] LoadThemedSprites(string folder, string fileNamePrefix)
         {
             string[] themeIds = { "default", "council", "event" };
             var sprites = new Sprite[3];
             for (int i = 0; i < themeIds.Length; i++)
             {
-                string path = $"Assets/Art/Backgrounds/background_{themeIds[i]}.png";
-                sprites[i] = LoadBackgroundSprite(path);
+                sprites[i] = LoadThemedSprite($"{folder}/{fileNamePrefix}_{themeIds[i]}.png");
             }
             for (int i = 0; i < sprites.Length; i++)
             {
                 if (sprites[i] == null)
                 {
-                    Debug.LogError($"CoreLoopSceneBuilder.LoadBackgroundSprites: failed to load background sprite at index {i}");
+                    Debug.LogError($"CoreLoopSceneBuilder.LoadThemedSprites: failed to load sprite at index {i} for {fileNamePrefix} in {folder}");
                 }
             }
             return sprites;
