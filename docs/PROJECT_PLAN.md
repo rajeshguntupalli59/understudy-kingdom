@@ -264,10 +264,13 @@ real local Postgres integration tests (no mocking):
 | #12 Ruler Portrait System | `feat/ruler-portrait` | Visual art phase 1: painted ruler portrait reacting to Mood/Loyalty | Done |
 | #13 Themed Scene Backgrounds | `feat/scene-backgrounds` | Visual art phase 2: full-screen throne-room backdrop matching the 3 Cosmetics themes | Done |
 | #14 Themed Panel Art | `feat/panel-art` | Visual art phase 3: painted background art for the History/Council/Events modal panels, per theme | Done |
+| #15 Button Icons | `feat/button-icons` | Visual art phase 4 (final increment): painted icons on 4 of 15 buttons | Done |
 
-*(Milestones #12-14 are the first three increments of a broader visual-art
-phase — button icons are still not started, see "Known
-follow-up items" below. Milestone #9 merged after a manual playtest was still outstanding —
+*(Milestones #12-15 are the four increments of the visual-art phase --
+all planned increments now have at least a first pass shipped, though
+#14 and #15 both ended up scope-reduced by the same Hugging Face credit
+cap; see "Known follow-up items" below for what's deferred in each.
+Milestone #9 merged after a manual playtest was still outstanding —
 same limitation as milestones #10/#11: no automated agent can drive the
 interactive Unity Editor UI. Everything automated (server tests,
 typecheck, Unity EditMode, Unity PlayMode) is green; see "Known follow-up
@@ -578,6 +581,64 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     #12-13 already recorded. See
     `docs/superpowers/specs/2026-09-06-panel-art-design.md` and
     `docs/superpowers/plans/2026-09-06-panel-art.md`.
+- **Milestone #15 (Button Icons)** shipped the fourth and originally-final
+  increment of the visual-art phase: small painted icons on 4 of the
+  game's 15 buttons (Submit Recommendation, Challenge a Rival Kingdom,
+  View History, Council), sitting left of each button's existing text
+  label. The other 11 buttons/8 remaining unique icons are deferred --
+  Hugging Face's monthly credit cap was hit again mid-batch, this time
+  after only ~5 generations (vs. ~9 the first time it was hit, during
+  milestone #14 the day before) -- see the updated "Known limit" section
+  of the HF-token memory note for this observation. No code-shape changes
+  needed to add the rest later; the pattern (art file, loader call, icon
+  child GameObject, label offset, `Initialize` field) is now a clean,
+  copy-pasteable template across all 4 landed buttons.
+  - **Architecturally distinct from milestones #12-14**: icons are purely
+    static (no mood/theme/state variation), so unlike the three prior
+    increments there is no `ApplyTheme`-equivalent method and no
+    `GetBackgroundSprite`-style fallback lookup -- a plain `Sprite` per
+    icon, loaded once by `CoreLoopSceneBuilder.Build()` and assigned to a
+    dedicated `Image` child on each button. Confirmed interactively before
+    implementation: icon `Image` references are still wired through each
+    button's owning controller via a new trailing `Initialize(...)`
+    parameter (not left as scene-only decoration), purely so a future
+    milestone could add dynamic icon theming without another interface
+    change -- nothing reads these fields dynamically yet.
+  - **Task 1's diff had to touch 5 test files beyond its own brief's file
+    list** (`DuelModalGateInterleavingTests`,
+    `HistoryPanelControllerRealDataTests`, `EventPanelControllerTests`,
+    `EventPanelControllerRealDataTests`, `CouncilPanelControllerRealDataTests`)
+    because they also construct the same 4 controllers directly for
+    unrelated test scenarios, and the plan's brief (written before
+    implementation) hadn't traced every caller across the whole test
+    suite. Each got exactly one appended `null` placeholder argument --
+    both the task reviewer and the final whole-branch reviewer
+    independently verified (via `git log --all` on each filename) that
+    this boundary held for the rest of the branch: those 5 files were
+    never touched again once Task 2 wired the real icons.
+  - **Final whole-branch review passed clean on the first attempt** (no
+    fix-and-reverify round needed, unlike milestones #13 and #14) --
+    Ready to merge: Yes, zero Critical/Important findings, only 2 Minor
+    notes: `Verify()`'s new icon-check block re-runs `FindFirstObjectByType`
+    lookups already done earlier in the same method for other checks
+    (matches a pre-existing per-check-block convention in this file, not
+    a new anti-pattern); and the icon geometry itself (8px inset, 32x32,
+    40px label offset) has no automated test coverage -- the 4 new
+    per-controller tests are reflection-based field-storage checks
+    (near-tautological, but that's the correct floor given icons have no
+    other observable behavior this pass), and the new scene-level
+    regression test checks non-null sprites but not position/size. Worth
+    adding a `RectTransform` geometry assertion if this layout code is
+    ever touched again.
+  - **Process note**: the opus-model final review hit a session-wide rate
+    limit mid-review (a genuinely small, low-risk 4-icon branch didn't
+    need the most expensive model) and had to be retried on sonnet, which
+    completed cleanly in under 2 minutes. Going forward, final-review
+    model choice should scale with actual diff risk/size rather than
+    defaulting to the most capable model for every branch regardless of
+    scope.
+  - See `docs/superpowers/specs/2026-09-07-button-icons-design.md` and
+    `docs/superpowers/plans/2026-09-07-button-icons.md`.
 - **Recurring pattern across milestones #12 and #13, not yet fixed:**
   the "new `[SerializeField]` deserializes as null/empty on the old
   committed scene, and the field is indexed without a null-array guard"
