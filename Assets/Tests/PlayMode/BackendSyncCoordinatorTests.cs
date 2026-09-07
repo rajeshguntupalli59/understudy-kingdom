@@ -23,6 +23,7 @@ namespace UnderstudyKingdom.Tests
         private GameObject managerObject;
         private GameObject coordinatorObject;
         private DecisionCycleManager manager;
+        private string capturedAccessToken;
 
         [SetUp]
         public void SetUp()
@@ -42,9 +43,25 @@ namespace UnderstudyKingdom.Tests
             coordinator.DecisionCycleManager = manager;
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            // Both tests below end up with exactly one real kingdom (the
+            // second-coordinator test explicitly reuses the first's
+            // persisted identity, not a new one) -- one cleanup call covers
+            // either test. Prefer capturedAccessToken (set just before the
+            // second test's own finally block clears SessionStore) when
+            // present; SessionStore.Load() alone would find nothing by the
+            // time this runs for that test.
+            if (!string.IsNullOrEmpty(capturedAccessToken))
+            {
+                yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", capturedAccessToken, nameof(BackendSyncCoordinatorTests));
+            }
+            else
+            {
+                yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", nameof(BackendSyncCoordinatorTests));
+            }
+
             Object.DestroyImmediate(coordinatorObject);
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);
@@ -115,6 +132,13 @@ namespace UnderstudyKingdom.Tests
                 Assert.IsNotNull(secondSession, "Second coordinator should have a session after bootstrap.");
                 Assert.AreEqual(firstUserId, secondSession.UserId,
                     "Second coordinator should have reused the persisted session's identity, not signed in fresh.");
+
+                // Captured here because this method's own finally block below
+                // clears SessionStore before the class-level UnityTearDown
+                // runs -- without this, that teardown's SessionStore.Load()
+                // would find nothing and silently skip cleaning up the real
+                // kingdom this test created.
+                capturedAccessToken = secondSession.AccessToken;
             }
             finally
             {

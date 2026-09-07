@@ -22,6 +22,7 @@ namespace UnderstudyKingdom.Tests
         private GameObject coordinatorObject;
         private GameObject defenderAuthObject;
         private GameObject defenderApiObject;
+        private string defenderToken;
 
         [UnitySetUp]
         public IEnumerator UnitySetUp()
@@ -38,9 +39,10 @@ namespace UnderstudyKingdom.Tests
             SessionData defenderSession = null;
             defenderAuth.SignInAnonymously(s => defenderSession = s, err => Assert.Fail($"Defender sign-in failed: {err}"));
             yield return new WaitUntil(() => defenderSession != null);
+            defenderToken = defenderSession.AccessToken;
 
             bool defenderReady = false;
-            defenderApi.EnsureKingdom(defenderSession.AccessToken, () => defenderReady = true, err => Assert.Fail($"Defender EnsureKingdom failed: {err}"));
+            defenderApi.EnsureKingdom(defenderToken, () => defenderReady = true, err => Assert.Fail($"Defender EnsureKingdom failed: {err}"));
             yield return new WaitUntil(() => defenderReady);
 
             rulerObject = new GameObject("Ruler");
@@ -61,9 +63,14 @@ namespace UnderstudyKingdom.Tests
             yield return new WaitForSeconds(2f);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            // Two real kingdoms: the coordinator's own (SessionStore-backed)
+            // and the defender's (raw token, never persisted).
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", nameof(BackendSyncCoordinatorDuelTests));
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", defenderToken, nameof(BackendSyncCoordinatorDuelTests));
+
             Object.DestroyImmediate(coordinatorObject);
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);

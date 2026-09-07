@@ -111,9 +111,15 @@ namespace UnderstudyKingdom.Tests
             yield return new WaitForSeconds(3f);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            // Session 1 and session 2 above are the SAME underlying
+            // user/kingdom (session 2 resumes session 1's persisted
+            // session), so one cleanup call covers everything this test
+            // created.
+            yield return TestKingdomCleanup.DeleteTestKingdom(BackendBaseUrl, nameof(DecisionCycleManagerSessionResumeTests));
+
             if (coordinator1Object != null) Object.DestroyImmediate(coordinator1Object);
             Object.DestroyImmediate(coordinator2Object);
             Object.DestroyImmediate(manager2Object);

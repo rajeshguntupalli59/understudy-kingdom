@@ -219,6 +219,42 @@ namespace UnderstudyKingdom.Backend
         }
 
         /// <summary>
+        /// Test-only cleanup: deletes the caller's own kingdom (and everything
+        /// scoped to it -- ruler, decisions, duels, council membership) from
+        /// the real configured DATABASE_URL. Only ever succeeds against a
+        /// server with ALLOW_TEST_DB_TRUNCATE=true (403 otherwise) -- see
+        /// server/src/routes/kingdoms.ts's DELETE /api/v1/kingdoms/me. Intended
+        /// for real-data test TearDown, never for a real player-facing flow.
+        /// </summary>
+        public void DeleteMyKingdom(string accessToken, Action onSuccess, Action<string> onError)
+        {
+            StartCoroutine(SendDeleteMyKingdom(accessToken, onSuccess, onError));
+        }
+
+        private IEnumerator SendDeleteMyKingdom(string accessToken, Action onSuccess, Action<string> onError)
+        {
+            string url = $"{BackendBaseUrl}/api/v1/kingdoms/me";
+            using var request = UnityWebRequest.Delete(url);
+            request.SetRequestHeader("Authorization", $"Bearer {accessToken}");
+
+            yield return request.SendWebRequest();
+
+            // 404 ("no kingdom found") is a legitimate no-op for this call's
+            // main caller (test cleanup, where many fixtures never got as far
+            // as creating a kingdom before teardown) -- treat it as success
+            // rather than an error worth logging.
+            if (request.result != UnityWebRequest.Result.Success && request.responseCode != 404)
+            {
+                string message = TryExtractServerErrorMessage(request.downloadHandler.text)
+                    ?? $"Delete-kingdom request to {url} failed: {request.result} ({request.responseCode})";
+                onError?.Invoke(message);
+                yield break;
+            }
+
+            onSuccess?.Invoke();
+        }
+
+        /// <summary>
         /// Mirrors PostDuel's response-parsing shape (SendDuelRequest) -- the
         /// response body carries real council data, not just a status code.
         /// </summary>

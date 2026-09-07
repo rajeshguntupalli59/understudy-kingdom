@@ -36,9 +36,11 @@ namespace UnderstudyKingdom.Tests
             Object.DestroyImmediate(authObject);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", jwt, nameof(BackendApiClientEventsTests));
+
             Object.DestroyImmediate(apiClientObject);
         }
 

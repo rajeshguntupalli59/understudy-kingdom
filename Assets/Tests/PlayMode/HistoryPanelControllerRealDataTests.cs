@@ -121,9 +121,11 @@ namespace UnderstudyKingdom.Tests
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate, null);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", nameof(HistoryPanelControllerRealDataTests));
+
             Object.DestroyImmediate(controllerObject);
             Object.DestroyImmediate(canvasObject);
             Object.DestroyImmediate(coordinatorObject);

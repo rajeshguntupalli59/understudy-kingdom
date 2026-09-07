@@ -39,9 +39,11 @@ namespace UnderstudyKingdom.Tests
             accessToken = session.AccessToken;
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", accessToken, nameof(BackendApiClientTests));
+
             Object.DestroyImmediate(authClientObject);
             Object.DestroyImmediate(apiClientObject);
         }

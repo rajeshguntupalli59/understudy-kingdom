@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { db } from '../db/client';
-import { kingdoms, rulerNpcs } from '../db/schema';
+import { kingdoms, rulerNpcs, decisions, pvpDuels, councilMembers } from '../db/schema';
 
 // Either the top-level `db` handle or a `tx` handed in by `db.transaction`'s
 // callback -- both expose the same query-builder surface (`.select()`,
@@ -96,6 +96,51 @@ const kingdomsRoutes: FastifyPluginAsync = async (fastify) => {
     const rulerNpc = await getRulerNpcOrThrow(db, kingdom.id);
 
     return { kingdom, rulerNpc };
+  });
+
+  // Test-only cleanup for Unity's *RealDataTests suites (CouncilPanelController
+  // RealDataTests, EventPanelControllerRealDataTests, HistoryPanelController
+  // RealDataTests, DecisionCycleManagerSessionResumeTests), which each create
+  // a real kingdom + decisions against the real configured DATABASE_URL and,
+  // before this route existed, never cleaned any of it up -- unlike the
+  // TypeScript integration suite's own truncateTables(), which those Unity
+  // tests can't call (different runtime, no HTTP surface for it). Gated
+  // behind the same ALLOW_TEST_DB_TRUNCATE flag as truncateTables() -- see
+  // test/integration/helpers/db.ts -- rather than a new env var, so there is
+  // exactly one safety switch to reason about. Deliberately scoped to
+  // request.userId's OWN kingdom only (never an arbitrary id) so even a
+  // misconfigured production DATABASE_URL with this flag accidentally left
+  // on can only ever let an authenticated caller delete their own data, not
+  // anyone else's. Deletes in FK dependency order inside one transaction
+  // (no ON DELETE CASCADE is configured in schema.ts) -- everything but the
+  // councils row itself, which is intentionally left alone since other
+  // members may still belong to it; only this user's own council_members
+  // row is removed.
+  fastify.delete('/api/v1/kingdoms/me', async (request, reply) => {
+    if (process.env.ALLOW_TEST_DB_TRUNCATE !== 'true') {
+      reply.code(403);
+      return {
+        error:
+          'Refusing to delete: ALLOW_TEST_DB_TRUNCATE is not set to "true". This test-only cleanup route is disabled unless explicitly enabled against a dedicated test database.',
+      };
+    }
+
+    const rows = await db.select().from(kingdoms).where(eq(kingdoms.userId, request.userId)).limit(1);
+    if (rows.length === 0) {
+      reply.code(404);
+      return { error: 'No kingdom found for this user' };
+    }
+    const kingdom = rows[0];
+
+    await db.transaction(async (tx: TxExecutor) => {
+      await tx.delete(pvpDuels).where(or(eq(pvpDuels.challengerKingdomId, kingdom.id), eq(pvpDuels.defenderKingdomId, kingdom.id)));
+      await tx.delete(decisions).where(eq(decisions.kingdomId, kingdom.id));
+      await tx.delete(rulerNpcs).where(eq(rulerNpcs.kingdomId, kingdom.id));
+      await tx.delete(councilMembers).where(eq(councilMembers.userId, request.userId));
+      await tx.delete(kingdoms).where(eq(kingdoms.id, kingdom.id));
+    });
+
+    reply.code(204);
   });
 };
 

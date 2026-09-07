@@ -155,4 +155,72 @@ describe('kingdoms routes', () => {
 
     expect(response.statusCode).toBe(401);
   });
+
+  describe('DELETE /api/v1/kingdoms/me', () => {
+    const originalFlag = process.env.ALLOW_TEST_DB_TRUNCATE;
+
+    afterEach(() => {
+      process.env.ALLOW_TEST_DB_TRUNCATE = originalFlag;
+    });
+
+    it('returns 403 when ALLOW_TEST_DB_TRUNCATE is not "true"', async () => {
+      process.env.ALLOW_TEST_DB_TRUNCATE = 'false';
+      await app.inject({ method: 'POST', url: '/api/v1/kingdoms', headers: { authorization: `Bearer ${jwt}` } });
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: '/api/v1/kingdoms/me',
+        headers: { authorization: `Bearer ${jwt}` },
+      });
+
+      expect(response.statusCode).toBe(403);
+    });
+
+    it('returns 404 if the caller has no kingdom yet', async () => {
+      process.env.ALLOW_TEST_DB_TRUNCATE = 'true';
+
+      const response = await app.inject({
+        method: 'DELETE',
+        url: '/api/v1/kingdoms/me',
+        headers: { authorization: `Bearer ${jwt}` },
+      });
+
+      expect(response.statusCode).toBe(404);
+    });
+
+    it('deletes the caller\'s kingdom, ruler, and decisions', async () => {
+      process.env.ALLOW_TEST_DB_TRUNCATE = 'true';
+      await app.inject({ method: 'POST', url: '/api/v1/kingdoms', headers: { authorization: `Bearer ${jwt}` } });
+      await app.inject({
+        method: 'POST',
+        url: '/api/v1/decisions',
+        headers: { authorization: `Bearer ${jwt}` },
+        payload: { cycle_number: 1, player_recommendation: {}, ruler_outcome: {}, overridden: false },
+      });
+
+      const deleteResponse = await app.inject({
+        method: 'DELETE',
+        url: '/api/v1/kingdoms/me',
+        headers: { authorization: `Bearer ${jwt}` },
+      });
+      expect(deleteResponse.statusCode).toBe(204);
+
+      const kingdomAfter = await app.inject({
+        method: 'GET',
+        url: '/api/v1/kingdoms/me',
+        headers: { authorization: `Bearer ${jwt}` },
+      });
+      expect(kingdomAfter.statusCode).toBe(404);
+
+      // A fresh POST /api/v1/kingdoms must succeed as if this were a brand
+      // new user -- proves the old kingdom row (and its unique userId
+      // constraint) is genuinely gone, not just hidden from GET.
+      const recreated = await app.inject({
+        method: 'POST',
+        url: '/api/v1/kingdoms',
+        headers: { authorization: `Bearer ${jwt}` },
+      });
+      expect(recreated.statusCode).toBe(201);
+    });
+  });
 });

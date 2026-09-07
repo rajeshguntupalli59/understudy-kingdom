@@ -61,9 +61,11 @@ namespace UnderstudyKingdom.Tests
             yield return new WaitUntil(() => decision2Posted);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", accessToken, nameof(BackendApiClientHistoryTests));
+
             Object.DestroyImmediate(authObject);
             Object.DestroyImmediate(apiClientObject);
         }

@@ -36,9 +36,11 @@ namespace UnderstudyKingdom.Tests
             yield return new WaitForSeconds(2f);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", nameof(BackendSyncCoordinatorHistoryTests));
+
             Object.DestroyImmediate(coordinatorObject);
             Object.DestroyImmediate(managerObject);
             Object.DestroyImmediate(rulerObject);

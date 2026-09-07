@@ -18,6 +18,7 @@ namespace UnderstudyKingdom.Tests
         private GameObject defenderAuthObject;
         private GameObject apiClientObject;
         private string challengerToken;
+        private string defenderToken;
 
         [UnitySetUp]
         public IEnumerator UnitySetUp()
@@ -44,19 +45,25 @@ namespace UnderstudyKingdom.Tests
             SessionData defenderSession = null;
             defenderAuth.SignInAnonymously(s => defenderSession = s, err => Assert.Fail($"Defender sign-in failed: {err}"));
             yield return new WaitUntil(() => defenderSession != null);
+            defenderToken = defenderSession.AccessToken;
 
             bool challengerKingdomReady = false;
             apiClient.EnsureKingdom(challengerToken, () => challengerKingdomReady = true, err => Assert.Fail($"Challenger EnsureKingdom failed: {err}"));
             yield return new WaitUntil(() => challengerKingdomReady);
 
             bool defenderKingdomReady = false;
-            apiClient.EnsureKingdom(defenderSession.AccessToken, () => defenderKingdomReady = true, err => Assert.Fail($"Defender EnsureKingdom failed: {err}"));
+            apiClient.EnsureKingdom(defenderToken, () => defenderKingdomReady = true, err => Assert.Fail($"Defender EnsureKingdom failed: {err}"));
             yield return new WaitUntil(() => defenderKingdomReady);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator UnityTearDown()
         {
+            // Two real kingdoms this time (challenger + defender), neither
+            // persisted to SessionStore -- clean up both explicitly by token.
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", challengerToken, nameof(BackendApiClientDuelTests));
+            yield return TestKingdomCleanup.DeleteTestKingdom("http://localhost:3000", defenderToken, nameof(BackendApiClientDuelTests));
+
             Object.DestroyImmediate(challengerAuthObject);
             Object.DestroyImmediate(defenderAuthObject);
             Object.DestroyImmediate(apiClientObject);
