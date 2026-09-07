@@ -633,13 +633,13 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     lookups already done earlier in the same method for other checks
     (matches a pre-existing per-check-block convention in this file, not
     a new anti-pattern); and the icon geometry itself (8px inset, 32x32,
-    40px label offset) has no automated test coverage -- the 4 new
+    40px label offset) had no automated test coverage -- the 4
     per-controller tests are reflection-based field-storage checks
     (near-tautological, but that's the correct floor given icons have no
-    other observable behavior this pass), and the new scene-level
-    regression test checks non-null sprites but not position/size. Worth
-    adding a `RectTransform` geometry assertion if this layout code is
-    ever touched again.
+    other observable behavior this pass). **Resolved** (commit `b919b78`):
+    the scene-level regression test now asserts each icon's
+    `RectTransform` (anchors, pivot, anchoredPosition, sizeDelta)
+    against the shared shape, not just non-null sprite.
   - **Process note**: the opus-model final review hit a session-wide rate
     limit mid-review (a genuinely small, low-risk 4-icon branch didn't
     need the most expensive model) and had to be retried on sonnet, which
