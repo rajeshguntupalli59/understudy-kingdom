@@ -1,6 +1,6 @@
 # Project Plan — Understudy Kingdom
 
-**Version:** 1.0 | **Status:** In development (7 milestones shipped) | **Last updated:** 2026-09-03
+**Version:** 1.0 | **Status:** In development (7 milestones shipped, first playable APK verified) | **Last updated:** 2026-09-07
 
 Assumptions: mobile client (Android + iOS), Unity/C# client, lightweight
 backend (Node.js + PostgreSQL), F2P with IAP, India-first launch market,
@@ -731,6 +731,49 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   This was the last unguarded instance of the pattern in the codebase --
   no further audit needed unless a future milestone adds another raw
   array index outside `GetBackgroundSprite`/`GetPortraitSprite`.
+- **First playable APK built and visually verified** (commits `0be195a`,
+  `1c518d6`), all functional requirements now shipped. Built via the
+  existing `Assets/Editor/AndroidBuildTool.cs` (x86_64, matching the
+  Pixel_6 AVD's system image) and installed/launched on a fresh emulator
+  boot; screenshots confirm the full UI renders correctly end to end --
+  onboarding tutorial overlay, then the core-loop screen with ruler
+  portrait, mood/loyalty/agenda, and all 6 primary buttons showing their
+  new icons.
+  - Two real build-pipeline bugs found and fixed during verification,
+    neither present in the game code itself:
+    1. `BackendSyncCoordinator` bakes `http://localhost:3000` into the
+       scene for Editor/desktop testing; on Android, guest `localhost`
+       is the emulator itself, not the host, so every backend call
+       (Council/History/Duel) silently failed. Fixed with a
+       runtime-only rewrite to the emulator's documented `10.0.2.2`
+       host-loopback alias, gated to `Application.platform ==
+       RuntimePlatform.Android` so Editor/desktop behavior is
+       unchanged.
+    2. Once requests could reach the host, Unity's Android Player
+       Settings blocked them anyway (`InvalidOperationException:
+       "Insecure connection not allowed"` -- plain HTTP disabled by
+       default). `AndroidBuildTool.BuildApk()` now sets
+       `insecureHttpOption = AlwaysAllowed` before building (this is
+       the already-documented "local emulator test build, not part of
+       any CI/release pipeline" tool, so this is scoped correctly).
+    3. Also fixed: `BuildApk()` only called `EditorApplication.Exit()`
+       on failure, so a successful `-executeMethod` batchmode run never
+       quit -- the process stayed alive holding the project lock and
+       made the *next* build invocation fail instantly. Now exits
+       explicitly on both paths.
+  - Also root-caused (environment, not app) a "background renders but
+    no UI at all" symptom hit twice during verification: the Pixel_6
+    AVD's own SystemUI has a recurring `KeyguardService` ANR on cold
+    boot (`waited 20138ms`, compounded by a post-boot OOM-killer storm
+    at the AVD's original 2048MB RAM allocation, bumped to 4096MB); and
+    separately, switching the emulator to software rendering
+    (`-gpu swiftshader_indirect`) to dodge that ANR silently failed to
+    composite the UI Canvas at all, while the default hardware GPU
+    backend renders it correctly. If the original "APK showed only one
+    screen with a button" report came from either of these on the
+    reporting machine, that fully explains it -- full suite (EditMode
+    81/81, PlayMode 82/82) was green throughout; nothing here traces to
+    a code defect.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
