@@ -656,22 +656,29 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     Challenge, View History, Council, Events, Customize, Claim Reward);
     5 icons/6 button slots remain deferred (Create Council, Join Council,
     Skip, Next, shared Close).
-- **Recurring pattern across milestones #12 and #13, not yet fixed:**
-  the "new `[SerializeField]` deserializes as null/empty on the old
-  committed scene, and the field is indexed without a null-array guard"
-  failure has now cost implementer time in 3 separate task
-  implementations (ruler-portrait Task 2, scene-backgrounds Task 1, and
-  scene-backgrounds Task 2 avoided it only because Task 1 already forced
-  the rebuild). Each time, the immediate fix was "regenerate the scene
-  one task early" rather than "guard the array access" -- the guard
-  itself only landed for scene-backgrounds' `backgroundSprites` (as
-  Important finding I-3), not more broadly. Worth a deliberate pass
-  before a 3rd visual-art milestone: either add null-array guards
-  wherever a plan prescribes an unguarded `SerializeField` array/object
-  index (not just null-element fallbacks), or explicitly design future
-  plans to regenerate the scene inside the first task that adds any new
-  serialized field, rather than treating each occurrence as a
-  surprise.
+- **Resolved (`fix/portrait-array-null-guard`, commit `cc47d60`):**
+  the recurring "new `[SerializeField]` deserializes as null/empty on
+  the old committed scene, and the field is indexed without a
+  null-array guard" pattern from milestones #12/#13 (cost implementer
+  time in 3 separate task implementations: ruler-portrait Task 2,
+  scene-backgrounds Task 1, and scene-backgrounds Task 2 avoided it only
+  because Task 1 already forced the rebuild). The guard had already
+  landed for `backgroundSprites`/`historyPanelSprites`/
+  `councilPanelSprites`/`eventPanelSprites` (all route through
+  `CosmeticsPanelController.GetBackgroundSprite`, which already
+  null/length-guards), but a deliberate audit found one remaining gap:
+  `CoreLoopScreenController.RefreshStatusLabels()` indexed
+  `rulerPortraits[portraitIndex]` directly with no array-level null
+  check at all -- a null `rulerPortraits` array NRE'd immediately rather
+  than degrading gracefully. Fixed via a new `GetPortraitSprite(...)`
+  helper mirroring `GetBackgroundSprite`'s exact fallback shape (null
+  array, too-short array, out-of-range index, or a missing sprite at the
+  selected index all resolve to the Neutral/Medium fallback, index 7,
+  instead of throwing). TDD: a new regression test first captured the
+  real `NullReferenceException` (RED), then confirmed the fix (GREEN).
+  This was the last unguarded instance of the pattern in the codebase --
+  no further audit needed unless a future milestone adds another raw
+  array index outside `GetBackgroundSprite`/`GetPortraitSprite`.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
