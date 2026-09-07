@@ -263,9 +263,10 @@ real local Postgres integration tests (no mocking):
 | #11 Cosmetics Customization | `feat/cosmetics-customization` | FR-12 | Done |
 | #12 Ruler Portrait System | `feat/ruler-portrait` | Visual art phase 1: painted ruler portrait reacting to Mood/Loyalty | Done |
 | #13 Themed Scene Backgrounds | `feat/scene-backgrounds` | Visual art phase 2: full-screen throne-room backdrop matching the 3 Cosmetics themes | Done |
+| #14 Themed Panel Art | `feat/panel-art` | Visual art phase 3: painted background art for the History/Council/Events modal panels, per theme | Done |
 
-*(Milestones #12-13 are the first two increments of a broader visual-art
-phase — button icons and panel art are still not started, see "Known
+*(Milestones #12-14 are the first three increments of a broader visual-art
+phase — button icons are still not started, see "Known
 follow-up items" below. Milestone #9 merged after a manual playtest was still outstanding —
 same limitation as milestones #10/#11: no automated agent can drive the
 interactive Unity Editor UI. Everything automated (server tests,
@@ -483,6 +484,100 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     mismatch (same open recommendation as milestone #12's). See
     `docs/superpowers/specs/2026-09-06-scene-backgrounds-design.md` and
     `docs/superpowers/plans/2026-09-06-scene-backgrounds.md`.
+- **Milestone #14 (Themed Panel Art)** shipped the third increment of the
+  visual-art phase: painted background art for the History/Council/Events
+  modal panels, per theme (3 panels x 3 themes). Two real, unavoidable
+  scope reductions from the originally-approved design, both confirmed
+  interactively before implementation began:
+  - **Customize panel art dropped entirely.** Mid-generation, Hugging
+    Face's authenticated router API hit a genuine monthly free-credit cap
+    (distinct from the anonymous-tier per-session quota wall used in
+    milestones #12-13, which resets much faster) — 8 of the planned 12
+    images generated successfully before every remaining request started
+    failing with "You have depleted your monthly included credits."
+    Customize stays exactly as milestone #11 shipped it (fixed navy, not
+    theme-reactive) — literally untouched by this milestone.
+  - **`event_event.png` (Events panel, Harvest Hall theme) was never
+    generated** — the one image lost to the credit cap among the 8 that
+    remained in scope. Left deliberately unset; resolves through the
+    pre-existing `GetBackgroundSprite` fallback-to-Default mechanism with
+    zero special-case code. A new PlayMode regression test
+    (`LoadedCoreLoopScene_PanelArt_HasNonNullSpritesUnderEventTheme`)
+    seeds a save file selecting the Event theme before loading the real
+    scene, specifically to exercise this fallback path end-to-end, not
+    just assert non-null.
+  - **5 of the 8 committed images had hallucinated fake artist
+    signatures/watermarks** baked in by FLUX.1-schnell (reproducing
+    stock-art credits from its training data) — one had a large, fully
+    legible fake copyright stamp spanning the image width. Fixed before
+    committing: 4 via `ffmpeg` crop (removing the affected edge) +
+    rescale back to the original 1024x1792 (negligible stretch, under
+    ~3% in most cases), 1 via `ffmpeg delogo` in-place blur (signature
+    sat mid-image, not at an edge, so cropping wasn't viable). All 8
+    final images independently verified 1024x1792 via `ffprobe` and
+    visually reviewed before commit.
+  - **The final whole-branch review caught 2 Important, purely
+    spec-level defects** — both task-level reviews had passed correctly
+    against what the spec/plan actually specified; the gap was that
+    neither ever stated what the destination Image's tint or aspect
+    ratio should be. (I-1) `ApplyTheme` set both `.color` (the existing
+    dark per-theme tint) and `.sprite` (the new art) on the same three
+    Images — Unity's UI shader multiplies sprite x color, so the art
+    rendered at roughly 10-20% brightness, effectively invisible. (I-2)
+    the 1024x1792 art was stretched ~53% horizontally into the 700x800
+    panel rects with no aspect correction — worse than milestone #13's
+    already-fixed 19% squeeze, using the exact same `AspectRatioFitter`
+    mechanism sitting 300 lines up the same file. Both were confirmed via
+    the actual serialized scene YAML, not speculation.
+  - **Fixed via a dedicated art-layer architecture**, chosen interactively
+    over two cheaper-but-worse alternatives (brightening the existing
+    Image in place, which would have broken milestone #11's already-shipped
+    color-tint tests; or `preserveAspect` letterboxing, which would have
+    left transparent gaps at the panel edges exposing the scene background
+    underneath). Each panel gained a new child `Image` (`historyArtImage`/
+    `councilArtImage`/`eventArtImage`, default Unity white, matching the
+    existing `sceneBackgroundImage` precedent exactly) carrying an
+    `AspectRatioFitter` in `EnvelopeParent` mode against its *parent*
+    panel (not the panel root itself — parenting the fitter to the root
+    would have resized the whole 700x800 panel to full-screen, since
+    `EnvelopeParent` drives its own RectTransform from its own parent),
+    plus a `RectMask2D` on each panel root to clip the resulting overflow
+    to the panel's fixed bounds. The original three Images/their
+    `.color` assignments/their milestone #11 tests are completely
+    unchanged. Independently re-verified against the regenerated scene's
+    actual serialized transforms (envelope math confirmed exact to 4
+    decimal places, GUID/parenting/sizeDelta all checked directly) rather
+    than trusted from the fix report — this project's established
+    standard after milestone #13's invisible-outline lesson.
+  - Consulted the `ui-ux-pro-max` skill for scrim/contrast guidance before
+    finalizing the fix; decided against adding a scrim layer — the
+    existing TMP outlined-label material (already proven for the
+    visually-similar, equally-busy scene-background case in milestone
+    #13) should suffice, and a scrim wasn't clearly warranted by the
+    guidance for this specific case. Not verified with a live
+    screenshot/device render — the fix's correctness rests on independently-checked
+    serialized-scene math (exact envelope ratio, confirmed white tint,
+    confirmed child-not-root fitter placement) rather than a rendered
+    image. Recommended next step if any panel's readability looks off in
+    practice: a real screenshot per theme, and revisit the scrim question
+    if labels are hard to read over busy art.
+  - Non-blocking Minor items from the fix's re-review, not yet acted on:
+    the three new art Images are dereferenced with no null guard in
+    `ApplyTheme` (unlike `sceneBackgroundImage` just below them, which is
+    guarded) — this is what caused 9 expected PlayMode failures against
+    the stale pre-rebuild scene, not a new hazard but worth guarding
+    consistently; the new scene-level regression test dereferences the
+    `PanelArt` children/their sprites without an `Assert.IsNotNull` first,
+    so a missing-child regression would surface as a bare NRE instead of
+    a diagnostic message; one stale XML-doc comment describing the test's
+    pre-strengthening assertions; a handful of `AspectRatioFitter`
+    pivot/`preserveAspect` lines that just restate Unity's own defaults
+    (harmless, mirrors the existing scene-background code's style).
+    Texture budget (8 more 1024x1792 sources, ~23MB, no mobile
+    `maxTextureSize` override) folds into the same open item milestones
+    #12-13 already recorded. See
+    `docs/superpowers/specs/2026-09-06-panel-art-design.md` and
+    `docs/superpowers/plans/2026-09-06-panel-art.md`.
 - **Recurring pattern across milestones #12 and #13, not yet fixed:**
   the "new `[SerializeField]` deserializes as null/empty on the old
   committed scene, and the field is indexed without a null-array guard"
