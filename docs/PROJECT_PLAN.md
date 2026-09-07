@@ -639,6 +639,23 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     scope.
   - See `docs/superpowers/specs/2026-09-07-button-icons-design.md` and
     `docs/superpowers/plans/2026-09-07-button-icons.md`.
+  - **Follow-up same day**: HF credits became available again a short
+    while later, so 3 more icons (Events, Customize, Claim Reward) were
+    generated and shipped as a direct follow-up commit on `main`
+    (`f1afe3d`) rather than through the full subagent-driven-development
+    pipeline -- by this point the pattern had shipped clean 4 times in a
+    row with zero Important findings across 3 independent reviews, so the
+    controller/scene-builder wiring was done directly, self-reviewed
+    against the actual scene YAML (RectTransform math and sprite GUID
+    references cross-checked by hand, not just trusted), and merged after
+    a fresh full-suite pass (EditMode 77/77, PlayMode 81/81). No new
+    per-controller reflection tests were added this round (the earlier
+    final review had already flagged those as near-tautological); the
+    existing scene-level regression test was extended to cover all 7
+    shipped icons instead. 7 of 12 unique icons now live (Submit,
+    Challenge, View History, Council, Events, Customize, Claim Reward);
+    5 icons/6 button slots remain deferred (Create Council, Join Council,
+    Skip, Next, shared Close).
 - **Recurring pattern across milestones #12 and #13, not yet fixed:**
   the "new `[SerializeField]` deserializes as null/empty on the old
   committed scene, and the field is indexed without a null-array guard"
