@@ -435,10 +435,24 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   behind it, called in all 6 integration test files' `afterEach`) and set
   to `true` in this environment's real `.env` — the TypeScript
   integration suite's own test DB already resets between runs and was
-  never the unbounded-growth source this note assumed. The real remaining
-  risk (Unity PlayMode `*RealDataTests` hitting the same live server
-  outside that TS-side truncation) is unquantified — not yet investigated
-  further.
+  never the unbounded-growth source this note assumed. **Resolved**
+  (commit `e08363e`): the real remaining risk -- every PlayMode test that
+  signs in for real and creates a real kingdom (13 files total, not just
+  the 4 `*RealDataTests` files; 9 more `BackendApiClient*`/
+  `BackendSyncCoordinator*` files were never previously scoped for this)
+  never cleaned up its rows. Quantified by direct row-count measurement:
+  ~21-22 new kingdoms per full PlayMode suite run before the fix. New
+  `DELETE /api/v1/kingdoms/me` (gated behind the same
+  `ALLOW_TEST_DB_TRUNCATE` flag, scoped to the caller's own kingdom only)
+  plus a shared `TestKingdomCleanup` teardown helper across all 13 files
+  dropped that to ~1-2/run. The residual is a genuine timing race, not a
+  cleanup bug: `BackendSyncCoordinator` is deliberately "fire-and-forget
+  with no observable sync status" (its own docstring), so an in-flight
+  `EnsureKingdom` call can occasionally land just after teardown's
+  cleanup already ran and got a 404 -- same class of real-network
+  flakiness already accepted for N-4 above. Not chased further; closing
+  it fully would mean making the coordinator's bootstrap observable, a
+  real architecture change beyond a cleanup fix's scope.
 - **Milestone #12 (Ruler Portrait System)** shipped the first increment of
   a broader visual-art phase: 15 AI-generated portraits (5 Mood tiers x 3
   Loyalty tiers) that `CoreLoopScreenController.RefreshStatusLabels()`
