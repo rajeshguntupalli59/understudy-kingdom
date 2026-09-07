@@ -89,5 +89,55 @@ namespace UnderstudyKingdom.Core
                 return new RulerState();
             }
         }
+
+        private const string EstateFileName = "estate_save.json";
+
+        public static string EstateSavePath => Path.Combine(Application.persistentDataPath, EstateFileName);
+
+        public static void SaveEstate(EstateState state)
+        {
+            var data = new EstateSaveData
+            {
+                Coins = state.Coins,
+                Plots = state.Plots
+            };
+            File.WriteAllText(EstateSavePath, JsonUtility.ToJson(data));
+        }
+
+        public static EstateState LoadEstate()
+        {
+            if (!File.Exists(EstateSavePath))
+            {
+                return new EstateState();
+            }
+
+            try
+            {
+                string raw = File.ReadAllText(EstateSavePath);
+                string trimmed = raw.TrimStart();
+
+                if (trimmed.Length == 0 || trimmed[0] != '{')
+                {
+                    return new EstateState();
+                }
+
+                var data = JsonUtility.FromJson<EstateSaveData>(raw);
+
+                if (data.Plots == null || data.Plots.Length != EstateState.PlotCount)
+                {
+                    return new EstateState();
+                }
+
+                return new EstateState
+                {
+                    Coins = data.Coins,
+                    Plots = data.Plots
+                };
+            }
+            catch (Exception)
+            {
+                return new EstateState();
+            }
+        }
     }
 }
