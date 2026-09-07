@@ -172,8 +172,7 @@ namespace UnderstudyKingdom.UI
             councilButton.interactable = interactable;
             eventsButton.interactable = interactable;
             customizeButton.interactable = interactable;
-            if (estateButton != null)
-                estateButton.interactable = interactable;
+            estateButton.interactable = interactable;
         }
     }
 }

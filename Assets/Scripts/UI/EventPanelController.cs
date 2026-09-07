@@ -189,8 +189,7 @@ namespace UnderstudyKingdom.UI
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
             customizeButton.interactable = interactable;
-            if (estateButton != null)
-                estateButton.interactable = interactable;
+            estateButton.interactable = interactable;
 
             // challengeButton has two independent disablers (this modal, and
             // Duel's own in-flight state) -- see

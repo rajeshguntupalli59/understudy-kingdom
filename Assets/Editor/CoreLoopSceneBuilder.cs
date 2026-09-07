@@ -280,6 +280,15 @@ namespace UnderstudyKingdom.EditorTools
             customizeIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/customize.png");
             customizeIconImage.raycastTarget = false;
 
+            // Task 6 replaces this placeholder with the real Estate button;
+            // exists only so these controllers' estateButton field is never
+            // null before Task 6 lands (SetCoreLoopControlsInteractable
+            // dereferences it unconditionally, matching every other button
+            // in that method).
+            var estatePlaceholderButtonObject = new GameObject("EstatePlaceholderButton", typeof(Image), typeof(Button));
+            estatePlaceholderButtonObject.transform.SetParent(canvasObject.transform, false);
+            var estatePlaceholderButton = estatePlaceholderButtonObject.GetComponent<Button>();
+
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
             var eventPanelRect = eventPanelRootObject.GetComponent<RectTransform>();
@@ -369,7 +378,7 @@ namespace UnderstudyKingdom.EditorTools
             eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
                 eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton, duelModalGate,
-                eventsIconImage, claimIconImage, null);
+                eventsIconImage, claimIconImage, estatePlaceholderButton);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -517,7 +526,7 @@ namespace UnderstudyKingdom.EditorTools
                 nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
                 councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
                 backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage, null);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage, estatePlaceholderButton);
 
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -575,7 +584,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage, null);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage, estatePlaceholderButton);
 
             var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
             tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);
@@ -654,7 +663,7 @@ namespace UnderstudyKingdom.EditorTools
             var tutorialController = tutorialControllerObject.AddComponent<TutorialOverlayController>();
             tutorialController.Initialize(tutorialOverlayObject, tutorialStepIndicatorLabel, tutorialTitleLabel, tutorialBodyLabel,
                 tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage, null);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage, estatePlaceholderButton);
 
             var cosmeticsPanelRootObject = new GameObject("CosmeticsPanel", typeof(Image));
             cosmeticsPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -721,7 +730,7 @@ namespace UnderstudyKingdom.EditorTools
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage, customizeIconImage, null);
+                historyArtImage, councilArtImage, eventArtImage, customizeIconImage, estatePlaceholderButton);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
