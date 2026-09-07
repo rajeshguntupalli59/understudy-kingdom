@@ -312,12 +312,28 @@ FR-14, FR-15 (monetization guardrails) not yet started.
   what shipped. No leave/rename/kick-member, no browsing UI, no repeating
   rewards this pass — see
   `docs/superpowers/specs/2026-09-03-council-social-design.md`.
-- Milestone #7's final review flagged a duel-in-flight request as sitting
-  outside the modal mutual-exclusion gate shared by the History and Council
-  panels (`DuelButtonController` only disables its own button, not the
-  shared gate) — a pre-existing gap from milestone #6, now duplicated by
-  Council. Real fix needs `DuelButtonController` to own a shared in-flight
-  flag the panels consult; deferred as larger than a single milestone.
+- **Resolved (was stale in this doc until now):** Milestone #7's final
+  review flagged a duel-in-flight request as sitting outside the modal
+  mutual-exclusion gate shared by the History and Council panels
+  (`DuelButtonController` only disabled its own button, not the shared
+  gate) — a pre-existing gap from milestone #6, duplicated by Council,
+  originally deferred here as "larger than a single milestone." Milestone
+  #9 (Duel/Modal Gate Fix, shipped after this note was written) is
+  exactly that fix: `DuelModalGate` (a `MonoBehaviour`, not a plain C#
+  class -- `[SerializeField]` on a plain class silently drops the
+  reference, see the class's own doc comment) is constructed once in
+  `CoreLoopSceneBuilder.Build()` and the same shared instance is passed
+  into all 5 controllers that need it (`DuelButtonController`,
+  `HistoryPanelController`, `CouncilPanelController`,
+  `EventPanelController`, `CosmeticsPanelController` — the last two
+  became gate-aware slightly after the others, see that milestone's own
+  entry below). `DuelButtonController` sets `gate.IsDuelInFlight`;
+  every panel's `SetCoreLoopControlsInteractable` skips re-enabling
+  Challenge while it's still true. Verified directly in the current
+  codebase (not just re-reading old notes) that this bullet was simply
+  never updated after milestone #9 shipped — worth remembering as a
+  process gap: a follow-up item should be marked resolved at the
+  milestone that actually closes it, not left to go stale.
 - Milestone #8's final review caught a real soft-lock bug (`CoreLoopSceneBuilder`
   bakes disabled-control state into the committed scene at edit time; the
   tutorial's completed-path never re-enabled it for returning players) —
