@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -35,8 +36,10 @@ namespace UnderstudyKingdom.Tests
         private TMP_InputField nameInputField;
         private TMP_InputField joinCodeInputField;
         private TextMeshProUGUI statusMessageText;
+        private Image councilIcon;
         private GameObject gateObject;
         private DuelModalGate gate;
+        private CouncilPanelController controller;
 
         [SetUp]
         public void SetUp()
@@ -82,7 +85,7 @@ namespace UnderstudyKingdom.Tests
 
             screenController.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton,
-                rulerPortraitImage, new Sprite[15]);
+                rulerPortraitImage, new Sprite[15], null);
 
             var challengeButtonObject = new GameObject("ChallengeButton", typeof(Image), typeof(Button));
             challengeButtonObject.transform.SetParent(canvasObject.transform, false);
@@ -103,6 +106,10 @@ namespace UnderstudyKingdom.Tests
             var councilButtonObject = new GameObject("CouncilButton", typeof(Image), typeof(Button));
             councilButtonObject.transform.SetParent(canvasObject.transform, false);
             councilButton = councilButtonObject.GetComponent<Button>();
+
+            var councilIconObject = new GameObject("CouncilIcon", typeof(Image));
+            councilIconObject.transform.SetParent(canvasObject.transform, false);
+            councilIcon = councilIconObject.GetComponent<Image>();
 
             panelRootObject = new GameObject("PanelRoot");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -144,12 +151,12 @@ namespace UnderstudyKingdom.Tests
             gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
-            var controller = controllerObject.AddComponent<CouncilPanelController>();
+            controller = controllerObject.AddComponent<CouncilPanelController>();
             controller.Initialize(councilButton, panelRootObject, closeButton, notInCouncilViewObject, inCouncilViewObject,
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate, councilIcon);
         }
 
         [TearDown]
@@ -235,6 +242,13 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(submitButton.interactable);
             Assert.IsFalse(challengeButton.interactable,
                 "closing Council while a duel is still in flight must NOT re-enable Challenge -- this is the exact bug DuelModalGate fixes");
+        }
+
+        [Test]
+        public void Initialize_StoresCouncilIconReference()
+        {
+            FieldInfo iconField = typeof(CouncilPanelController).GetField("councilIcon", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.AreSame(councilIcon, iconField.GetValue(controller));
         }
     }
 }

@@ -102,12 +102,12 @@ namespace UnderstudyKingdom.Tests
 
             duelControllerObject = new GameObject("DuelController");
             var duelController = duelControllerObject.AddComponent<DuelButtonController>();
-            duelController.Initialize(armySlider, tradeSlider, religionSlider, challengeButton, resultText, coordinator, gate);
+            duelController.Initialize(armySlider, tradeSlider, religionSlider, challengeButton, resultText, coordinator, gate, null);
 
             historyControllerObject = new GameObject("HistoryController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate, null);
         }
 
         [TearDown]

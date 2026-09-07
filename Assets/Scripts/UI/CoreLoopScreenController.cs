@@ -25,6 +25,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button submitButton;
         [SerializeField] private Image rulerPortraitImage;
         [SerializeField] private Sprite[] rulerPortraits;
+        [SerializeField] private Image submitIcon;
 
         private bool rebalancing;
 
@@ -50,7 +51,8 @@ namespace UnderstudyKingdom.UI
             TextMeshProUGUI narrationText,
             Button submitButton,
             Image rulerPortraitImage,
-            Sprite[] rulerPortraits)
+            Sprite[] rulerPortraits,
+            Image submitIcon)
         {
             this.manager = manager;
             this.armySlider = armySlider;
@@ -63,6 +65,7 @@ namespace UnderstudyKingdom.UI
             this.submitButton = submitButton;
             this.rulerPortraitImage = rulerPortraitImage;
             this.rulerPortraits = rulerPortraits;
+            this.submitIcon = submitIcon;
 
             Bind();
         }

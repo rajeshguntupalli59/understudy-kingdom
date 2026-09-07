@@ -118,7 +118,7 @@ namespace UnderstudyKingdom.Tests
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate, null);
         }
 
         [TearDown]

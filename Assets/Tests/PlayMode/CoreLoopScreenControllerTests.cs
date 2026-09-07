@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,6 +27,7 @@ namespace UnderstudyKingdom.Tests
         private Button submitButton;
         private Image rulerPortraitImage;
         private Sprite[] rulerPortraits;
+        private Image submitIcon;
         private CoreLoopScreenController controller;
 
         [SetUp]
@@ -63,11 +65,15 @@ namespace UnderstudyKingdom.Tests
                 rulerPortraits[i] = CreateDummySprite();
             }
 
+            var submitIconObject = new GameObject("SubmitIcon", typeof(Image));
+            submitIconObject.transform.SetParent(canvasObject.transform, false);
+            submitIcon = submitIconObject.GetComponent<Image>();
+
             controllerObject = new GameObject("Controller");
             controller = controllerObject.AddComponent<CoreLoopScreenController>();
             controller.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton,
-                rulerPortraitImage, rulerPortraits);
+                rulerPortraitImage, rulerPortraits, submitIcon);
         }
 
         [TearDown]
@@ -165,6 +171,13 @@ namespace UnderstudyKingdom.Tests
             controller.RefreshStatusLabels();
 
             Assert.AreSame(rulerPortraits[7], rulerPortraitImage.sprite);
+        }
+
+        [Test]
+        public void Initialize_StoresSubmitIconReference()
+        {
+            FieldInfo iconField = typeof(CoreLoopScreenController).GetField("submitIcon", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.AreSame(submitIcon, iconField.GetValue(controller));
         }
     }
 }

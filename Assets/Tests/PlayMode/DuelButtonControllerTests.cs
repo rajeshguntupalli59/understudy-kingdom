@@ -1,3 +1,4 @@
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,9 +17,11 @@ namespace UnderstudyKingdom.Tests
         private Slider tradeSlider;
         private Slider religionSlider;
         private Button challengeButton;
+        private Image challengeIcon;
         private TextMeshProUGUI resultText;
         private GameObject gateObject;
         private DuelModalGate gate;
+        private DuelButtonController controller;
 
         [SetUp]
         public void SetUp()
@@ -46,12 +49,16 @@ namespace UnderstudyKingdom.Tests
             resultObject.transform.SetParent(canvasObject.transform, false);
             resultText = resultObject.GetComponent<TextMeshProUGUI>();
 
+            var challengeIconObject = new GameObject("ChallengeIcon", typeof(Image));
+            challengeIconObject.transform.SetParent(canvasObject.transform, false);
+            challengeIcon = challengeIconObject.GetComponent<Image>();
+
             gateObject = new GameObject("DuelModalGate");
             gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
-            var controller = controllerObject.AddComponent<DuelButtonController>();
-            controller.Initialize(armySlider, tradeSlider, religionSlider, challengeButton, resultText, coordinator, gate);
+            controller = controllerObject.AddComponent<DuelButtonController>();
+            controller.Initialize(armySlider, tradeSlider, religionSlider, challengeButton, resultText, coordinator, gate, challengeIcon);
         }
 
         [TearDown]
@@ -94,6 +101,13 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(resultText.text.Contains("Challenge failed"));
             Assert.IsFalse(challengeButton.interactable,
                 "a modal being open must keep Challenge disabled even after the duel request itself resolves");
+        }
+
+        [Test]
+        public void Initialize_StoresChallengeIconReference()
+        {
+            FieldInfo iconField = typeof(DuelButtonController).GetField("challengeIcon", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.AreSame(challengeIcon, iconField.GetValue(controller));
         }
     }
 }

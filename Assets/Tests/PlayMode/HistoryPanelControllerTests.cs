@@ -25,8 +25,10 @@ namespace UnderstudyKingdom.Tests
         private Button viewHistoryButton;
         private Button closeButton;
         private TextMeshProUGUI[] rowTexts;
+        private Image viewHistoryIcon;
         private GameObject gateObject;
         private DuelModalGate gate;
+        private HistoryPanelController controller;
 
         [SetUp]
         public void SetUp()
@@ -70,6 +72,10 @@ namespace UnderstudyKingdom.Tests
             viewHistoryButtonObject.transform.SetParent(canvasObject.transform, false);
             viewHistoryButton = viewHistoryButtonObject.GetComponent<Button>();
 
+            var viewHistoryIconObject = new GameObject("ViewHistoryIcon", typeof(Image));
+            viewHistoryIconObject.transform.SetParent(canvasObject.transform, false);
+            viewHistoryIcon = viewHistoryIconObject.GetComponent<Image>();
+
             panelRootObject = new GameObject("PanelRoot");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
 
@@ -89,9 +95,9 @@ namespace UnderstudyKingdom.Tests
             gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
-            var controller = controllerObject.AddComponent<HistoryPanelController>();
+            controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate, viewHistoryIcon);
         }
 
         [TearDown]
@@ -176,7 +182,6 @@ namespace UnderstudyKingdom.Tests
             // HandleResult is private, so invoke it via reflection -- same technique
             // already established for internal state in
             // BackendSyncCoordinatorHistoryTests.cs/BackendSyncCoordinatorDuelTests.cs.
-            var controller = controllerObject.GetComponent<HistoryPanelController>();
             MethodInfo handleResult = typeof(HistoryPanelController).GetMethod(
                 "HandleResult", BindingFlags.NonPublic | BindingFlags.Instance);
             Assert.IsNotNull(handleResult, "HandleResult method not found -- HistoryPanelController internals changed");
@@ -189,6 +194,13 @@ namespace UnderstudyKingdom.Tests
             {
                 Assert.IsFalse(rowTexts[i].gameObject.activeSelf, $"rowTexts[{i}] should be hidden for the empty-state render");
             }
+        }
+
+        [Test]
+        public void Initialize_StoresViewHistoryIconReference()
+        {
+            FieldInfo iconField = typeof(HistoryPanelController).GetField("viewHistoryIcon", BindingFlags.NonPublic | BindingFlags.Instance);
+            Assert.AreSame(viewHistoryIcon, iconField.GetValue(controller));
         }
     }
 }

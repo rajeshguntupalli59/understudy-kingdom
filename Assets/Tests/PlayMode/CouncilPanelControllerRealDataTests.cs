@@ -105,7 +105,7 @@ namespace UnderstudyKingdom.Tests
 
             screenController.Initialize(manager, armySlider, tradeSlider, religionSlider,
                 moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton,
-                rulerPortraitImage, new Sprite[15]);
+                rulerPortraitImage, new Sprite[15], null);
 
             var challengeButtonObject = new GameObject("ChallengeButton", typeof(Image), typeof(Button));
             challengeButtonObject.transform.SetParent(canvasObject.transform, false);
@@ -172,7 +172,7 @@ namespace UnderstudyKingdom.Tests
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate, null);
         }
 
         [TearDown]

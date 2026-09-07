@@ -23,6 +23,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private TextMeshProUGUI resultText;
         [SerializeField] private BackendSyncCoordinator coordinator;
         [SerializeField] private DuelModalGate gate;
+        [SerializeField] private Image challengeIcon;
 
         private void Start()
         {
@@ -41,7 +42,8 @@ namespace UnderstudyKingdom.UI
             Button challengeButton,
             TextMeshProUGUI resultText,
             BackendSyncCoordinator coordinator,
-            DuelModalGate gate)
+            DuelModalGate gate,
+            Image challengeIcon)
         {
             this.armySlider = armySlider;
             this.tradeSlider = tradeSlider;
@@ -50,6 +52,7 @@ namespace UnderstudyKingdom.UI
             this.resultText = resultText;
             this.coordinator = coordinator;
             this.gate = gate;
+            this.challengeIcon = challengeIcon;
 
             Bind();
         }
