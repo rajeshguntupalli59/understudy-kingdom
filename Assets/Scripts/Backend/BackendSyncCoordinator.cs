@@ -47,9 +47,26 @@ namespace UnderstudyKingdom.Backend
             authClient.SupabaseAnonKey = SupabaseAnonKey;
 
             apiClient = gameObject.AddComponent<BackendApiClient>();
-            apiClient.BackendBaseUrl = BackendBaseUrl;
+            apiClient.BackendBaseUrl = ResolveBackendBaseUrl(BackendBaseUrl);
 
             BootstrapSession();
+        }
+
+        // CoreLoopSceneBuilder bakes "http://localhost:3000" into the scene for
+        // Editor/desktop testing, where localhost correctly reaches the dev
+        // server on the same machine. On an Android emulator, localhost inside
+        // the guest refers to the emulator itself, not the host -- 10.0.2.2 is
+        // the emulator's documented alias for the host's loopback. Runtime-only
+        // rewrite so the same baked scene value works in both environments
+        // without needing a platform-specific scene rebuild.
+        private static string ResolveBackendBaseUrl(string configured)
+        {
+            if (Application.platform != RuntimePlatform.Android || string.IsNullOrEmpty(configured))
+            {
+                return configured;
+            }
+
+            return configured.Replace("localhost", "10.0.2.2").Replace("127.0.0.1", "10.0.2.2");
         }
 
         private void BootstrapSession()
