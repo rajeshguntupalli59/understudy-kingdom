@@ -696,6 +696,18 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     Challenge, View History, Council, Events, Customize, Claim Reward);
     5 icons/6 button slots remain deferred (Create Council, Join Council,
     Skip, Next, shared Close).
+  - **Second follow-up same day** (commit `bcd73ea`): HF credits opened
+    up again for a third round, generating Create Council, Join Council,
+    and Skip. Wired directly using the same established pattern
+    (`CouncilPanelController` gained `createIcon`/`joinIcon`,
+    `TutorialOverlayController` gained `skipIcon`), `Verify()` extended
+    with 3 more field checks (including a new `TutorialOverlayController`
+    lookup, since `Verify()` hadn't checked that controller before), and
+    the scene-level regression test extended to cover all 10 shipped
+    icons. Full suite green after the change: EditMode 81/81, PlayMode
+    82/82. 10 of 12 unique icons now live; only Next and the shared Close
+    icon (used by all 4 panel close buttons) remain deferred, still
+    blocked on HF credit availability.
 - **Resolved (`fix/portrait-array-null-guard`, commit `cc47d60`):**
   the recurring "new `[SerializeField]` deserializes as null/empty on
   the old committed scene, and the field is indexed without a
