@@ -41,6 +41,7 @@ namespace UnderstudyKingdom.Tests
         private Image historyArtImage;
         private Image councilArtImage;
         private Image eventArtImage;
+        private Image customizeIcon;
 
         [SetUp]
         public void SetUp()
@@ -98,6 +99,10 @@ namespace UnderstudyKingdom.Tests
             historyArtObject.transform.SetParent(canvasObject.transform, false);
             historyArtImage = historyArtObject.GetComponent<Image>();
 
+            var customizeIconObject = new GameObject("CustomizeIcon", typeof(Image));
+            customizeIconObject.transform.SetParent(canvasObject.transform, false);
+            customizeIcon = customizeIconObject.GetComponent<Image>();
+
             var councilArtObject = new GameObject("CouncilArt", typeof(Image));
             councilArtObject.transform.SetParent(canvasObject.transform, false);
             councilArtImage = councilArtObject.GetComponent<Image>();
@@ -154,7 +159,7 @@ namespace UnderstudyKingdom.Tests
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage);
+                historyArtImage, councilArtImage, eventArtImage, customizeIcon);
         }
 
         private static Sprite CreateDummySprite()
@@ -361,7 +366,7 @@ namespace UnderstudyKingdom.Tests
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage);
+                historyArtImage, councilArtImage, eventArtImage, customizeIcon);
 
             Color expected = new Color(0.22f, 0.08f, 0.16f, 0.95f);
             Assert.AreEqual(expected, eventPanelImage.color);

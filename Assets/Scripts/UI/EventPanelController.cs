@@ -40,6 +40,8 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button councilButton;
         [SerializeField] private Button customizeButton;
         [SerializeField] private DuelModalGate gate;
+        [SerializeField] private Image eventsIcon;
+        [SerializeField] private Image claimIcon;
 
         private EventResponse latestResponse;
 
@@ -73,7 +75,9 @@ namespace UnderstudyKingdom.UI
             Button viewHistoryButton,
             Button councilButton,
             Button customizeButton,
-            DuelModalGate gate)
+            DuelModalGate gate,
+            Image eventsIcon,
+            Image claimIcon)
         {
             this.eventsButton = eventsButton;
             this.panelRoot = panelRoot;
@@ -95,6 +99,8 @@ namespace UnderstudyKingdom.UI
             this.councilButton = councilButton;
             this.customizeButton = customizeButton;
             this.gate = gate;
+            this.eventsIcon = eventsIcon;
+            this.claimIcon = claimIcon;
 
             Bind();
         }

@@ -126,9 +126,18 @@ namespace UnderstudyKingdom.Tests
 
             controllerObject = new GameObject("Controller");
             controller = controllerObject.AddComponent<EventPanelController>();
+            var eventsIconObject = new GameObject("EventsIcon", typeof(Image));
+            eventsIconObject.transform.SetParent(canvasObject.transform, false);
+            var eventsIcon = eventsIconObject.GetComponent<Image>();
+
+            var claimIconObject = new GameObject("ClaimIcon", typeof(Image));
+            claimIconObject.transform.SetParent(canvasObject.transform, false);
+            var claimIcon = claimIconObject.GetComponent<Image>();
+
             controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
                 progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate,
+                eventsIcon, claimIcon);
         }
 
         [TearDown]

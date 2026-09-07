@@ -79,6 +79,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Image historyArtImage;
         [SerializeField] private Image councilArtImage;
         [SerializeField] private Image eventArtImage;
+        [SerializeField] private Image customizeIcon;
 
         private void Start()
         {
@@ -116,7 +117,8 @@ namespace UnderstudyKingdom.UI
             Sprite[] eventPanelSprites,
             Image historyArtImage,
             Image councilArtImage,
-            Image eventArtImage)
+            Image eventArtImage,
+            Image customizeIcon)
         {
             this.customizeButton = customizeButton;
             this.panelRoot = panelRoot;
@@ -144,6 +146,7 @@ namespace UnderstudyKingdom.UI
             this.historyArtImage = historyArtImage;
             this.councilArtImage = councilArtImage;
             this.eventArtImage = eventArtImage;
+            this.customizeIcon = customizeIcon;
 
             Bind();
         }

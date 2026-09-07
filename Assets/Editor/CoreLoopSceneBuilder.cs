@@ -239,8 +239,20 @@ namespace UnderstudyKingdom.EditorTools
             var eventsButtonLabelRect = eventsButtonLabel.GetComponent<RectTransform>();
             eventsButtonLabelRect.anchorMin = Vector2.zero;
             eventsButtonLabelRect.anchorMax = Vector2.one;
-            eventsButtonLabelRect.sizeDelta = Vector2.zero;
-            eventsButtonLabelRect.anchoredPosition = Vector2.zero;
+            eventsButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            eventsButtonLabelRect.offsetMax = Vector2.zero;
+
+            var eventsIconObject = new GameObject("Icon", typeof(Image));
+            eventsIconObject.transform.SetParent(eventsButtonObject.transform, false);
+            var eventsIconRect = eventsIconObject.GetComponent<RectTransform>();
+            eventsIconRect.anchorMin = new Vector2(0f, 0.5f);
+            eventsIconRect.anchorMax = new Vector2(0f, 0.5f);
+            eventsIconRect.pivot = new Vector2(0f, 0.5f);
+            eventsIconRect.anchoredPosition = new Vector2(8f, 0f);
+            eventsIconRect.sizeDelta = new Vector2(32f, 32f);
+            var eventsIconImage = eventsIconObject.GetComponent<Image>();
+            eventsIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/events.png");
+            eventsIconImage.raycastTarget = false;
 
             var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
             customizeButtonObject.transform.SetParent(canvasObject.transform, false);
@@ -253,8 +265,20 @@ namespace UnderstudyKingdom.EditorTools
             var customizeButtonLabelRect = customizeButtonLabel.GetComponent<RectTransform>();
             customizeButtonLabelRect.anchorMin = Vector2.zero;
             customizeButtonLabelRect.anchorMax = Vector2.one;
-            customizeButtonLabelRect.sizeDelta = Vector2.zero;
-            customizeButtonLabelRect.anchoredPosition = Vector2.zero;
+            customizeButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            customizeButtonLabelRect.offsetMax = Vector2.zero;
+
+            var customizeIconObject = new GameObject("Icon", typeof(Image));
+            customizeIconObject.transform.SetParent(customizeButtonObject.transform, false);
+            var customizeIconRect = customizeIconObject.GetComponent<RectTransform>();
+            customizeIconRect.anchorMin = new Vector2(0f, 0.5f);
+            customizeIconRect.anchorMax = new Vector2(0f, 0.5f);
+            customizeIconRect.pivot = new Vector2(0f, 0.5f);
+            customizeIconRect.anchoredPosition = new Vector2(8f, 0f);
+            customizeIconRect.sizeDelta = new Vector2(32f, 32f);
+            var customizeIconImage = customizeIconObject.GetComponent<Image>();
+            customizeIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/customize.png");
+            customizeIconImage.raycastTarget = false;
 
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -325,14 +349,27 @@ namespace UnderstudyKingdom.EditorTools
             var claimButtonLabelRect = claimButtonLabel.GetComponent<RectTransform>();
             claimButtonLabelRect.anchorMin = Vector2.zero;
             claimButtonLabelRect.anchorMax = Vector2.one;
-            claimButtonLabelRect.sizeDelta = Vector2.zero;
-            claimButtonLabelRect.anchoredPosition = Vector2.zero;
+            claimButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            claimButtonLabelRect.offsetMax = Vector2.zero;
+
+            var claimIconObject = new GameObject("Icon", typeof(Image));
+            claimIconObject.transform.SetParent(claimButtonObject.transform, false);
+            var claimIconRect = claimIconObject.GetComponent<RectTransform>();
+            claimIconRect.anchorMin = new Vector2(0f, 0.5f);
+            claimIconRect.anchorMax = new Vector2(0f, 0.5f);
+            claimIconRect.pivot = new Vector2(0f, 0.5f);
+            claimIconRect.anchoredPosition = new Vector2(8f, 0f);
+            claimIconRect.sizeDelta = new Vector2(32f, 32f);
+            var claimIconImage = claimIconObject.GetComponent<Image>();
+            claimIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/claim.png");
+            claimIconImage.raycastTarget = false;
 
             var eventControllerObject = new GameObject("EventPanelController");
             var eventController = eventControllerObject.AddComponent<EventPanelController>();
             eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
                 eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton, duelModalGate);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton, duelModalGate,
+                eventsIconImage, claimIconImage);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -648,7 +685,7 @@ namespace UnderstudyKingdom.EditorTools
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage);
+                historyArtImage, councilArtImage, eventArtImage, customizeIconImage);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
@@ -796,6 +833,31 @@ namespace UnderstudyKingdom.EditorTools
             if (cosmeticsController == null)
             {
                 Debug.LogError("CoreLoopSceneBuilder.Verify: no CosmeticsPanelController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            if (!VerifyIconField(eventController, "eventsIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(eventController, "claimIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(cosmeticsController, "customizeIcon"))
+            {
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);

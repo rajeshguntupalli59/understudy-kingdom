@@ -356,16 +356,25 @@ namespace UnderstudyKingdom.Tests
             GameObject challengeButton = FindChildByName(canvas.transform, "ChallengeButton");
             GameObject viewHistoryButton = FindChildByName(canvas.transform, "ViewHistoryButton");
             GameObject councilButton = FindChildByName(canvas.transform, "CouncilButton");
+            GameObject eventsButton = FindChildByName(canvas.transform, "EventsButton");
+            GameObject customizeButton = FindChildByName(canvas.transform, "CustomizeButton");
+            GameObject claimButton = FindChildByName(canvas.transform, "ClaimButton");
 
             GameObject submitIcon = FindChildByName(submitButton.transform, "Icon");
             GameObject challengeIcon = FindChildByName(challengeButton.transform, "Icon");
             GameObject viewHistoryIcon = FindChildByName(viewHistoryButton.transform, "Icon");
             GameObject councilIcon = FindChildByName(councilButton.transform, "Icon");
+            GameObject eventsIcon = FindChildByName(eventsButton.transform, "Icon");
+            GameObject customizeIcon = FindChildByName(customizeButton.transform, "Icon");
+            GameObject claimIcon = FindChildByName(claimButton.transform, "Icon");
 
             Assert.IsNotNull(submitIcon.GetComponent<Image>().sprite, "Expected SubmitButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(challengeIcon.GetComponent<Image>().sprite, "Expected ChallengeButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(viewHistoryIcon.GetComponent<Image>().sprite, "Expected ViewHistoryButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(councilIcon.GetComponent<Image>().sprite, "Expected CouncilButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(eventsIcon.GetComponent<Image>().sprite, "Expected EventsButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(customizeIcon.GetComponent<Image>().sprite, "Expected CustomizeButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(claimIcon.GetComponent<Image>().sprite, "Expected ClaimButton's Icon to have a non-null sprite.");
         }
 
         private static Button FindButton(Canvas canvas, string name)

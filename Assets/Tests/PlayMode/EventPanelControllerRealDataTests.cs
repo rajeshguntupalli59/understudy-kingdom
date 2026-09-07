@@ -151,7 +151,8 @@ namespace UnderstudyKingdom.Tests
             var controller = controllerObject.AddComponent<EventPanelController>();
             controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
                 progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate,
+                null, null);
         }
 
         [TearDown]
