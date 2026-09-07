@@ -49,16 +49,19 @@ namespace UnderstudyKingdom.Core
             }
 
             long elapsed = nowUnixSeconds - plot.WateredAtUnixSeconds;
-            long halfDuration = crop.GrowDurationSeconds / 2;
-            if (halfDuration <= 0)
+            if (elapsed < 0)
             {
-                halfDuration = 1;
+                return 0;
             }
-
-            long stage = elapsed / halfDuration;
-            if (stage > 2) return 2;
-            if (stage < 0) return 0;
-            return (int)stage;
+            if (elapsed >= crop.GrowDurationSeconds)
+            {
+                return 2;
+            }
+            if (elapsed * 2 >= crop.GrowDurationSeconds)
+            {
+                return 1;
+            }
+            return 0;
         }
 
         /// <summary>

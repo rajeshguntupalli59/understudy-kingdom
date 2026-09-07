@@ -78,6 +78,18 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void GrowthStage_OddGrowDuration_DoesNotTransitionEarly()
+        {
+            var plot = new LandPlot { CropId = "test", WateredAtUnixSeconds = 1000 };
+            var crop = new CropDefinition("test", "Test", seedCost: 1, growDurationSeconds: 5, sellValue: 1);
+
+            Assert.AreEqual(0, EstateState.GrowthStage(plot, crop, nowUnixSeconds: 1002)); // elapsed=2, true half=2.5, still stage 0
+            Assert.AreEqual(1, EstateState.GrowthStage(plot, crop, nowUnixSeconds: 1003)); // elapsed=3, past half, stage 1
+            Assert.AreEqual(1, EstateState.GrowthStage(plot, crop, nowUnixSeconds: 1004)); // elapsed=4, still stage 1 (not yet full 5)
+            Assert.AreEqual(2, EstateState.GrowthStage(plot, crop, nowUnixSeconds: 1005)); // elapsed=5, full duration, stage 2
+        }
+
+        [Test]
         public void UnlockCost_FirstLockedPlot_Is100()
         {
             Assert.AreEqual(100, EstateState.UnlockCost(4));
