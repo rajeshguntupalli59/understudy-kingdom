@@ -34,6 +34,7 @@ namespace UnderstudyKingdom.Tests
         private RulerNpcController ruler;
         private Button eventsButton;
         private Button claimButton;
+        private Button estateButton;
         private TextMeshProUGUI progressLabel;
         private TextMeshProUGUI statusMessageText;
 
@@ -144,6 +145,10 @@ namespace UnderstudyKingdom.Tests
             claimButtonObject.transform.SetParent(panelRootObject.transform, false);
             claimButton = claimButtonObject.GetComponent<Button>();
 
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            estateButton = estateButtonObject.GetComponent<Button>();
+
             gateObject = new GameObject("DuelModalGate");
             var gate = gateObject.AddComponent<DuelModalGate>();
 
@@ -152,7 +157,7 @@ namespace UnderstudyKingdom.Tests
             controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
                 progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate,
-                null, null);
+                null, null, estateButton);
         }
 
         [UnityTearDown]

@@ -42,6 +42,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private DuelModalGate gate;
         [SerializeField] private Image eventsIcon;
         [SerializeField] private Image claimIcon;
+        [SerializeField] private Button estateButton;
 
         private EventResponse latestResponse;
 
@@ -77,7 +78,8 @@ namespace UnderstudyKingdom.UI
             Button customizeButton,
             DuelModalGate gate,
             Image eventsIcon,
-            Image claimIcon)
+            Image claimIcon,
+            Button estateButton)
         {
             this.eventsButton = eventsButton;
             this.panelRoot = panelRoot;
@@ -101,6 +103,7 @@ namespace UnderstudyKingdom.UI
             this.gate = gate;
             this.eventsIcon = eventsIcon;
             this.claimIcon = claimIcon;
+            this.estateButton = estateButton;
 
             Bind();
         }
@@ -186,6 +189,8 @@ namespace UnderstudyKingdom.UI
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
             customizeButton.interactable = interactable;
+            if (estateButton != null)
+                estateButton.interactable = interactable;
 
             // challengeButton has two independent disablers (this modal, and
             // Duel's own in-flight state) -- see

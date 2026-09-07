@@ -33,6 +33,7 @@ namespace UnderstudyKingdom.Tests
         private GameObject directApiClientObject;
         private RulerNpcController ruler;
         private Button councilButton;
+        private Button estateButton;
         private TextMeshProUGUI rewardStatusLabel;
         private GameObject gateObject;
         private DuelModalGate gate;
@@ -163,6 +164,10 @@ namespace UnderstudyKingdom.Tests
             rewardStatusLabel = CreateLabel("RewardStatusLabel", inCouncilViewObject.transform);
             var statusMessageText = CreateLabel("StatusMessageText", panelRootObject.transform);
 
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            estateButton = estateButtonObject.GetComponent<Button>();
+
             gateObject = new GameObject("DuelModalGate");
             gate = gateObject.AddComponent<DuelModalGate>();
 
@@ -172,7 +177,7 @@ namespace UnderstudyKingdom.Tests
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate, null, null, null);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate, null, null, null, estateButton);
         }
 
         [UnityTearDown]

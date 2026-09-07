@@ -369,7 +369,7 @@ namespace UnderstudyKingdom.EditorTools
             eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
                 eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton, duelModalGate,
-                eventsIconImage, claimIconImage);
+                eventsIconImage, claimIconImage, null);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -517,7 +517,7 @@ namespace UnderstudyKingdom.EditorTools
                 nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
                 councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
                 backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage, null);
 
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -575,7 +575,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage, null);
 
             var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
             tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);
@@ -654,7 +654,7 @@ namespace UnderstudyKingdom.EditorTools
             var tutorialController = tutorialControllerObject.AddComponent<TutorialOverlayController>();
             tutorialController.Initialize(tutorialOverlayObject, tutorialStepIndicatorLabel, tutorialTitleLabel, tutorialBodyLabel,
                 tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage, null);
 
             var cosmeticsPanelRootObject = new GameObject("CosmeticsPanel", typeof(Image));
             cosmeticsPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -721,7 +721,7 @@ namespace UnderstudyKingdom.EditorTools
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage, customizeIconImage);
+                historyArtImage, councilArtImage, eventArtImage, customizeIconImage, null);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 

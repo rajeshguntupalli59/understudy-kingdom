@@ -52,6 +52,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Image councilIcon;
         [SerializeField] private Image createIcon;
         [SerializeField] private Image joinIcon;
+        [SerializeField] private Button estateButton;
 
         private void Start()
         {
@@ -93,7 +94,8 @@ namespace UnderstudyKingdom.UI
             DuelModalGate gate,
             Image councilIcon,
             Image createIcon,
-            Image joinIcon)
+            Image joinIcon,
+            Button estateButton)
         {
             this.councilButton = councilButton;
             this.panelRoot = panelRoot;
@@ -125,6 +127,7 @@ namespace UnderstudyKingdom.UI
             this.councilIcon = councilIcon;
             this.createIcon = createIcon;
             this.joinIcon = joinIcon;
+            this.estateButton = estateButton;
 
             Bind();
         }
@@ -267,6 +270,8 @@ namespace UnderstudyKingdom.UI
             submitButton.interactable = interactable;
             eventsButton.interactable = interactable;
             customizeButton.interactable = interactable;
+            if (estateButton != null)
+                estateButton.interactable = interactable;
 
             // challengeButton has two independent disablers (this modal, and
             // Duel's own in-flight state) -- opening always disables it

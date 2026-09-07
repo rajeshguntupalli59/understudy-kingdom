@@ -80,6 +80,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Image councilArtImage;
         [SerializeField] private Image eventArtImage;
         [SerializeField] private Image customizeIcon;
+        [SerializeField] private Button estateButton;
 
         private void Start()
         {
@@ -118,7 +119,8 @@ namespace UnderstudyKingdom.UI
             Image historyArtImage,
             Image councilArtImage,
             Image eventArtImage,
-            Image customizeIcon)
+            Image customizeIcon,
+            Button estateButton)
         {
             this.customizeButton = customizeButton;
             this.panelRoot = panelRoot;
@@ -147,6 +149,7 @@ namespace UnderstudyKingdom.UI
             this.councilArtImage = councilArtImage;
             this.eventArtImage = eventArtImage;
             this.customizeIcon = customizeIcon;
+            this.estateButton = estateButton;
 
             Bind();
         }
@@ -292,6 +295,8 @@ namespace UnderstudyKingdom.UI
             tradeSlider.interactable = interactable;
             religionSlider.interactable = interactable;
             submitButton.interactable = interactable;
+            if (estateButton != null)
+                estateButton.interactable = interactable;
 
             // challengeButton has two independent disablers (this modal, and
             // Duel's own in-flight state) -- see

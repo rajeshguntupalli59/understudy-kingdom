@@ -39,6 +39,7 @@ namespace UnderstudyKingdom.Tests
         private Image councilIcon;
         private Image createIcon;
         private Image joinIcon;
+        private Button estateButton;
         private GameObject gateObject;
         private DuelModalGate gate;
         private CouncilPanelController controller;
@@ -121,6 +122,10 @@ namespace UnderstudyKingdom.Tests
             joinIconObject.transform.SetParent(canvasObject.transform, false);
             joinIcon = joinIconObject.GetComponent<Image>();
 
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            estateButton = estateButtonObject.GetComponent<Button>();
+
             panelRootObject = new GameObject("PanelRoot");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
 
@@ -166,7 +171,7 @@ namespace UnderstudyKingdom.Tests
                 nameInputField, createButton, joinCodeInputField, joinButton, statusMessageText,
                 nameLabel, joinCodeLabel, memberCountLabel, progressLabel, rewardStatusLabel,
                 coordinator, manager, screenController,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate, councilIcon, createIcon, joinIcon);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, eventsButton, customizeButton, gate, councilIcon, createIcon, joinIcon, estateButton);
         }
 
         [TearDown]

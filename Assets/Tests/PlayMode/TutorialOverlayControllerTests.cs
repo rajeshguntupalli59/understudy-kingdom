@@ -30,6 +30,7 @@ namespace UnderstudyKingdom.Tests
         private TextMeshProUGUI stepIndicatorLabel;
         private TextMeshProUGUI titleLabel;
         private TextMeshProUGUI bodyLabel;
+        private Button estateButton;
         private RulerNpcController ruler;
         private DecisionCycleManager manager;
 
@@ -54,6 +55,7 @@ namespace UnderstudyKingdom.Tests
             councilButton = CreateButton("CouncilButton");
             eventsButton = CreateButton("EventsButton");
             customizeButton = CreateButton("CustomizeButton");
+            estateButton = CreateButton("EstateButton");
 
             panelRootObject = new GameObject("PanelRoot");
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -112,7 +114,7 @@ namespace UnderstudyKingdom.Tests
             var controller = controllerObject.AddComponent<TutorialOverlayController>();
             controller.Initialize(panelRootObject, stepIndicatorLabel, titleLabel, bodyLabel,
                 nextButton, nextButtonLabel, skipButton, manager,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, customizeButton, null);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, customizeButton, null, estateButton);
             return controller;
         }
 

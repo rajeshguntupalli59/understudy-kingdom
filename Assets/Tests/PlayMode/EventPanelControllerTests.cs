@@ -33,6 +33,7 @@ namespace UnderstudyKingdom.Tests
         private Button customizeButton;
         private Button closeButton;
         private Button claimButton;
+        private Button estateButton;
         private TextMeshProUGUI nameLabel;
         private TextMeshProUGUI narrationLabel;
         private TextMeshProUGUI progressLabel;
@@ -134,10 +135,14 @@ namespace UnderstudyKingdom.Tests
             claimIconObject.transform.SetParent(canvasObject.transform, false);
             var claimIcon = claimIconObject.GetComponent<Image>();
 
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            estateButton = estateButtonObject.GetComponent<Button>();
+
             controller.Initialize(eventsButton, panelRootObject, closeButton, nameLabel, narrationLabel,
                 progressLabel, statusMessageText, claimButton, coordinator, manager, screenController,
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, customizeButton, gate,
-                eventsIcon, claimIcon);
+                eventsIcon, claimIcon, estateButton);
         }
 
         [TearDown]

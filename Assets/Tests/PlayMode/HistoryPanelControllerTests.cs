@@ -26,6 +26,7 @@ namespace UnderstudyKingdom.Tests
         private Button closeButton;
         private TextMeshProUGUI[] rowTexts;
         private Image viewHistoryIcon;
+        private Button estateButton;
         private GameObject gateObject;
         private DuelModalGate gate;
         private HistoryPanelController controller;
@@ -91,13 +92,17 @@ namespace UnderstudyKingdom.Tests
                 rowTexts[i] = rowObject.GetComponent<TextMeshProUGUI>();
             }
 
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            estateButton = estateButtonObject.GetComponent<Button>();
+
             gateObject = new GameObject("DuelModalGate");
             gate = gateObject.AddComponent<DuelModalGate>();
 
             controllerObject = new GameObject("Controller");
             controller = controllerObject.AddComponent<HistoryPanelController>();
             controller.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, coordinator,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate, viewHistoryIcon);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, councilButton, eventsButton, customizeButton, gate, viewHistoryIcon, estateButton);
         }
 
         [TearDown]

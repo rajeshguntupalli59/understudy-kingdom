@@ -42,6 +42,7 @@ namespace UnderstudyKingdom.Tests
         private Image councilArtImage;
         private Image eventArtImage;
         private Image customizeIcon;
+        private Button estateButton;
 
         [SetUp]
         public void SetUp()
@@ -152,6 +153,10 @@ namespace UnderstudyKingdom.Tests
                 eventPanelSprites[i] = CreateDummySprite();
             }
 
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            estateButton = estateButtonObject.GetComponent<Button>();
+
             controllerObject = new GameObject("Controller");
             var controller = controllerObject.AddComponent<CosmeticsPanelController>();
             controller.Initialize(customizeButton, panelRootObject, closeButton, statusLabels, applyButtons,
@@ -159,7 +164,7 @@ namespace UnderstudyKingdom.Tests
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage, customizeIcon);
+                historyArtImage, councilArtImage, eventArtImage, customizeIcon, estateButton);
         }
 
         private static Sprite CreateDummySprite()
@@ -366,7 +371,7 @@ namespace UnderstudyKingdom.Tests
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, gate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage, customizeIcon);
+                historyArtImage, councilArtImage, eventArtImage, customizeIcon, estateButton);
 
             Color expected = new Color(0.22f, 0.08f, 0.16f, 0.95f);
             Assert.AreEqual(expected, eventPanelImage.color);
