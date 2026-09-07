@@ -112,7 +112,7 @@ namespace UnderstudyKingdom.Tests
             var controller = controllerObject.AddComponent<TutorialOverlayController>();
             controller.Initialize(panelRootObject, stepIndicatorLabel, titleLabel, bodyLabel,
                 nextButton, nextButtonLabel, skipButton, manager,
-                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, customizeButton);
+                armySlider, tradeSlider, religionSlider, submitButton, challengeButton, viewHistoryButton, councilButton, eventsButton, customizeButton, null);
             return controller;
         }
 

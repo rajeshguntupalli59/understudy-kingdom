@@ -440,8 +440,20 @@ namespace UnderstudyKingdom.EditorTools
             var createButtonLabelRect = createButtonLabel.GetComponent<RectTransform>();
             createButtonLabelRect.anchorMin = Vector2.zero;
             createButtonLabelRect.anchorMax = Vector2.one;
-            createButtonLabelRect.sizeDelta = Vector2.zero;
-            createButtonLabelRect.anchoredPosition = Vector2.zero;
+            createButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            createButtonLabelRect.offsetMax = Vector2.zero;
+
+            var createIconObject = new GameObject("Icon", typeof(Image));
+            createIconObject.transform.SetParent(createButtonObject.transform, false);
+            var createIconRect = createIconObject.GetComponent<RectTransform>();
+            createIconRect.anchorMin = new Vector2(0f, 0.5f);
+            createIconRect.anchorMax = new Vector2(0f, 0.5f);
+            createIconRect.pivot = new Vector2(0f, 0.5f);
+            createIconRect.anchoredPosition = new Vector2(8f, 0f);
+            createIconRect.sizeDelta = new Vector2(32f, 32f);
+            var createIconImage = createIconObject.GetComponent<Image>();
+            createIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/create.png");
+            createIconImage.raycastTarget = false;
 
             TextMeshProUGUI joinCodeFieldLabel = CreateLabel(notInCouncilViewObject.transform, "JoinCodeFieldLabel", 0f, "Join Code");
             joinCodeFieldLabel.fontSize = 24f;
@@ -464,8 +476,20 @@ namespace UnderstudyKingdom.EditorTools
             var joinButtonLabelRect = joinButtonLabel.GetComponent<RectTransform>();
             joinButtonLabelRect.anchorMin = Vector2.zero;
             joinButtonLabelRect.anchorMax = Vector2.one;
-            joinButtonLabelRect.sizeDelta = Vector2.zero;
-            joinButtonLabelRect.anchoredPosition = Vector2.zero;
+            joinButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            joinButtonLabelRect.offsetMax = Vector2.zero;
+
+            var joinIconObject = new GameObject("Icon", typeof(Image));
+            joinIconObject.transform.SetParent(joinButtonObject.transform, false);
+            var joinIconRect = joinIconObject.GetComponent<RectTransform>();
+            joinIconRect.anchorMin = new Vector2(0f, 0.5f);
+            joinIconRect.anchorMax = new Vector2(0f, 0.5f);
+            joinIconRect.pivot = new Vector2(0f, 0.5f);
+            joinIconRect.anchoredPosition = new Vector2(8f, 0f);
+            joinIconRect.sizeDelta = new Vector2(32f, 32f);
+            var joinIconImage = joinIconObject.GetComponent<Image>();
+            joinIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/join.png");
+            joinIconImage.raycastTarget = false;
 
             var inCouncilViewObject = new GameObject("InCouncilView", typeof(RectTransform));
             inCouncilViewObject.transform.SetParent(councilPanelRootObject.transform, false);
@@ -493,7 +517,7 @@ namespace UnderstudyKingdom.EditorTools
                 nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
                 councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
                 backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage);
 
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -597,8 +621,20 @@ namespace UnderstudyKingdom.EditorTools
             var tutorialSkipButtonLabelRect = tutorialSkipButtonLabel.GetComponent<RectTransform>();
             tutorialSkipButtonLabelRect.anchorMin = Vector2.zero;
             tutorialSkipButtonLabelRect.anchorMax = Vector2.one;
-            tutorialSkipButtonLabelRect.sizeDelta = Vector2.zero;
-            tutorialSkipButtonLabelRect.anchoredPosition = Vector2.zero;
+            tutorialSkipButtonLabelRect.offsetMin = new Vector2(40f, 0f);
+            tutorialSkipButtonLabelRect.offsetMax = Vector2.zero;
+
+            var tutorialSkipIconObject = new GameObject("Icon", typeof(Image));
+            tutorialSkipIconObject.transform.SetParent(tutorialSkipButtonObject.transform, false);
+            var tutorialSkipIconRect = tutorialSkipIconObject.GetComponent<RectTransform>();
+            tutorialSkipIconRect.anchorMin = new Vector2(0f, 0.5f);
+            tutorialSkipIconRect.anchorMax = new Vector2(0f, 0.5f);
+            tutorialSkipIconRect.pivot = new Vector2(0f, 0.5f);
+            tutorialSkipIconRect.anchoredPosition = new Vector2(8f, 0f);
+            tutorialSkipIconRect.sizeDelta = new Vector2(32f, 32f);
+            var tutorialSkipIconImage = tutorialSkipIconObject.GetComponent<Image>();
+            tutorialSkipIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/skip.png");
+            tutorialSkipIconImage.raycastTarget = false;
 
             var tutorialNextButtonObject = new GameObject("NextButton", typeof(Image), typeof(Button));
             tutorialNextButtonObject.transform.SetParent(tutorialBoxObject.transform, false);
@@ -618,7 +654,7 @@ namespace UnderstudyKingdom.EditorTools
             var tutorialController = tutorialControllerObject.AddComponent<TutorialOverlayController>();
             tutorialController.Initialize(tutorialOverlayObject, tutorialStepIndicatorLabel, tutorialTitleLabel, tutorialBodyLabel,
                 tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage);
 
             var cosmeticsPanelRootObject = new GameObject("CosmeticsPanel", typeof(Image));
             cosmeticsPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -1047,6 +1083,41 @@ namespace UnderstudyKingdom.EditorTools
                 return;
             }
             if (!VerifyIconField(councilPanelController, "councilIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(councilPanelController, "createIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(councilPanelController, "joinIcon"))
+            {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var tutorialOverlayController = Object.FindFirstObjectByType<TutorialOverlayController>();
+            if (tutorialOverlayController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no TutorialOverlayController found in the scene.");
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+            if (!VerifyIconField(tutorialOverlayController, "skipIcon"))
             {
                 if (Application.isBatchMode)
                 {

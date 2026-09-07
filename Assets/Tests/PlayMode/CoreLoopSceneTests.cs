@@ -359,6 +359,9 @@ namespace UnderstudyKingdom.Tests
             GameObject eventsButton = FindChildByName(canvas.transform, "EventsButton");
             GameObject customizeButton = FindChildByName(canvas.transform, "CustomizeButton");
             GameObject claimButton = FindChildByName(canvas.transform, "ClaimButton");
+            GameObject createButton = FindChildByName(canvas.transform, "CreateButton");
+            GameObject joinButton = FindChildByName(canvas.transform, "JoinButton");
+            GameObject skipButton = FindChildByName(canvas.transform, "SkipButton");
 
             GameObject submitIcon = FindChildByName(submitButton.transform, "Icon");
             GameObject challengeIcon = FindChildByName(challengeButton.transform, "Icon");
@@ -367,6 +370,9 @@ namespace UnderstudyKingdom.Tests
             GameObject eventsIcon = FindChildByName(eventsButton.transform, "Icon");
             GameObject customizeIcon = FindChildByName(customizeButton.transform, "Icon");
             GameObject claimIcon = FindChildByName(claimButton.transform, "Icon");
+            GameObject createIcon = FindChildByName(createButton.transform, "Icon");
+            GameObject joinIcon = FindChildByName(joinButton.transform, "Icon");
+            GameObject skipIcon = FindChildByName(skipButton.transform, "Icon");
 
             Assert.IsNotNull(submitIcon.GetComponent<Image>().sprite, "Expected SubmitButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(challengeIcon.GetComponent<Image>().sprite, "Expected ChallengeButton's Icon to have a non-null sprite.");
@@ -375,12 +381,15 @@ namespace UnderstudyKingdom.Tests
             Assert.IsNotNull(eventsIcon.GetComponent<Image>().sprite, "Expected EventsButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(customizeIcon.GetComponent<Image>().sprite, "Expected CustomizeButton's Icon to have a non-null sprite.");
             Assert.IsNotNull(claimIcon.GetComponent<Image>().sprite, "Expected ClaimButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(createIcon.GetComponent<Image>().sprite, "Expected CreateButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(joinIcon.GetComponent<Image>().sprite, "Expected JoinButton's Icon to have a non-null sprite.");
+            Assert.IsNotNull(skipIcon.GetComponent<Image>().sprite, "Expected SkipButton's Icon to have a non-null sprite.");
 
             // Geometry guard flagged by milestone #15's final review as
             // untested: the 8px-inset, 32x32, left-center-anchored shape every
             // icon is supposed to share (CoreLoopSceneBuilder.cs) had no
             // automated check -- only the non-null-sprite assertions above did.
-            foreach (GameObject icon in new[] { submitIcon, challengeIcon, viewHistoryIcon, councilIcon, eventsIcon, customizeIcon, claimIcon })
+            foreach (GameObject icon in new[] { submitIcon, challengeIcon, viewHistoryIcon, councilIcon, eventsIcon, customizeIcon, claimIcon, createIcon, joinIcon, skipIcon })
             {
                 var rect = icon.GetComponent<RectTransform>();
                 Assert.AreEqual(new Vector2(0f, 0.5f), rect.anchorMin, $"{icon.transform.parent.name}'s Icon has an unexpected anchorMin.");

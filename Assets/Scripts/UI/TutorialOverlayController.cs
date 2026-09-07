@@ -48,6 +48,7 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button councilButton;
         [SerializeField] private Button eventsButton;
         [SerializeField] private Button customizeButton;
+        [SerializeField] private Image skipIcon;
 
         private int currentStep;
 
@@ -78,7 +79,8 @@ namespace UnderstudyKingdom.UI
             Button viewHistoryButton,
             Button councilButton,
             Button eventsButton,
-            Button customizeButton)
+            Button customizeButton,
+            Image skipIcon)
         {
             this.panelRoot = panelRoot;
             this.stepIndicatorLabel = stepIndicatorLabel;
@@ -97,6 +99,7 @@ namespace UnderstudyKingdom.UI
             this.councilButton = councilButton;
             this.eventsButton = eventsButton;
             this.customizeButton = customizeButton;
+            this.skipIcon = skipIcon;
 
             Bind();
         }

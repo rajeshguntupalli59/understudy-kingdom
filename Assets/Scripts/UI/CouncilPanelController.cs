@@ -50,6 +50,8 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button customizeButton;
         [SerializeField] private DuelModalGate gate;
         [SerializeField] private Image councilIcon;
+        [SerializeField] private Image createIcon;
+        [SerializeField] private Image joinIcon;
 
         private void Start()
         {
@@ -89,7 +91,9 @@ namespace UnderstudyKingdom.UI
             Button eventsButton,
             Button customizeButton,
             DuelModalGate gate,
-            Image councilIcon)
+            Image councilIcon,
+            Image createIcon,
+            Image joinIcon)
         {
             this.councilButton = councilButton;
             this.panelRoot = panelRoot;
@@ -119,6 +123,8 @@ namespace UnderstudyKingdom.UI
             this.customizeButton = customizeButton;
             this.gate = gate;
             this.councilIcon = councilIcon;
+            this.createIcon = createIcon;
+            this.joinIcon = joinIcon;
 
             Bind();
         }
