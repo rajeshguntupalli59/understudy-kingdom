@@ -174,6 +174,32 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void Initialize_WithNullPortraitsArray_DoesNotThrowAndLeavesPortraitSpriteNull()
+        {
+            // Regression guard for the recurring "new [SerializeField] deserializes
+            // as null on an old committed scene, indexed without a null-array
+            // guard" pattern -- see docs/PROJECT_PLAN.md's "Recurring pattern
+            // across milestones #12 and #13" note. rulerPortraits[portraitIndex]
+            // previously indexed directly with no null-array check at all, so a
+            // null rulerPortraits array (e.g. a stale scene predating this field)
+            // would NRE inside Bind() -> RefreshStatusLabels(), not just leave a
+            // blank portrait.
+            var freshControllerObject = new GameObject("FreshController");
+            var freshController = freshControllerObject.AddComponent<CoreLoopScreenController>();
+
+            Assert.DoesNotThrow(() =>
+            {
+                freshController.Initialize(manager, armySlider, tradeSlider, religionSlider,
+                    moodLabel, loyaltyLabel, agendaLabel, narrationText, submitButton,
+                    rulerPortraitImage, null, submitIcon);
+            });
+
+            Assert.IsNull(rulerPortraitImage.sprite);
+
+            Object.DestroyImmediate(freshControllerObject);
+        }
+
+        [Test]
         public void Initialize_StoresSubmitIconReference()
         {
             FieldInfo iconField = typeof(CoreLoopScreenController).GetField("submitIcon", BindingFlags.NonPublic | BindingFlags.Instance);

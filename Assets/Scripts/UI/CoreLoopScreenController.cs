@@ -126,11 +126,29 @@ namespace UnderstudyKingdom.UI
             loyaltyLabel.text = $"Loyalty: {manager.Ruler.State.Loyalty}";
             agendaLabel.text = $"Agenda: {manager.Ruler.State.Agenda}";
 
-            // Neutral/Medium (index 7) is the fallback for a missing slot --
-            // matches CosmeticsPanelController.GetThemeColor's fallback to the
-            // Default theme rather than leaving a UI element blank/unset.
             int portraitIndex = GetMoodTier(manager.Ruler.State.Mood) * 3 + GetLoyaltyTier(manager.Ruler.State.Loyalty);
-            rulerPortraitImage.sprite = rulerPortraits[portraitIndex] != null ? rulerPortraits[portraitIndex] : rulerPortraits[7];
+            rulerPortraitImage.sprite = GetPortraitSprite(portraitIndex);
+        }
+
+        // Same fallback shape as CosmeticsPanelController.GetBackgroundSprite --
+        // a null/too-short array, an out-of-range index, or a missing sprite at
+        // portraitIndex all resolve to the Neutral/Medium fallback (index 7)
+        // rather than indexing directly and throwing. A null rulerPortraits
+        // array (e.g. an old scene predating this field, or a hand-built test
+        // object) previously NRE'd here with no array-level guard at all -- see
+        // docs/PROJECT_PLAN.md's "Recurring pattern across milestones #12 and
+        // #13" note.
+        private Sprite GetPortraitSprite(int portraitIndex)
+        {
+            if (rulerPortraits == null || rulerPortraits.Length <= 7)
+            {
+                return null;
+            }
+            if (portraitIndex < 0 || portraitIndex >= rulerPortraits.Length || rulerPortraits[portraitIndex] == null)
+            {
+                return rulerPortraits[7];
+            }
+            return rulerPortraits[portraitIndex];
         }
 
         private static int GetMoodTier(int mood)
