@@ -400,6 +400,31 @@ namespace UnderstudyKingdom.Tests
             }
         }
 
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_EstateButton_OpensPanelWithFourUnlockedAndFourLockedPlots()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button estateButton = FindButton(canvas, "EstateButton");
+            Assert.IsNotNull(estateButton, "EstateButton not found in the loaded CoreLoop scene.");
+
+            GameObject estatePanel = FindChildByName(canvas.transform, "EstatePanel");
+            Assert.IsNotNull(estatePanel, "EstatePanel not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(estatePanel.activeSelf, "Expected EstatePanel to start inactive.");
+
+            estateButton.onClick.Invoke();
+
+            Assert.IsTrue(estatePanel.activeSelf,
+                "Expected EstatePanel to become active after EstateButton is clicked.");
+
+            GameObject plot0Locked = FindChildByName(estatePanel.transform, "LockedOverlay");
+            Assert.IsNotNull(plot0Locked, "Expected at least one Plot LockedOverlay in the Estate panel.");
+        }
+
         private static Button FindButton(Canvas canvas, string name)
         {
             foreach (Button candidate in canvas.GetComponentsInChildren<Button>(true))
