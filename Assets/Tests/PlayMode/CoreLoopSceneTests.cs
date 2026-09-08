@@ -439,6 +439,52 @@ namespace UnderstudyKingdom.Tests
             }
         }
 
+        /// <summary>
+        /// Regression guard for the final-review Critical finding: EstateButton
+        /// was authored at anchoredPosition (0, -840) with sizeDelta (220, 44),
+        /// putting its bottom edge (-862) entirely below the canvas's -800
+        /// bottom edge (CanvasScaler.matchWidthOrHeight=1 pins the canvas's
+        /// logical height at referenceResolution.y=1600, so its rect is
+        /// deterministic in a UnityTest regardless of the actual test-runner
+        /// window size) -- the button was unreachable on any device, and no
+        /// existing test caught it because every other button test only
+        /// checks that a button exists/responds to clicks, never where it
+        /// sits relative to the canvas. This test would have failed against
+        /// the pre-fix EstateButton position.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_CoreLoopButtons_AreWithinCanvasVerticalBounds()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+            Assert.IsNotNull(canvasRect, "Canvas has no RectTransform.");
+
+            float canvasHalfHeight = canvasRect.rect.height / 2f;
+
+            string[] buttonNames =
+            {
+                "SubmitButton", "ChallengeButton", "ViewHistoryButton", "CouncilButton",
+                "EventsButton", "CustomizeButton", "EstateButton"
+            };
+
+            foreach (string name in buttonNames)
+            {
+                Button button = FindButton(canvas, name);
+                Assert.IsNotNull(button, $"{name} not found in the loaded CoreLoop scene.");
+
+                RectTransform rect = button.GetComponent<RectTransform>();
+                float bottom = rect.anchoredPosition.y - (rect.sizeDelta.y / 2f);
+
+                Assert.GreaterOrEqual(bottom, -canvasHalfHeight,
+                    $"{name}'s bottom edge ({bottom}) is below the canvas bottom ({-canvasHalfHeight}).");
+            }
+        }
+
         private static Button FindButton(Canvas canvas, string name)
         {
             foreach (Button candidate in canvas.GetComponentsInChildren<Button>(true))

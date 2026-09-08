@@ -164,6 +164,7 @@ namespace UnderstudyKingdom.UI
                 state.Coins -= cost;
                 plot.Unlocked = true;
                 RefreshPlots();
+                SaveService.SaveEstate(state);
                 return;
             }
 
@@ -181,6 +182,7 @@ namespace UnderstudyKingdom.UI
                 plot.WateredAtUnixSeconds = now;
                 StartCoroutine(ColorFlash(plotViews[plotIndex].stageImage, new Color(0.4f, 0.7f, 1f), 0.2f));
                 RefreshPlots();
+                SaveService.SaveEstate(state);
                 return;
             }
 
@@ -202,9 +204,21 @@ namespace UnderstudyKingdom.UI
             plot.WateredAtUnixSeconds = 0;
             StartCoroutine(HarvestFly(plotViews[plotIndex].stageImage));
             RefreshPlots();
+            SaveService.SaveEstate(state);
         }
 
         private void ShowSeedPicker()
+        {
+            RefreshSeedPickerAffordability();
+            seedPickerRoot.SetActive(true);
+        }
+
+        // Extracted from ShowSeedPicker so RefreshPlots() can re-run the same
+        // affordability check while the picker is already open (e.g. a
+        // different plot's harvest/unlock changes state.Coins mid-pick) --
+        // otherwise the interactable/cost display goes stale until the picker
+        // is closed and reopened.
+        private void RefreshSeedPickerAffordability()
         {
             for (int i = 0; i < CropCatalog.All.Length; i++)
             {
@@ -212,7 +226,6 @@ namespace UnderstudyKingdom.UI
                 seedCostLabels[i].text = $"{crop.DisplayName}: {crop.SeedCost}";
                 seedButtons[i].interactable = state.Coins >= crop.SeedCost;
             }
-            seedPickerRoot.SetActive(true);
         }
 
         private void OnSeedPicked(int cropIndex)
@@ -239,6 +252,7 @@ namespace UnderstudyKingdom.UI
             pendingPlantPlotIndex = -1;
             RefreshPlots();
             StartCoroutine(ScaleBounce(plotViews[plantedPlotIndex].stageImage.transform, 1.3f, 0.15f));
+            SaveService.SaveEstate(state);
         }
 
         private void RefreshPlots()
@@ -277,6 +291,11 @@ namespace UnderstudyKingdom.UI
 
                 int stage = EstateState.GrowthStage(plot, crop.Value, now);
                 view.stageImage.sprite = GetStageSprite(cropIndex, stage);
+            }
+
+            if (seedPickerRoot.activeSelf)
+            {
+                RefreshSeedPickerAffordability();
             }
         }
 

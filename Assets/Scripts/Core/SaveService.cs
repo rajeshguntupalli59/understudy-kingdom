@@ -116,6 +116,11 @@ namespace UnderstudyKingdom.Core
                 string raw = File.ReadAllText(EstateSavePath);
                 string trimmed = raw.TrimStart();
 
+                // JsonUtility's own behavior on malformed input is not something we can
+                // verify without a real Unity runtime (see task-4-report.md), so this
+                // pre-check makes corruption detection deterministic instead of relying
+                // on it: anything that doesn't even start a JSON object is treated as
+                // corrupt before JsonUtility is ever invoked.
                 if (trimmed.Length == 0 || trimmed[0] != '{')
                 {
                     return new EstateState();

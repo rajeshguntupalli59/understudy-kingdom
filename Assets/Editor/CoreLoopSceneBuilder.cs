@@ -257,8 +257,18 @@ namespace UnderstudyKingdom.EditorTools
             var customizeButtonObject = new GameObject("CustomizeButton", typeof(Image), typeof(Button));
             customizeButtonObject.transform.SetParent(canvasObject.transform, false);
             var customizeButtonRect = customizeButtonObject.GetComponent<RectTransform>();
-            customizeButtonRect.anchoredPosition = new Vector2(0f, -780f);
-            customizeButtonRect.sizeDelta = new Vector2(220f, 44f);
+            // y=-776f, not the brief's -780f: at -780f with this button's 44f
+            // height, the bottom edge lands at -802f -- 2 units past the
+            // canvas's real bottom edge (~-799.9999f; CanvasScaler's
+            // height-match scaling doesn't resolve to an exact -800f, see the
+            // referenceResolution/matchWidthOrHeight comment above). That
+            // pre-existing 2-unit overflow predates this branch (same Y/height
+            // Customize always had) and was only surfaced now by the new
+            // canvas-bounds regression test (Fix 2). -776f gives both buttons
+            // in this row a small safety margin instead of sitting exactly on
+            // the boundary.
+            customizeButtonRect.anchoredPosition = new Vector2(-115f, -776f);
+            customizeButtonRect.sizeDelta = new Vector2(200f, 44f);
             customizeButtonObject.GetComponent<Image>().color = new Color(0.45f, 0.45f, 0.5f, 1f);
             var customizeButton = customizeButtonObject.GetComponent<Button>();
             TextMeshProUGUI customizeButtonLabel = CreateLabel(customizeButtonObject.transform, "Text", 0f, "Customize");
@@ -283,12 +293,18 @@ namespace UnderstudyKingdom.EditorTools
             var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
             estateButtonObject.transform.SetParent(canvasObject.transform, false);
             var estateButtonRect = estateButtonObject.GetComponent<RectTransform>();
-            // Brief specified -420f, which exactly duplicates SubmitButton's
-            // position+size (line 112-113 above) and would fully overlap/block
-            // it -- continuing this list's established -60f decrement past
-            // customizeButton's -780f instead.
-            estateButtonRect.anchoredPosition = new Vector2(0f, -840f);
-            estateButtonRect.sizeDelta = new Vector2(220f, 44f);
+            // The vertical ladder ran out of room: customizeButton's row is
+            // already at the canvas's -800f bottom edge (see the
+            // referenceResolution/matchWidthOrHeight comment above, on the
+            // CanvasScaler setup -- the canvas's logical height is always 1600,
+            // so its bottom edge is a fixed -800 regardless of device).
+            // Continuing the ladder's -60f decrement to -840f would put this
+            // button entirely off-canvas and permanently unreachable. Instead,
+            // Estate shares customizeButton's row as a second column, at the
+            // same -776f y (see the comment on customizeButtonRect above for
+            // why -776f and not the brief's -780f).
+            estateButtonRect.anchoredPosition = new Vector2(115f, -776f);
+            estateButtonRect.sizeDelta = new Vector2(200f, 44f);
             estateButtonObject.GetComponent<Image>().color = new Color(0.35f, 0.55f, 0.3f, 1f);
             var estateButton = estateButtonObject.GetComponent<Button>();
             TextMeshProUGUI estateButtonLabel = CreateLabel(estateButtonObject.transform, "Text", 0f, "Estate");
@@ -332,7 +348,11 @@ namespace UnderstudyKingdom.EditorTools
             {
                 int column = i % 4;
                 int row = i / 4;
-                float plotX = -300f + column * 200f;
+                // 170f pitch (not 200f) so the 4 columns of 160-wide plots stay
+                // within the 700-wide EstatePanel background (and a narrow
+                // device's canvas width) -- 200f pitch put columns 0 and 3
+                // 30 units past both edges. See final-review Fix 3.
+                float plotX = -255f + column * 170f;
                 float plotY = 180f - row * 220f;
 
                 var slotBackgroundObject = new GameObject($"Plot{i}", typeof(Image));
@@ -416,12 +436,28 @@ namespace UnderstudyKingdom.EditorTools
             var estateCropStageSprites = new Sprite[9];
             string[] estateCropIds = { "wheat", "carrot", "pumpkin" };
             string[] estateStageNames = { "sprout", "growing", "mature" };
-            for (int cropIndex = 0; cropIndex < estateCropIds.Length; cropIndex++)
+            // Art generation for crops is a separate, later pass (same
+            // established pattern as every other icon/portrait/background in
+            // this project) -- Assets/Art/Crops doesn't exist yet. Without this
+            // check, the per-file loop below would call LoadIconSprite 9 times
+            // and each miss logs a Debug.LogError, drowning out the signal an
+            // Error should carry for a genuinely-missing asset elsewhere. Skip
+            // straight to a single warning instead when the directory itself
+            // is absent; once art lands, this branch stops firing and the
+            // real per-file loop resumes normal (error-on-miss) behavior.
+            if (!System.IO.Directory.Exists("Assets/Art/Crops"))
             {
-                for (int stage = 0; stage < estateStageNames.Length; stage++)
+                Debug.LogWarning("CoreLoopSceneBuilder: Assets/Art/Crops does not exist yet -- crop stage sprites will be null until art is generated (see docs/superpowers/specs/2026-09-07-estate-phase1-land-crops-design.md).");
+            }
+            else
+            {
+                for (int cropIndex = 0; cropIndex < estateCropIds.Length; cropIndex++)
                 {
-                    string path = $"Assets/Art/Crops/{estateCropIds[cropIndex]}_{estateStageNames[stage]}.png";
-                    estateCropStageSprites[cropIndex * 3 + stage] = LoadIconSprite(path);
+                    for (int stage = 0; stage < estateStageNames.Length; stage++)
+                    {
+                        string path = $"Assets/Art/Crops/{estateCropIds[cropIndex]}_{estateStageNames[stage]}.png";
+                        estateCropStageSprites[cropIndex * 3 + stage] = LoadIconSprite(path);
+                    }
                 }
             }
 
