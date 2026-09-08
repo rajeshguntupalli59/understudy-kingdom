@@ -421,8 +421,22 @@ namespace UnderstudyKingdom.Tests
             Assert.IsTrue(estatePanel.activeSelf,
                 "Expected EstatePanel to become active after EstateButton is clicked.");
 
-            GameObject plot0Locked = FindChildByName(estatePanel.transform, "LockedOverlay");
-            Assert.IsNotNull(plot0Locked, "Expected at least one Plot LockedOverlay in the Estate panel.");
+            // Verify each plot's locked state matches the expected 4-unlocked/4-locked split.
+            // Plots 0-3 start unlocked (LockedOverlay inactive), plots 4-7 start locked (LockedOverlay active).
+            for (int i = 0; i < 8; i++)
+            {
+                GameObject plot = FindChildByName(estatePanel.transform, $"Plot{i}");
+                Assert.IsNotNull(plot, $"Expected Plot{i} to exist in the Estate panel.");
+
+                GameObject lockedOverlay = FindChildByName(plot.transform, "LockedOverlay");
+                Assert.IsNotNull(lockedOverlay, $"Expected LockedOverlay under Plot{i}.");
+
+                bool isLocked = lockedOverlay.activeSelf;
+                bool shouldBeLocked = i >= 4; // Plots 0-3 are unlocked, 4-7 are locked
+
+                Assert.AreEqual(shouldBeLocked, isLocked,
+                    $"Plot{i} LockedOverlay.activeSelf should be {shouldBeLocked} but was {isLocked}.");
+            }
         }
 
         private static Button FindButton(Canvas canvas, string name)
