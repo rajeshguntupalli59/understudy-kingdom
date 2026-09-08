@@ -107,5 +107,74 @@ namespace UnderstudyKingdom.Tests
             Assert.AreEqual(160, EstateState.UnlockCost(5));
             Assert.AreEqual(260, EstateState.UnlockCost(6));
         }
+
+        [Test]
+        public void NewEstateState_HasEmptyInventoryOfCorrectLength()
+        {
+            var state = new EstateState();
+
+            Assert.AreEqual(GoodsCatalog.Count, state.Inventory.Length);
+            foreach (int count in state.Inventory)
+            {
+                Assert.AreEqual(0, count);
+            }
+        }
+
+        [Test]
+        public void NewEstateState_HasAllShopsLockedAndIdle()
+        {
+            var state = new EstateState();
+
+            Assert.AreEqual(ShopCatalog.All.Length, state.Shops.Length);
+            foreach (ShopState shop in state.Shops)
+            {
+                Assert.IsFalse(shop.Unlocked);
+                Assert.AreEqual(0, shop.ProductionStartedAtUnixSeconds);
+            }
+        }
+
+        [Test]
+        public void ShopProductionStage_Idle_IsStageZeroRegardlessOfElapsedTime()
+        {
+            var shop = new ShopState { Unlocked = true, ProductionStartedAtUnixSeconds = 0 };
+            ShopDefinition bakery = ShopCatalog.Find("bakery").Value;
+
+            int stage = EstateState.ShopProductionStage(shop, bakery, nowUnixSeconds: 999999);
+
+            Assert.AreEqual(0, stage);
+        }
+
+        [Test]
+        public void ShopProductionStage_JustStarted_IsStageOne()
+        {
+            var shop = new ShopState { Unlocked = true, ProductionStartedAtUnixSeconds = 1000 };
+            ShopDefinition bakery = ShopCatalog.Find("bakery").Value; // 60s production
+
+            int stage = EstateState.ShopProductionStage(shop, bakery, nowUnixSeconds: 1001);
+
+            Assert.AreEqual(1, stage);
+        }
+
+        [Test]
+        public void ShopProductionStage_AtFullDuration_IsStageTwo()
+        {
+            var shop = new ShopState { Unlocked = true, ProductionStartedAtUnixSeconds = 1000 };
+            ShopDefinition bakery = ShopCatalog.Find("bakery").Value;
+
+            int stage = EstateState.ShopProductionStage(shop, bakery, nowUnixSeconds: 1060);
+
+            Assert.AreEqual(2, stage);
+        }
+
+        [Test]
+        public void ShopProductionStage_PastFullDuration_StaysStageTwo()
+        {
+            var shop = new ShopState { Unlocked = true, ProductionStartedAtUnixSeconds = 1000 };
+            ShopDefinition bakery = ShopCatalog.Find("bakery").Value;
+
+            int stage = EstateState.ShopProductionStage(shop, bakery, nowUnixSeconds: 999999);
+
+            Assert.AreEqual(2, stage);
+        }
     }
 }

@@ -17,6 +17,13 @@ namespace UnderstudyKingdom.Core
     }
 
     [Serializable]
+    public class ShopState
+    {
+        public bool Unlocked;
+        public long ProductionStartedAtUnixSeconds;
+    }
+
+    [Serializable]
     public class EstateState
     {
         public const int PlotCount = 8;
@@ -24,6 +31,8 @@ namespace UnderstudyKingdom.Core
 
         public int Coins = 200;
         public LandPlot[] Plots;
+        public int[] Inventory;
+        public ShopState[] Shops;
 
         public EstateState()
         {
@@ -31,6 +40,13 @@ namespace UnderstudyKingdom.Core
             for (int i = 0; i < Plots.Length; i++)
             {
                 Plots[i] = new LandPlot { Unlocked = i < StartingUnlockedPlots };
+            }
+
+            Inventory = new int[GoodsCatalog.Count];
+            Shops = new ShopState[ShopCatalog.All.Length];
+            for (int i = 0; i < Shops.Length; i++)
+            {
+                Shops[i] = new ShopState();
             }
         }
 
@@ -74,6 +90,28 @@ namespace UnderstudyKingdom.Core
             int lockedIndex = plotIndex - StartingUnlockedPlots;
             double raw = 100.0 * Math.Pow(1.6, lockedIndex);
             return (int)(Math.Round(raw / 10.0) * 10.0);
+        }
+
+        /// <summary>
+        /// Mirrors GrowthStage's exact shape -- 0 while idle (never
+        /// started), 1 while producing, 2 once ProductionSeconds has
+        /// fully elapsed. No intermediate-division truncation bug (see
+        /// GrowthStage's own fix history) -- compares elapsed directly
+        /// against the full duration only, nothing to truncate.
+        /// </summary>
+        public static int ShopProductionStage(ShopState shop, ShopDefinition def, long nowUnixSeconds)
+        {
+            if (shop.ProductionStartedAtUnixSeconds == 0)
+            {
+                return 0;
+            }
+
+            long elapsed = nowUnixSeconds - shop.ProductionStartedAtUnixSeconds;
+            if (elapsed < 0)
+            {
+                return 0;
+            }
+            return elapsed >= def.ProductionSeconds ? 2 : 1;
         }
     }
 }
