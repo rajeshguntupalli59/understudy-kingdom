@@ -919,6 +919,16 @@ namespace UnderstudyKingdom.EditorTools
             AssetDatabase.Refresh();
 
             Debug.Log($"CoreLoopSceneBuilder: saved scene to {ScenePath}");
+
+            // -executeMethod does not auto-quit batchmode on return -- without
+            // an explicit exit here, a successful run leaves the process alive
+            // holding the project lock, causing the next invocation to fail
+            // instantly instead of running (same fix already applied to
+            // AndroidBuildTool.BuildApk()).
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(0);
+            }
         }
 
         /// <summary>
@@ -1326,6 +1336,13 @@ namespace UnderstudyKingdom.EditorTools
             }
 
             Debug.Log("CoreLoopSceneBuilder.Verify: scene opened and controller found successfully.");
+
+            // See Build()'s identical comment -- without this, a successful
+            // run leaves the process alive holding the project lock.
+            if (Application.isBatchMode)
+            {
+                EditorApplication.Exit(0);
+            }
         }
 
         // Confirms an icon Image field is non-null AND its .sprite is non-null --
