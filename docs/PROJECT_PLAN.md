@@ -852,6 +852,67 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     (Animals, Shops/Production, Trade + recruitable Shop Seller,
     Integration with Council/Customize) are not started.
 
+- **Milestone #17 — Estate Phase 3: Shops & Production Chains** (branch
+  `feat/estate-phase3-shops-production`, merged `2da62d7`, fast-forward).
+  Third phase of the 5-phase economy roadmap (built ahead of Phase 2
+  Animals per explicit user direction, since production chains are what
+  actually implements "the bakery needs wheat") -- see
+  `docs/superpowers/specs/2026-09-08-estate-phase3-shops-production-design.md`.
+  - Ships: an `Inventory` (flat `int[]`, unified crop+product index space
+    via new `GoodsCatalog`), 3 one-time-purchase shops (Bakery/wheat→bread,
+    Kitchen/carrot→carrot_soup, Pie House/pumpkin→pumpkin_pie) with
+    unlock→start-production→collect lifecycles, and a Land/Shops tab
+    switcher inside the existing Estate panel (deliberately not a new
+    throne-room button, learning from Phase 1's unreachable-button bug).
+    Harvesting a crop now adds to Inventory instead of auto-selling for
+    coins -- selling is a separate, explicit whole-stack action, matching
+    Hay Day/Township's model over Phase 1's original instant-sell. Old
+    Phase-1-only save files (`Coins`/`Plots`, no `Inventory`/`Shops` keys)
+    migrate per-field: `Coins`/`Plots` load exactly as saved, only the two
+    new fields default fresh -- never a blanket state reset.
+  - Built via `understudy-kingdom:subagent-driven-development` across 8
+    tasks (3 new static catalogs, `EstateState`/`SaveService` additions,
+    `EstatePanelController` behavior, `CoreLoopSceneBuilder` wiring, a
+    scene-level regression test), all individually reviewed clean
+    (0 Critical at any task; Task 6's one fix round resolved a duplicate
+    test with a stale name plus unmarked-but-necessary null-guards ahead
+    of the scene actually being wired).
+  - **Final whole-branch review again caught a real bug every task-level
+    review missed** -- the same "new element vs. a *different* pre-existing
+    element" collision class as Phase 1's off-canvas-button bug, just one
+    step subtler: the new `LandTabButton`/`ShopsTabButton` (y=255) overlapped
+    the *top row's plot tiles* by 25 units, and because the tab buttons sat
+    later in the sibling list they won every raycast hit-test in that
+    band -- tapping the top edge of 2 of the 8 plots would silently switch
+    tabs instead of watering/harvesting. Task 7's own review had correctly
+    checked the new elements against the *panel's* bounds (learning
+    Phase 1's lesson) but not against each other; the final review checked
+    both. First final-review attempt was dispatched on the most capable
+    model but hit a session-wide rate limit mid-task with no report
+    produced -- cleanly re-dispatched on the standard model per this
+    project's established fallback, no work lost. Fixed by shifting the
+    plot grid down 30 units (not the buttons, which had no room to move
+    without colliding with the coins label above them), re-verified via
+    independent arithmetic against the real committed scene YAML (not just
+    the builder script) both by the fix's own reviewer and by the
+    controller directly. Merged after three independent, controller-run
+    full-suite passes (pre-fix, pre-merge, post-merge), all green:
+    EditMode 129/129, PlayMode 105/105.
+  - Text+color only this pass, no shop/product icons -- explicit scope
+    decision to keep this plan to the economy logic itself.
+  - **Immediately after merge, the user set a standing design directive
+    for all future Understudy Kingdom work**: interactions should make the
+    player feel like they're doing the real thing, not tapping through
+    abstract state changes -- concretely, shops should be built as visible
+    structures on the land (with a land-expansion animation) rather than a
+    plain unlock-button list row, and planting/growing/harvesting should
+    play real animations at each step rather than instant taps. Scoped as
+    its own follow-up phase on top of this merged base, not a rework of
+    what just shipped (user's explicit choice when offered that tradeoff).
+  - Phase 2 (Animals & Breeding), Phase 4 (Trade + recruitable Shop
+    Seller), Phase 5 (Integration), remaining crop art, and the new
+    real-feel-animation follow-up phase are all not started.
+
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
 for the duration of active development.
