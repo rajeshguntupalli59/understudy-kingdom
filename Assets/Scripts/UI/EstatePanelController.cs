@@ -334,11 +334,15 @@ namespace UnderstudyKingdom.UI
 
             int goodsIndex = GoodsCatalog.IndexOf(plot.CropId);
             state.Inventory[goodsIndex] += 1;
-            Vector3 harvestFlyTarget = inventoryRows[goodsIndex].root.transform.position;
             plot.CropId = null;
             plot.PlantedAtUnixSeconds = 0;
             plot.WateredAtUnixSeconds = 0;
-            StartCoroutine(HarvestFly(plotViews[plotIndex].stageImage, harvestFlyTarget));
+            // null-safe for direct/test construction that bypasses CoreLoopSceneBuilder
+            if (inventoryRows != null)
+            {
+                Vector3 harvestFlyTarget = inventoryRows[goodsIndex].root.transform.position;
+                StartCoroutine(HarvestFly(plotViews[plotIndex].stageImage, harvestFlyTarget));
+            }
             RefreshPlots();
             RefreshInventoryAndShops();
             SaveService.SaveEstate(state);
@@ -388,8 +392,7 @@ namespace UnderstudyKingdom.UI
             seedPickerRoot.SetActive(false);
             pendingPlantPlotIndex = -1;
             RefreshPlots();
-            StartCoroutine(SeedDrop(plotViews[plantedPlotIndex].stageImage.transform.parent));
-            StartCoroutine(ScaleBounce(plotViews[plantedPlotIndex].stageImage.transform, 1.3f, 0.15f));
+            StartCoroutine(PlantSequence(plantedPlotIndex));
             SaveService.SaveEstate(state);
         }
 
@@ -562,6 +565,16 @@ namespace UnderstudyKingdom.UI
             }
 
             Destroy(flyer);
+        }
+
+        // Sequences the plant animation so the seed visibly settles into
+        // the soil BEFORE the sprout appears/bounces, instead of both
+        // playing at once -- see final-review Important #2, Estate Crop
+        // Animation.
+        private IEnumerator PlantSequence(int plotIndex)
+        {
+            yield return SeedDrop(plotViews[plotIndex].stageImage.transform.parent);
+            yield return ScaleBounce(plotViews[plotIndex].stageImage.transform, 1.3f, 0.15f);
         }
 
         // Spawns a temporary seed sprite over the plot that scales down to

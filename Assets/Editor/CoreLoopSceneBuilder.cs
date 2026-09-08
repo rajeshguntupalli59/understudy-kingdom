@@ -389,6 +389,25 @@ namespace UnderstudyKingdom.EditorTools
                 tapButtonObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
                 var tapButton = tapButtonObject.GetComponent<Button>();
 
+                var progressBarObject = new GameObject("ProgressBar", typeof(Image));
+                progressBarObject.transform.SetParent(slotBackgroundObject.transform, false);
+                var progressBarRect = progressBarObject.GetComponent<RectTransform>();
+                progressBarRect.anchoredPosition = new Vector2(0f, -72f);
+                progressBarRect.sizeDelta = new Vector2(140f, 10f);
+                var progressBarImage = progressBarObject.GetComponent<Image>();
+                progressBarImage.type = Image.Type.Filled;
+                progressBarImage.fillMethod = Image.FillMethod.Horizontal;
+                // Image.Type.Filled only actually renders fillAmount when it
+                // has a sprite -- a null sprite falls through to a plain
+                // full-rect quad regardless of fillAmount. See final-review
+                // Critical, Estate Crop Animation.
+                progressBarImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+                progressBarImage.color = new Color(0.4f, 0.8f, 0.4f, 1f);
+                // Must not block taps to the underlying TapButton. See
+                // final-review Important #1, Estate Crop Animation.
+                progressBarImage.raycastTarget = false;
+                progressBarObject.SetActive(false);
+
                 var lockedOverlayObject = new GameObject("LockedOverlay", typeof(Image));
                 lockedOverlayObject.transform.SetParent(slotBackgroundObject.transform, false);
                 var lockedOverlayRect = lockedOverlayObject.GetComponent<RectTransform>();
@@ -401,17 +420,6 @@ namespace UnderstudyKingdom.EditorTools
 
                 TextMeshProUGUI lockCostLabel = CreateLabel(lockedOverlayObject.transform, "LockCost", 0f, "Unlock: 0");
                 lockCostLabel.fontSize = 18f;
-
-                var progressBarObject = new GameObject("ProgressBar", typeof(Image));
-                progressBarObject.transform.SetParent(slotBackgroundObject.transform, false);
-                var progressBarRect = progressBarObject.GetComponent<RectTransform>();
-                progressBarRect.anchoredPosition = new Vector2(0f, -72f);
-                progressBarRect.sizeDelta = new Vector2(140f, 10f);
-                var progressBarImage = progressBarObject.GetComponent<Image>();
-                progressBarImage.type = Image.Type.Filled;
-                progressBarImage.fillMethod = Image.FillMethod.Horizontal;
-                progressBarImage.color = new Color(0.4f, 0.8f, 0.4f, 1f);
-                progressBarObject.SetActive(false);
 
                 estatePlotViews[i] = new EstatePanelController.PlotView
                 {

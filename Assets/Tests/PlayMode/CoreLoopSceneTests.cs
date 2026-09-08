@@ -538,6 +538,11 @@ namespace UnderstudyKingdom.Tests
 
                 GameObject progressBar = FindChildByName(plot.transform, "ProgressBar");
                 Assert.IsNotNull(progressBar, $"Plot{i} is missing its ProgressBar child.");
+
+                Image progressBarImage = progressBar.GetComponent<Image>();
+                Assert.IsNotNull(progressBarImage.sprite, $"Plot{i}'s ProgressBar has no sprite assigned -- Image.Type.Filled won't render fillAmount without one.");
+                Assert.IsFalse(progressBarImage.raycastTarget, $"Plot{i}'s ProgressBar should not block raycasts to the underlying TapButton.");
+                Assert.AreEqual(Image.Type.Filled, progressBarImage.type, $"Plot{i}'s ProgressBar should be Image.Type.Filled.");
             }
         }
 
