@@ -99,7 +99,9 @@ namespace UnderstudyKingdom.Core
             var data = new EstateSaveData
             {
                 Coins = state.Coins,
-                Plots = state.Plots
+                Plots = state.Plots,
+                Inventory = state.Inventory,
+                Shops = state.Shops
             };
             File.WriteAllText(EstateSavePath, JsonUtility.ToJson(data));
         }
@@ -133,10 +135,30 @@ namespace UnderstudyKingdom.Core
                     return new EstateState();
                 }
 
+                int[] inventory = (data.Inventory != null && data.Inventory.Length == GoodsCatalog.Count)
+                    ? data.Inventory
+                    : new int[GoodsCatalog.Count];
+
+                ShopState[] shops;
+                if (data.Shops != null && data.Shops.Length == ShopCatalog.All.Length)
+                {
+                    shops = data.Shops;
+                }
+                else
+                {
+                    shops = new ShopState[ShopCatalog.All.Length];
+                    for (int i = 0; i < shops.Length; i++)
+                    {
+                        shops[i] = new ShopState();
+                    }
+                }
+
                 return new EstateState
                 {
                     Coins = data.Coins,
-                    Plots = data.Plots
+                    Plots = data.Plots,
+                    Inventory = inventory,
+                    Shops = shops
                 };
             }
             catch (Exception)

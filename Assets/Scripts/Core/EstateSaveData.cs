@@ -14,5 +14,7 @@ namespace UnderstudyKingdom.Core
         public int Version = 1;
         public int Coins;
         public LandPlot[] Plots;
+        public int[] Inventory;
+        public ShopState[] Shops;
     }
 }

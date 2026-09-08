@@ -94,5 +94,64 @@ namespace UnderstudyKingdom.Tests
                 File.Delete(SaveService.SavePath);
             }
         }
+
+        [Test]
+        public void SaveEstateThenLoadEstate_RoundTripsInventoryAndShops()
+        {
+            var original = new EstateState { Coins = 100 };
+            original.Inventory[0] = 3;
+            original.Shops[0].Unlocked = true;
+            original.Shops[0].ProductionStartedAtUnixSeconds = 555;
+
+            SaveService.SaveEstate(original);
+            var loaded = SaveService.LoadEstate();
+
+            Assert.AreEqual(3, loaded.Inventory[0]);
+            Assert.IsTrue(loaded.Shops[0].Unlocked);
+            Assert.AreEqual(555, loaded.Shops[0].ProductionStartedAtUnixSeconds);
+        }
+
+        [Test]
+        public void LoadEstate_SaveFileMissingInventoryAndShops_KeepsCoinsAndPlotsDefaultsRest()
+        {
+            System.IO.File.WriteAllText(SaveService.EstateSavePath,
+                "{\"Version\":1,\"Coins\":250,\"Plots\":[" +
+                "{\"Unlocked\":true,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":true,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":true,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":true,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":false,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":false,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":false,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}," +
+                "{\"Unlocked\":false,\"CropId\":null,\"PlantedAtUnixSeconds\":0,\"WateredAtUnixSeconds\":0}]}");
+
+            var loaded = SaveService.LoadEstate();
+
+            Assert.AreEqual(250, loaded.Coins);
+            Assert.IsTrue(loaded.Plots[0].Unlocked);
+            Assert.IsFalse(loaded.Plots[4].Unlocked);
+            Assert.AreEqual(GoodsCatalog.Count, loaded.Inventory.Length);
+            Assert.AreEqual(0, loaded.Inventory[0]);
+            Assert.AreEqual(ShopCatalog.All.Length, loaded.Shops.Length);
+            Assert.IsFalse(loaded.Shops[0].Unlocked);
+        }
+
+        [Test]
+        public void LoadEstate_WrongInventoryLength_DefaultsOnlyInventory()
+        {
+            var corrupted = new EstateSaveData
+            {
+                Coins = 50,
+                Plots = new EstateState().Plots,
+                Inventory = new int[2],
+                Shops = new EstateState().Shops
+            };
+            System.IO.File.WriteAllText(SaveService.EstateSavePath, UnityEngine.JsonUtility.ToJson(corrupted));
+
+            var loaded = SaveService.LoadEstate();
+
+            Assert.AreEqual(50, loaded.Coins);
+            Assert.AreEqual(GoodsCatalog.Count, loaded.Inventory.Length);
+        }
     }
 }
