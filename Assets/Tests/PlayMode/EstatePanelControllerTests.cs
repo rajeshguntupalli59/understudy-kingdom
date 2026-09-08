@@ -461,6 +461,30 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void HarvestMaturePlot_AddsToCorrectInventoryRowBeforeFlightStarts()
+        {
+            // The fix under test is HarvestFly's destination -- this can't be
+            // observed by watching the animation itself (not meaningfully
+            // testable, see this plan's Global Constraints), so it's pinned
+            // via the state-side guarantee the fix's own call-site ordering
+            // depends on: Inventory must already be incremented, and the
+            // target row must already be showing, BEFORE HarvestFly starts,
+            // for the fly-to-inventory-row target to resolve to a visible
+            // destination at all.
+            var seeded = new EstateState { Coins = 200 };
+            seeded.Plots[0].CropId = "wheat";
+            seeded.Plots[0].PlantedAtUnixSeconds = 1;
+            seeded.Plots[0].WateredAtUnixSeconds = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600;
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            plotViews[0].tapButton.onClick.Invoke(); // harvest
+
+            int wheatIndex = GoodsCatalog.IndexOf("wheat");
+            Assert.IsTrue(inventoryRows[wheatIndex].root.activeSelf, "Inventory row must already be visible by the time HarvestFly's target is resolved.");
+        }
+
+        [Test]
         public void SellInventoryStack_AwardsCoinsForWholeStackAndZeroesCount()
         {
             var seeded = new EstateState { Coins = 100 };

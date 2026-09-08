@@ -332,11 +332,13 @@ namespace UnderstudyKingdom.UI
                 return;
             }
 
-            state.Inventory[GoodsCatalog.IndexOf(plot.CropId)] += 1;
+            int goodsIndex = GoodsCatalog.IndexOf(plot.CropId);
+            state.Inventory[goodsIndex] += 1;
+            Vector3 harvestFlyTarget = inventoryRows[goodsIndex].root.transform.position;
             plot.CropId = null;
             plot.PlantedAtUnixSeconds = 0;
             plot.WateredAtUnixSeconds = 0;
-            StartCoroutine(HarvestFly(plotViews[plotIndex].stageImage));
+            StartCoroutine(HarvestFly(plotViews[plotIndex].stageImage, harvestFlyTarget));
             RefreshPlots();
             RefreshInventoryAndShops();
             SaveService.SaveEstate(state);
@@ -525,11 +527,13 @@ namespace UnderstudyKingdom.UI
         }
 
         // Spawns a short-lived copy of the harvested plot's sprite that
-        // arcs to the coin label then is destroyed -- both live under the
+        // arcs to targetPosition then is destroyed -- both live under the
         // same Canvas so a straight world-position lerp is a valid arc
         // target, no coroutine-owning-object lifetime issue since this
-        // MonoBehaviour outlives the tween.
-        private IEnumerator HarvestFly(Image sourceImage)
+        // MonoBehaviour outlives the tween. targetPosition is resolved by
+        // the caller (OnPlotTapped) before the plot's CropId is cleared,
+        // since resolving it requires the still-known harvested crop id.
+        private IEnumerator HarvestFly(Image sourceImage, Vector3 targetPosition)
         {
             Sprite sprite = sourceImage.sprite;
             if (sprite == null)
@@ -547,7 +551,7 @@ namespace UnderstudyKingdom.UI
             flyerRect.sizeDelta = sourceImage.rectTransform.sizeDelta;
 
             Vector3 start = flyerRect.position;
-            Vector3 end = coinsLabel.transform.position;
+            Vector3 end = targetPosition;
             const float duration = 0.4f;
             float t = 0f;
             while (t < duration)
