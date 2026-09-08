@@ -343,6 +343,9 @@ namespace UnderstudyKingdom.EditorTools
             estateCoinsLabel.fontSize = 24f;
             estateCoinsLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 295f);
 
+            var estateLandTabRootObject = new GameObject("LandTabRoot");
+            estateLandTabRootObject.transform.SetParent(estatePanelRootObject.transform, false);
+
             var estatePlotViews = new EstatePanelController.PlotView[8];
             for (int i = 0; i < 8; i++)
             {
@@ -356,7 +359,7 @@ namespace UnderstudyKingdom.EditorTools
                 float plotY = 180f - row * 220f;
 
                 var slotBackgroundObject = new GameObject($"Plot{i}", typeof(Image));
-                slotBackgroundObject.transform.SetParent(estatePanelRootObject.transform, false);
+                slotBackgroundObject.transform.SetParent(estateLandTabRootObject.transform, false);
                 var slotBackgroundRect = slotBackgroundObject.GetComponent<RectTransform>();
                 slotBackgroundRect.anchoredPosition = new Vector2(plotX, plotY);
                 slotBackgroundRect.sizeDelta = new Vector2(160f, 160f);
@@ -403,7 +406,7 @@ namespace UnderstudyKingdom.EditorTools
             }
 
             var estateSeedPickerObject = new GameObject("SeedPicker", typeof(Image));
-            estateSeedPickerObject.transform.SetParent(estatePanelRootObject.transform, false);
+            estateSeedPickerObject.transform.SetParent(estateLandTabRootObject.transform, false);
             var estateSeedPickerRect = estateSeedPickerObject.GetComponent<RectTransform>();
             estateSeedPickerRect.anchoredPosition = new Vector2(0f, -280f);
             estateSeedPickerRect.sizeDelta = new Vector2(640f, 120f);
@@ -430,6 +433,95 @@ namespace UnderstudyKingdom.EditorTools
                 estateSeedCostLabels[i] = seedCostLabel;
             }
             estateSeedPickerObject.SetActive(false);
+
+            var estateShopsTabRootObject = new GameObject("ShopsTabRoot");
+            estateShopsTabRootObject.transform.SetParent(estatePanelRootObject.transform, false);
+            estateShopsTabRootObject.SetActive(false);
+
+            var estateShopRows = new UnderstudyKingdom.UI.EstatePanelController.ShopRowView[3];
+            string[] estateShopIds = { "bakery", "kitchen", "pie_house" };
+            for (int i = 0; i < 3; i++)
+            {
+                float rowY = 140f - i * 120f;
+
+                var rowBackgroundObject = new GameObject($"ShopRow_{estateShopIds[i]}", typeof(Image));
+                rowBackgroundObject.transform.SetParent(estateShopsTabRootObject.transform, false);
+                var rowBackgroundRect = rowBackgroundObject.GetComponent<RectTransform>();
+                rowBackgroundRect.anchoredPosition = new Vector2(0f, rowY);
+                rowBackgroundRect.sizeDelta = new Vector2(640f, 100f);
+                rowBackgroundObject.GetComponent<Image>().color = new Color(0.15f, 0.2f, 0.15f, 1f);
+
+                TextMeshProUGUI statusLabel = CreateLabel(rowBackgroundObject.transform, "StatusLabel", 0f, string.Empty);
+                statusLabel.fontSize = 20f;
+                var statusLabelRect = statusLabel.GetComponent<RectTransform>();
+                statusLabelRect.anchoredPosition = new Vector2(-80f, 15f);
+                statusLabelRect.sizeDelta = new Vector2(460f, 50f);
+
+                var actionButtonObject = new GameObject("ActionButton", typeof(Image), typeof(Button));
+                actionButtonObject.transform.SetParent(rowBackgroundObject.transform, false);
+                var actionButtonRect = actionButtonObject.GetComponent<RectTransform>();
+                actionButtonRect.anchoredPosition = new Vector2(250f, -15f);
+                actionButtonRect.sizeDelta = new Vector2(120f, 44f);
+                actionButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
+                var actionButton = actionButtonObject.GetComponent<Button>();
+                TextMeshProUGUI actionButtonLabel = CreateLabel(actionButtonObject.transform, "Text", 0f, string.Empty);
+                var actionButtonLabelRect = actionButtonLabel.GetComponent<RectTransform>();
+                actionButtonLabelRect.anchorMin = Vector2.zero;
+                actionButtonLabelRect.anchorMax = Vector2.one;
+                actionButtonLabelRect.sizeDelta = Vector2.zero;
+                actionButtonLabelRect.anchoredPosition = Vector2.zero;
+
+                estateShopRows[i] = new UnderstudyKingdom.UI.EstatePanelController.ShopRowView
+                {
+                    statusLabel = statusLabel,
+                    actionButton = actionButton,
+                    actionButtonLabel = actionButtonLabel
+                };
+            }
+
+            // Inventory strip -- visible regardless of active tab, so it
+            // is a direct child of estatePanelRootObject, not either tab root.
+            var estateInventoryRows = new UnderstudyKingdom.UI.EstatePanelController.InventoryRowView[UnderstudyKingdom.Core.GoodsCatalog.Count];
+            for (int i = 0; i < estateInventoryRows.Length; i++)
+            {
+                float rowX = -250f + i * 100f;
+
+                var invRowObject = new GameObject($"InventoryRow{i}", typeof(Image));
+                invRowObject.transform.SetParent(estatePanelRootObject.transform, false);
+                var invRowRect = invRowObject.GetComponent<RectTransform>();
+                invRowRect.anchoredPosition = new Vector2(rowX, -360f);
+                invRowRect.sizeDelta = new Vector2(110f, 50f);
+                invRowObject.GetComponent<Image>().color = new Color(0.2f, 0.25f, 0.15f, 1f);
+                invRowObject.SetActive(false);
+
+                TextMeshProUGUI invLabel = CreateLabel(invRowObject.transform, "Label", 0f, string.Empty);
+                invLabel.fontSize = 14f;
+                var invLabelRect = invLabel.GetComponent<RectTransform>();
+                invLabelRect.anchoredPosition = new Vector2(0f, 10f);
+                invLabelRect.sizeDelta = new Vector2(105f, 24f);
+
+                var sellButtonObject = new GameObject("SellButton", typeof(Image), typeof(Button));
+                sellButtonObject.transform.SetParent(invRowObject.transform, false);
+                var sellButtonRect = sellButtonObject.GetComponent<RectTransform>();
+                sellButtonRect.anchoredPosition = new Vector2(0f, -12f);
+                sellButtonRect.sizeDelta = new Vector2(90f, 22f);
+                sellButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+                var sellButton = sellButtonObject.GetComponent<Button>();
+                TextMeshProUGUI sellLabel = CreateLabel(sellButtonObject.transform, "Text", 0f, "Sell");
+                sellLabel.fontSize = 14f;
+                var sellLabelRect = sellLabel.GetComponent<RectTransform>();
+                sellLabelRect.anchorMin = Vector2.zero;
+                sellLabelRect.anchorMax = Vector2.one;
+                sellLabelRect.sizeDelta = Vector2.zero;
+                sellLabelRect.anchoredPosition = Vector2.zero;
+
+                estateInventoryRows[i] = new UnderstudyKingdom.UI.EstatePanelController.InventoryRowView
+                {
+                    root = invRowObject,
+                    label = invLabel,
+                    sellButton = sellButton
+                };
+            }
 
             // 3 crops x 3 stages, flat -- index = cropIndex * 3 + stage,
             // matching EstatePanelController.GetStageSprite's indexing.
@@ -461,12 +553,42 @@ namespace UnderstudyKingdom.EditorTools
                 }
             }
 
+            var estateLandTabButtonObject = new GameObject("LandTabButton", typeof(Image), typeof(Button));
+            estateLandTabButtonObject.transform.SetParent(estatePanelRootObject.transform, false);
+            var estateLandTabButtonRect = estateLandTabButtonObject.GetComponent<RectTransform>();
+            estateLandTabButtonRect.anchoredPosition = new Vector2(-80f, 255f);
+            estateLandTabButtonRect.sizeDelta = new Vector2(140f, 40f);
+            estateLandTabButtonObject.GetComponent<Image>().color = new Color(0.35f, 0.55f, 0.3f, 1f);
+            var estateLandTabButton = estateLandTabButtonObject.GetComponent<Button>();
+            TextMeshProUGUI estateLandTabLabel = CreateLabel(estateLandTabButtonObject.transform, "Text", 0f, "Land");
+            var estateLandTabLabelRect = estateLandTabLabel.GetComponent<RectTransform>();
+            estateLandTabLabelRect.anchorMin = Vector2.zero;
+            estateLandTabLabelRect.anchorMax = Vector2.one;
+            estateLandTabLabelRect.sizeDelta = Vector2.zero;
+            estateLandTabLabelRect.anchoredPosition = Vector2.zero;
+
+            var estateShopsTabButtonObject = new GameObject("ShopsTabButton", typeof(Image), typeof(Button));
+            estateShopsTabButtonObject.transform.SetParent(estatePanelRootObject.transform, false);
+            var estateShopsTabButtonRect = estateShopsTabButtonObject.GetComponent<RectTransform>();
+            estateShopsTabButtonRect.anchoredPosition = new Vector2(80f, 255f);
+            estateShopsTabButtonRect.sizeDelta = new Vector2(140f, 40f);
+            estateShopsTabButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.7f, 1f);
+            var estateShopsTabButton = estateShopsTabButtonObject.GetComponent<Button>();
+            TextMeshProUGUI estateShopsTabLabel = CreateLabel(estateShopsTabButtonObject.transform, "Text", 0f, "Shops");
+            var estateShopsTabLabelRect = estateShopsTabLabel.GetComponent<RectTransform>();
+            estateShopsTabLabelRect.anchorMin = Vector2.zero;
+            estateShopsTabLabelRect.anchorMax = Vector2.one;
+            estateShopsTabLabelRect.sizeDelta = Vector2.zero;
+            estateShopsTabLabelRect.anchoredPosition = Vector2.zero;
+
             var estateControllerObject = new GameObject("EstatePanelController");
             var estateController = estateControllerObject.AddComponent<EstatePanelController>();
             estateController.Initialize(estateButton, estatePanelRootObject, estateCloseButton, estateCoinsLabel,
                 estatePlotViews, estateSeedPickerObject, estateSeedButtons, estateSeedCostLabels, estateCropStageSprites,
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton,
-                eventsButton, customizeButton, duelModalGate, null, null, null, null, null, null);
+                eventsButton, customizeButton, duelModalGate,
+                estateLandTabButton, estateShopsTabButton, estateLandTabRootObject, estateShopsTabRootObject,
+                estateInventoryRows, estateShopRows);
 
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
