@@ -90,6 +90,61 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
+        public void GrowthProgress01_NeverWatered_IsZero()
+        {
+            var plot = new LandPlot { CropId = "wheat", WateredAtUnixSeconds = 0 };
+            var wheat = new CropDefinition("wheat", "Wheat", seedCost: 5, growDurationSeconds: 30, sellValue: 12);
+
+            float progress = EstateState.GrowthProgress01(plot, wheat, nowUnixSeconds: 999999);
+
+            Assert.AreEqual(0f, progress);
+        }
+
+        [Test]
+        public void GrowthProgress01_JustWatered_IsZero()
+        {
+            var plot = new LandPlot { CropId = "wheat", WateredAtUnixSeconds = 1000 };
+            var wheat = new CropDefinition("wheat", "Wheat", seedCost: 5, growDurationSeconds: 30, sellValue: 12);
+
+            float progress = EstateState.GrowthProgress01(plot, wheat, nowUnixSeconds: 1000);
+
+            Assert.AreEqual(0f, progress);
+        }
+
+        [Test]
+        public void GrowthProgress01_AtHalfDuration_IsAboutHalf()
+        {
+            var plot = new LandPlot { CropId = "wheat", WateredAtUnixSeconds = 1000 };
+            var wheat = new CropDefinition("wheat", "Wheat", seedCost: 5, growDurationSeconds: 30, sellValue: 12);
+
+            float progress = EstateState.GrowthProgress01(plot, wheat, nowUnixSeconds: 1015); // 15s of 30s
+
+            Assert.AreEqual(0.5f, progress, 0.001f);
+        }
+
+        [Test]
+        public void GrowthProgress01_AtFullDuration_IsOne()
+        {
+            var plot = new LandPlot { CropId = "wheat", WateredAtUnixSeconds = 1000 };
+            var wheat = new CropDefinition("wheat", "Wheat", seedCost: 5, growDurationSeconds: 30, sellValue: 12);
+
+            float progress = EstateState.GrowthProgress01(plot, wheat, nowUnixSeconds: 1030);
+
+            Assert.AreEqual(1f, progress, 0.001f);
+        }
+
+        [Test]
+        public void GrowthProgress01_PastFullDuration_StaysClampedAtOne()
+        {
+            var plot = new LandPlot { CropId = "wheat", WateredAtUnixSeconds = 1000 };
+            var wheat = new CropDefinition("wheat", "Wheat", seedCost: 5, growDurationSeconds: 30, sellValue: 12);
+
+            float progress = EstateState.GrowthProgress01(plot, wheat, nowUnixSeconds: 1000 + 999999);
+
+            Assert.AreEqual(1f, progress, 0.001f);
+        }
+
+        [Test]
         public void UnlockCost_FirstLockedPlot_Is100()
         {
             Assert.AreEqual(100, EstateState.UnlockCost(4));

@@ -81,6 +81,31 @@ namespace UnderstudyKingdom.Core
         }
 
         /// <summary>
+        /// Continuous 0..1 fraction toward the next growth transition, for
+        /// driving a live progress-bar fillAmount -- GrowthStage itself
+        /// stays the discrete 0/1/2 the rest of the codebase already
+        /// depends on. Same WateredAtUnixSeconds-based timing: 0 before
+        /// watering (nothing to show), clamped to 1 at/after
+        /// GrowDurationSeconds. Plain System.Math clamp, not
+        /// UnityEngine.Mathf -- this file stays free of the UnityEngine
+        /// dependency (see the class doc comment above).
+        /// </summary>
+        public static float GrowthProgress01(LandPlot plot, CropDefinition crop, long nowUnixSeconds)
+        {
+            if (plot.WateredAtUnixSeconds == 0)
+            {
+                return 0f;
+            }
+            long elapsed = nowUnixSeconds - plot.WateredAtUnixSeconds;
+            float fraction = elapsed / (float)crop.GrowDurationSeconds;
+            if (fraction < 0f)
+            {
+                return 0f;
+            }
+            return fraction > 1f ? 1f : fraction;
+        }
+
+        /// <summary>
         /// Geometric cost curve for locked plots (index 4-7), rounded to
         /// the nearest 10 and always shown before purchase -- see the
         /// design doc's "opaque expansion cost" differentiation note.
