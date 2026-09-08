@@ -161,6 +161,7 @@ namespace UnderstudyKingdom.UI
                 seedButtons[i].onClick.AddListener(() => OnSeedPicked(cropIndex));
             }
 
+            // null-safe until Task 7 wires these fields in CoreLoopSceneBuilder
             if (landTabButton != null)
             {
                 landTabButton.onClick.RemoveAllListeners();
@@ -483,6 +484,7 @@ namespace UnderstudyKingdom.UI
 
         private void SetActiveTab(bool land)
         {
+            // null-safe until Task 7 wires these fields in CoreLoopSceneBuilder
             if (landTabRoot != null)
             {
                 landTabRoot.SetActive(land);
@@ -570,6 +572,7 @@ namespace UnderstudyKingdom.UI
 
         private void RefreshInventoryAndShops()
         {
+            // null-safe until Task 7 wires these fields in CoreLoopSceneBuilder
             if (inventoryRows != null)
             {
                 for (int i = 0; i < inventoryRows.Length; i++)

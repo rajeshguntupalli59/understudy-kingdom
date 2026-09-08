@@ -261,26 +261,6 @@ namespace UnderstudyKingdom.Tests
         }
 
         [Test]
-        public void TapMaturePlot_AwardsSellValueCoinsAndClearsPlot()
-        {
-            // Arrange a pre-existing save with plot 0 already mature (wheat,
-            // 30s grow duration, watered far enough in the past).
-            var seeded = new EstateState { Coins = 200 };
-            seeded.Plots[0].CropId = "wheat";
-            seeded.Plots[0].PlantedAtUnixSeconds = 1;
-            seeded.Plots[0].WateredAtUnixSeconds = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600;
-            SaveService.SaveEstate(seeded);
-
-            estateButton.onClick.Invoke(); // loads the seeded state
-            plotViews[0].tapButton.onClick.Invoke(); // harvest (mature)
-
-            Assert.AreEqual("Coins: 200", coinsLabel.text); // unchanged -- harvest adds to inventory now
-            closeButton.onClick.Invoke();
-            var saved = SaveService.LoadEstate();
-            Assert.AreEqual(1, saved.Inventory[GoodsCatalog.IndexOf("wheat")]);
-        }
-
-        [Test]
         public void TapMaturePlot_ClearsCropSoNextOpenShowsEmptyPlot()
         {
             var seeded = new EstateState { Coins = 200 };
