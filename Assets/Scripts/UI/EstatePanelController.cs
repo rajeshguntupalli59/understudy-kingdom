@@ -23,6 +23,7 @@ namespace UnderstudyKingdom.UI
             public Button tapButton;
             public GameObject lockedOverlay;
             public TextMeshProUGUI lockCostLabel;
+            public Image progressBarImage;
         }
 
         [Serializable]
@@ -73,10 +74,69 @@ namespace UnderstudyKingdom.UI
 
         private EstateState state;
         private int pendingPlantPlotIndex = -1;
+        private readonly int[] lastKnownStage = new int[EstateState.PlotCount];
+        private int lastPoppedPlotIndex = -1;
 
         private void Start()
         {
             Bind();
+        }
+
+        private void Update()
+        {
+            if (!panelRoot.activeSelf)
+            {
+                return;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            for (int i = 0; i < EstateState.PlotCount; i++)
+            {
+                LandPlot plot = state.Plots[i];
+                Image bar = plotViews[i].progressBarImage;
+
+                if (!plot.Unlocked || string.IsNullOrEmpty(plot.CropId))
+                {
+                    if (bar != null)
+                    {
+                        bar.gameObject.SetActive(false);
+                    }
+                    continue;
+                }
+
+                CropDefinition? crop = CropCatalog.Find(plot.CropId);
+                if (crop == null)
+                {
+                    continue;
+                }
+
+                int stage = EstateState.GrowthStage(plot, crop.Value, now);
+                CheckStagePop(i, stage);
+
+                if (bar != null)
+                {
+                    bool showBar = plot.WateredAtUnixSeconds != 0 && stage < 2;
+                    bar.gameObject.SetActive(showBar);
+                    if (showBar)
+                    {
+                        bar.fillAmount = EstateState.GrowthProgress01(plot, crop.Value, now);
+                    }
+                }
+            }
+        }
+
+        // Extracted so tests can drive it directly with a controlled stage
+        // value via reflection, instead of needing real wall-clock time to
+        // cross a growth-stage boundary mid-test (crop durations are tens
+        // of real seconds -- too slow to wait out in a PlayMode test).
+        private void CheckStagePop(int plotIndex, int newStage)
+        {
+            if (newStage > lastKnownStage[plotIndex])
+            {
+                lastPoppedPlotIndex = plotIndex;
+                StartCoroutine(ScaleBounce(plotViews[plotIndex].stageImage.transform, 1.3f, 0.15f));
+            }
+            lastKnownStage[plotIndex] = newStage;
         }
 
         /// <summary>
@@ -339,6 +399,11 @@ namespace UnderstudyKingdom.UI
                     view.lockedOverlay.SetActive(true);
                     view.stageImage.gameObject.SetActive(false);
                     view.lockCostLabel.text = $"Unlock: {EstateState.UnlockCost(i)}";
+                    lastKnownStage[i] = 0;
+                    if (view.progressBarImage != null)
+                    {
+                        view.progressBarImage.gameObject.SetActive(false);
+                    }
                     continue;
                 }
 
@@ -348,6 +413,11 @@ namespace UnderstudyKingdom.UI
                 if (string.IsNullOrEmpty(plot.CropId))
                 {
                     view.stageImage.sprite = null;
+                    lastKnownStage[i] = 0;
+                    if (view.progressBarImage != null)
+                    {
+                        view.progressBarImage.gameObject.SetActive(false);
+                    }
                     continue;
                 }
 
@@ -360,6 +430,7 @@ namespace UnderstudyKingdom.UI
 
                 int stage = EstateState.GrowthStage(plot, crop.Value, now);
                 view.stageImage.sprite = GetStageSprite(cropIndex, stage);
+                lastKnownStage[i] = stage;
             }
 
             if (seedPickerRoot.activeSelf)

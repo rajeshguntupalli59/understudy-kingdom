@@ -1,7 +1,10 @@
 // Assets/Tests/PlayMode/EstatePanelControllerTests.cs
+using System.Collections;
 using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 using TMPro;
 using UnderstudyKingdom.Core;
@@ -63,13 +66,18 @@ namespace UnderstudyKingdom.Tests
                 stageObject.transform.SetParent(canvasObject.transform, false);
                 var lockedOverlay = new GameObject($"Plot{i}Locked");
                 lockedOverlay.transform.SetParent(canvasObject.transform, false);
+                var progressBarObject = new GameObject($"Plot{i}ProgressBar", typeof(Image));
+                progressBarObject.transform.SetParent(canvasObject.transform, false);
+                var progressBarImage = progressBarObject.GetComponent<Image>();
+                progressBarImage.type = Image.Type.Filled;
 
                 plotViews[i] = new EstatePanelController.PlotView
                 {
                     stageImage = stageObject.GetComponent<Image>(),
                     tapButton = CreateButton($"Plot{i}Button"),
                     lockedOverlay = lockedOverlay,
-                    lockCostLabel = CreateLabel($"Plot{i}LockCost")
+                    lockCostLabel = CreateLabel($"Plot{i}LockCost"),
+                    progressBarImage = progressBarImage
                 };
             }
 
@@ -290,6 +298,59 @@ namespace UnderstudyKingdom.Tests
             plotViews[0].tapButton.onClick.Invoke(); // should be a no-op harvest attempt
 
             Assert.AreEqual("Coins: 200", coinsLabel.text);
+        }
+
+        [UnityTest]
+        public IEnumerator PanelOpen_GrowingPlot_ProgressBarReflectsElapsedFraction()
+        {
+            var seeded = new EstateState { Coins = 200 };
+            seeded.Plots[0].CropId = "wheat";
+            seeded.Plots[0].PlantedAtUnixSeconds = 1;
+            seeded.Plots[0].WateredAtUnixSeconds = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 15; // half of wheat's 30s
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            yield return null; // let Update() run at least one tick
+
+            Assert.IsTrue(plotViews[0].progressBarImage.gameObject.activeSelf);
+            Assert.AreEqual(0.5f, plotViews[0].progressBarImage.fillAmount, 0.05f);
+        }
+
+        [Test]
+        public void EmptyPlot_ProgressBarStaysHidden()
+        {
+            estateButton.onClick.Invoke();
+
+            Assert.IsFalse(plotViews[0].progressBarImage.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void CheckStagePop_StageIncreased_SetsLastPoppedIndexAndUpdatesCache()
+        {
+            estateButton.onClick.Invoke(); // constructs the controller, syncs lastKnownStage via RefreshPlots
+
+            MethodInfo checkStagePop = typeof(EstatePanelController).GetMethod("CheckStagePop", BindingFlags.NonPublic | BindingFlags.Instance);
+            checkStagePop.Invoke(controller, new object[] { 0, 2 }); // plot 0 was stage 0 (empty), now claim stage 2
+
+            FieldInfo lastPoppedField = typeof(EstatePanelController).GetField("lastPoppedPlotIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo lastKnownField = typeof(EstatePanelController).GetField("lastKnownStage", BindingFlags.NonPublic | BindingFlags.Instance);
+            var lastKnownStage = (int[])lastKnownField.GetValue(controller);
+
+            Assert.AreEqual(0, (int)lastPoppedField.GetValue(controller));
+            Assert.AreEqual(2, lastKnownStage[0]);
+        }
+
+        [Test]
+        public void CheckStagePop_StageUnchanged_DoesNotSetLastPoppedIndex()
+        {
+            estateButton.onClick.Invoke();
+
+            MethodInfo checkStagePop = typeof(EstatePanelController).GetMethod("CheckStagePop", BindingFlags.NonPublic | BindingFlags.Instance);
+            FieldInfo lastPoppedField = typeof(EstatePanelController).GetField("lastPoppedPlotIndex", BindingFlags.NonPublic | BindingFlags.Instance);
+
+            checkStagePop.Invoke(controller, new object[] { 1, 0 }); // plot 1 already at stage 0, claim stage 0 again
+
+            Assert.AreEqual(-1, (int)lastPoppedField.GetValue(controller)); // default, never set
         }
 
         [Test]
