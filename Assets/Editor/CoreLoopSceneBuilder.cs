@@ -280,14 +280,157 @@ namespace UnderstudyKingdom.EditorTools
             customizeIconImage.sprite = LoadIconSprite("Assets/Art/ButtonIcons/customize.png");
             customizeIconImage.raycastTarget = false;
 
-            // Task 6 replaces this placeholder with the real Estate button;
-            // exists only so these controllers' estateButton field is never
-            // null before Task 6 lands (SetCoreLoopControlsInteractable
-            // dereferences it unconditionally, matching every other button
-            // in that method).
-            var estatePlaceholderButtonObject = new GameObject("EstatePlaceholderButton", typeof(Image), typeof(Button));
-            estatePlaceholderButtonObject.transform.SetParent(canvasObject.transform, false);
-            var estatePlaceholderButton = estatePlaceholderButtonObject.GetComponent<Button>();
+            var estateButtonObject = new GameObject("EstateButton", typeof(Image), typeof(Button));
+            estateButtonObject.transform.SetParent(canvasObject.transform, false);
+            var estateButtonRect = estateButtonObject.GetComponent<RectTransform>();
+            // Brief specified -420f, which exactly duplicates SubmitButton's
+            // position+size (line 112-113 above) and would fully overlap/block
+            // it -- continuing this list's established -60f decrement past
+            // customizeButton's -780f instead.
+            estateButtonRect.anchoredPosition = new Vector2(0f, -840f);
+            estateButtonRect.sizeDelta = new Vector2(220f, 44f);
+            estateButtonObject.GetComponent<Image>().color = new Color(0.35f, 0.55f, 0.3f, 1f);
+            var estateButton = estateButtonObject.GetComponent<Button>();
+            TextMeshProUGUI estateButtonLabel = CreateLabel(estateButtonObject.transform, "Text", 0f, "Estate");
+            var estateButtonLabelRect = estateButtonLabel.GetComponent<RectTransform>();
+            estateButtonLabelRect.anchorMin = Vector2.zero;
+            estateButtonLabelRect.anchorMax = Vector2.one;
+            estateButtonLabelRect.sizeDelta = Vector2.zero;
+            estateButtonLabelRect.anchoredPosition = Vector2.zero;
+
+            var estatePanelRootObject = new GameObject("EstatePanel", typeof(Image));
+            estatePanelRootObject.transform.SetParent(canvasObject.transform, false);
+            var estatePanelRect = estatePanelRootObject.GetComponent<RectTransform>();
+            estatePanelRect.anchoredPosition = Vector2.zero;
+            estatePanelRect.sizeDelta = new Vector2(700f, 800f);
+            estatePanelRootObject.GetComponent<Image>().color = new Color(0.1f, 0.15f, 0.1f, 0.95f);
+
+            var estateCloseButtonObject = new GameObject("CloseButton", typeof(Image), typeof(Button));
+            estateCloseButtonObject.transform.SetParent(estatePanelRootObject.transform, false);
+            var estateCloseButtonRect = estateCloseButtonObject.GetComponent<RectTransform>();
+            estateCloseButtonRect.anchoredPosition = new Vector2(310f, 360f);
+            estateCloseButtonRect.sizeDelta = new Vector2(60f, 40f);
+            estateCloseButtonObject.GetComponent<Image>().color = new Color(0.6f, 0.3f, 0.3f, 1f);
+            var estateCloseButton = estateCloseButtonObject.GetComponent<Button>();
+            TextMeshProUGUI estateCloseLabel = CreateLabel(estateCloseButtonObject.transform, "Text", 0f, "X");
+            var estateCloseLabelRect = estateCloseLabel.GetComponent<RectTransform>();
+            estateCloseLabelRect.anchorMin = Vector2.zero;
+            estateCloseLabelRect.anchorMax = Vector2.one;
+            estateCloseLabelRect.sizeDelta = Vector2.zero;
+            estateCloseLabelRect.anchoredPosition = Vector2.zero;
+
+            TextMeshProUGUI estateTitleLabel = CreateLabel(estatePanelRootObject.transform, "Title", 0f, "Your Estate");
+            estateTitleLabel.fontSize = 28f;
+            estateTitleLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 340f);
+
+            TextMeshProUGUI estateCoinsLabel = CreateLabel(estatePanelRootObject.transform, "CoinsLabel", 0f, "Coins: 200");
+            estateCoinsLabel.fontSize = 24f;
+            estateCoinsLabel.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, 295f);
+
+            var estatePlotViews = new EstatePanelController.PlotView[8];
+            for (int i = 0; i < 8; i++)
+            {
+                int column = i % 4;
+                int row = i / 4;
+                float plotX = -300f + column * 200f;
+                float plotY = 180f - row * 220f;
+
+                var slotBackgroundObject = new GameObject($"Plot{i}", typeof(Image));
+                slotBackgroundObject.transform.SetParent(estatePanelRootObject.transform, false);
+                var slotBackgroundRect = slotBackgroundObject.GetComponent<RectTransform>();
+                slotBackgroundRect.anchoredPosition = new Vector2(plotX, plotY);
+                slotBackgroundRect.sizeDelta = new Vector2(160f, 160f);
+                slotBackgroundObject.GetComponent<Image>().color = new Color(0.25f, 0.2f, 0.1f, 1f);
+
+                var stageObject = new GameObject("Stage", typeof(Image));
+                stageObject.transform.SetParent(slotBackgroundObject.transform, false);
+                var stageRect = stageObject.GetComponent<RectTransform>();
+                stageRect.anchoredPosition = Vector2.zero;
+                stageRect.sizeDelta = new Vector2(120f, 120f);
+                var stageImage = stageObject.GetComponent<Image>();
+                stageImage.raycastTarget = false;
+
+                var tapButtonObject = new GameObject("TapButton", typeof(Image), typeof(Button));
+                tapButtonObject.transform.SetParent(slotBackgroundObject.transform, false);
+                var tapButtonRect = tapButtonObject.GetComponent<RectTransform>();
+                tapButtonRect.anchorMin = Vector2.zero;
+                tapButtonRect.anchorMax = Vector2.one;
+                tapButtonRect.sizeDelta = Vector2.zero;
+                tapButtonRect.anchoredPosition = Vector2.zero;
+                tapButtonObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+                var tapButton = tapButtonObject.GetComponent<Button>();
+
+                var lockedOverlayObject = new GameObject("LockedOverlay", typeof(Image));
+                lockedOverlayObject.transform.SetParent(slotBackgroundObject.transform, false);
+                var lockedOverlayRect = lockedOverlayObject.GetComponent<RectTransform>();
+                lockedOverlayRect.anchorMin = Vector2.zero;
+                lockedOverlayRect.anchorMax = Vector2.one;
+                lockedOverlayRect.sizeDelta = Vector2.zero;
+                lockedOverlayRect.anchoredPosition = Vector2.zero;
+                lockedOverlayObject.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
+                lockedOverlayObject.transform.SetAsLastSibling();
+
+                TextMeshProUGUI lockCostLabel = CreateLabel(lockedOverlayObject.transform, "LockCost", 0f, "Unlock: 0");
+                lockCostLabel.fontSize = 18f;
+
+                estatePlotViews[i] = new EstatePanelController.PlotView
+                {
+                    stageImage = stageImage,
+                    tapButton = tapButton,
+                    lockedOverlay = lockedOverlayObject,
+                    lockCostLabel = lockCostLabel
+                };
+            }
+
+            var estateSeedPickerObject = new GameObject("SeedPicker", typeof(Image));
+            estateSeedPickerObject.transform.SetParent(estatePanelRootObject.transform, false);
+            var estateSeedPickerRect = estateSeedPickerObject.GetComponent<RectTransform>();
+            estateSeedPickerRect.anchoredPosition = new Vector2(0f, -280f);
+            estateSeedPickerRect.sizeDelta = new Vector2(640f, 120f);
+            estateSeedPickerObject.GetComponent<Image>().color = new Color(0.05f, 0.08f, 0.05f, 0.98f);
+
+            var estateSeedButtons = new Button[3];
+            var estateSeedCostLabels = new TextMeshProUGUI[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var seedButtonObject = new GameObject($"SeedButton{i}", typeof(Image), typeof(Button));
+                seedButtonObject.transform.SetParent(estateSeedPickerObject.transform, false);
+                var seedButtonRect = seedButtonObject.GetComponent<RectTransform>();
+                seedButtonRect.anchoredPosition = new Vector2(-200f + i * 200f, 0f);
+                seedButtonRect.sizeDelta = new Vector2(180f, 60f);
+                seedButtonObject.GetComponent<Image>().color = new Color(0.3f, 0.5f, 0.3f, 1f);
+                estateSeedButtons[i] = seedButtonObject.GetComponent<Button>();
+
+                TextMeshProUGUI seedCostLabel = CreateLabel(seedButtonObject.transform, "Text", 0f, string.Empty);
+                var seedCostLabelRect = seedCostLabel.GetComponent<RectTransform>();
+                seedCostLabelRect.anchorMin = Vector2.zero;
+                seedCostLabelRect.anchorMax = Vector2.one;
+                seedCostLabelRect.sizeDelta = Vector2.zero;
+                seedCostLabelRect.anchoredPosition = Vector2.zero;
+                estateSeedCostLabels[i] = seedCostLabel;
+            }
+            estateSeedPickerObject.SetActive(false);
+
+            // 3 crops x 3 stages, flat -- index = cropIndex * 3 + stage,
+            // matching EstatePanelController.GetStageSprite's indexing.
+            var estateCropStageSprites = new Sprite[9];
+            string[] estateCropIds = { "wheat", "carrot", "pumpkin" };
+            string[] estateStageNames = { "sprout", "growing", "mature" };
+            for (int cropIndex = 0; cropIndex < estateCropIds.Length; cropIndex++)
+            {
+                for (int stage = 0; stage < estateStageNames.Length; stage++)
+                {
+                    string path = $"Assets/Art/Crops/{estateCropIds[cropIndex]}_{estateStageNames[stage]}.png";
+                    estateCropStageSprites[cropIndex * 3 + stage] = LoadIconSprite(path);
+                }
+            }
+
+            var estateControllerObject = new GameObject("EstatePanelController");
+            var estateController = estateControllerObject.AddComponent<EstatePanelController>();
+            estateController.Initialize(estateButton, estatePanelRootObject, estateCloseButton, estateCoinsLabel,
+                estatePlotViews, estateSeedPickerObject, estateSeedButtons, estateSeedCostLabels, estateCropStageSprites,
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton,
+                eventsButton, customizeButton, duelModalGate);
 
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -378,7 +521,7 @@ namespace UnderstudyKingdom.EditorTools
             eventController.Initialize(eventsButton, eventPanelRootObject, eventCloseButton, eventNameLabel, eventNarrationLabel,
                 eventProgressLabel, eventStatusMessageText, claimButton, backendCoordinator, manager, controller,
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, customizeButton, duelModalGate,
-                eventsIconImage, claimIconImage, estatePlaceholderButton);
+                eventsIconImage, claimIconImage, estateButton);
 
             var councilPanelRootObject = new GameObject("CouncilPanel", typeof(Image));
             councilPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -526,7 +669,7 @@ namespace UnderstudyKingdom.EditorTools
                 nameInputField, createButton, joinCodeInputField, joinButton, councilStatusMessageText,
                 councilNameLabel, councilJoinCodeLabel, councilMemberCountLabel, councilProgressLabel, councilRewardStatusLabel,
                 backendCoordinator, manager, controller,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage, estatePlaceholderButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, eventsButton, customizeButton, duelModalGate, councilIconImage, createIconImage, joinIconImage, estateButton);
 
             var panelRootObject = new GameObject("HistoryPanel", typeof(Image));
             panelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -584,7 +727,7 @@ namespace UnderstudyKingdom.EditorTools
             var historyControllerObject = new GameObject("HistoryPanelController");
             var historyController = historyControllerObject.AddComponent<HistoryPanelController>();
             historyController.Initialize(viewHistoryButton, panelRootObject, closeButton, rowTexts, backendCoordinator,
-                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage, estatePlaceholderButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, councilButton, eventsButton, customizeButton, duelModalGate, viewHistoryIconImage, estateButton);
 
             var tutorialOverlayObject = new GameObject("TutorialOverlay", typeof(Image));
             tutorialOverlayObject.transform.SetParent(canvasObject.transform, false);
@@ -663,7 +806,7 @@ namespace UnderstudyKingdom.EditorTools
             var tutorialController = tutorialControllerObject.AddComponent<TutorialOverlayController>();
             tutorialController.Initialize(tutorialOverlayObject, tutorialStepIndicatorLabel, tutorialTitleLabel, tutorialBodyLabel,
                 tutorialNextButton, tutorialNextButtonLabel, tutorialSkipButton, manager,
-                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage, estatePlaceholderButton);
+                armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, customizeButton, tutorialSkipIconImage, estateButton);
 
             var cosmeticsPanelRootObject = new GameObject("CosmeticsPanel", typeof(Image));
             cosmeticsPanelRootObject.transform.SetParent(canvasObject.transform, false);
@@ -730,7 +873,7 @@ namespace UnderstudyKingdom.EditorTools
                 manager, armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton, eventsButton, duelModalGate,
                 sceneBackgroundImage, backgroundSprites,
                 historyPanelSprites, councilPanelSprites, eventPanelSprites,
-                historyArtImage, councilArtImage, eventArtImage, customizeIconImage, estatePlaceholderButton);
+                historyArtImage, councilArtImage, eventArtImage, customizeIconImage, estateButton);
 
             canvasObject.GetComponent<RectTransform>().localScale = Vector3.one;
 
@@ -1109,6 +1252,17 @@ namespace UnderstudyKingdom.EditorTools
             }
             if (!VerifyIconField(councilPanelController, "joinIcon"))
             {
+                if (Application.isBatchMode)
+                {
+                    EditorApplication.Exit(1);
+                }
+                return;
+            }
+
+            var estatePanelController = Object.FindFirstObjectByType<EstatePanelController>();
+            if (estatePanelController == null)
+            {
+                Debug.LogError("CoreLoopSceneBuilder.Verify: no EstatePanelController found in the scene.");
                 if (Application.isBatchMode)
                 {
                     EditorApplication.Exit(1);
