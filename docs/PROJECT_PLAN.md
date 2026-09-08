@@ -913,6 +913,73 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     Seller), Phase 5 (Integration), remaining crop art, and the new
     real-feel-animation follow-up phase are all not started.
 
+- **Milestone #18 — Estate Crop Animation (real-feel plant/water/grow/harvest)**
+  (branch `feat/estate-crop-animation`, merged `b9395a0`, fast-forward).
+  First concrete application of the real-feel directive from Milestone #17
+  -- see `docs/superpowers/specs/2026-09-08-estate-real-feel-vision.md`
+  (shared design philosophy, still conceptual for shops/animals) and
+  `docs/superpowers/specs/2026-09-08-estate-crop-animation-design.md`
+  (this milestone's buildable spec).
+  - Ships: a live growth progress bar per plot (new `EstateState.
+    GrowthProgress01` pure helper drives a `fillAmount`-based UI bar via a
+    new panel-visibility-gated `Update()` loop) with a stage-change "pop"
+    animation that fires only for growth the player actually watches
+    happen live, never for growth discovered on reopen; real plant
+    (seed-drop) and water (droplet) animations, both null-safe against
+    missing art; and a fix for a real pre-existing bug -- `HarvestFly` had
+    been flying the harvested sprite to the stale `coinsLabel` position
+    ever since Milestone #17 changed harvest to fill Inventory instead of
+    awarding coins directly, unnoticed until this pass. 2 new generic
+    sprites (`seed.png`, `water_droplet.png`) generated via the
+    established Hugging Face pipeline, both landing this session with no
+    credit-cap partial-batch this time.
+  - Built via `understudy-kingdom:subagent-driven-development` across 7
+    tasks, all individually reviewed clean (0 Critical at any task; two
+    disclosed implementer deviations -- a `RefreshPlots()` visibility fix
+    Task 2's own brief snippet had missed, and 3 Unity-auto-generated
+    `.meta` files Task 6 had to include since the controller's own direct
+    (non-Editor) art generation in Task 5 hadn't produced them -- both
+    independently investigated and confirmed correct by their task
+    reviewers before landing).
+  - **Final whole-branch review caught a real bug every task-level review
+    missed, again**: the growth progress bar's `Image` was `Type.Filled`
+    with no `Sprite` ever assigned -- Unity silently ignores `fillAmount`
+    without a sprite and renders a constant full bar, so the milestone's
+    entire headline feature never actually worked on screen. Every test
+    passed throughout because they asserted the `fillAmount` *property*
+    (which the setter always stores correctly), never the rendered mesh --
+    the exact "code path checked, rendered result never checked" gap this
+    project's two prior final-review-only catches (Milestone #16's
+    off-canvas button, Milestone #17's tab-button/plot overlap) both also
+    came from. Same review also found the bar's `raycastTarget` was left
+    at its Unity default (`true`) and sat on top of the full-tile
+    `TapButton` in a 140x10 raycast-blocking strip -- harmless only by
+    coincidence of the bar's visibility window matching `OnPlotTapped`'s
+    own no-op window, not by design. A third finding -- the seed-drop and
+    sprout-bounce animations firing simultaneously instead of sequentially
+    -- was traced back to the *plan's* own Task 3 code rather than an
+    implementer deviation; presented to the user as a plan-mandated
+    decision (per this project's `subagent-driven-development` skill) and
+    fixed at the user's explicit choice. First final-review attempt was
+    dispatched on the most capable model but hit a session-wide rate
+    limit mid-task with no report produced -- same recovery pattern as
+    Milestone #17, clean re-dispatch on the standard model, no work lost.
+    All fixes re-verified independently against the real committed scene
+    YAML (not just the builder script's intent) by both the fix's own
+    reviewer and the controller directly; the scene-level regression test
+    was also hardened with 3 new assertions (sprite non-null,
+    `raycastTarget` false, type Filled) so a future rebuild can't
+    silently reintroduce any of this. One PlayMode run hit an unrelated
+    flaky real-network-timeout failure in Council code this branch never
+    touches -- confirmed pre-existing (not a regression) via a clean
+    retry and two further independent controller reruns, one on the fix
+    commit and one on the merged `main`. Merged after four independent,
+    controller-run full-suite passes across the fix/pre-merge/post-merge
+    sequence, all green: EditMode 134/134, PlayMode 112/112.
+  - Shops-on-land + land expansion, and animal care animation (Phase 2,
+    not yet built at all) remain conceptual-only per the vision doc --
+    each gets its own brainstorm/spec/plan when that phase starts.
+
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
 for the duration of active development.
