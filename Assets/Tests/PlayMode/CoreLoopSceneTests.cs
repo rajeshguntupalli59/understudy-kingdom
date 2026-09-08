@@ -518,6 +518,29 @@ namespace UnderstudyKingdom.Tests
             }
         }
 
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_EstatePlots_HaveProgressBarChild()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button estateButton = FindButton(canvas, "EstateButton");
+            Assert.IsNotNull(estateButton, "EstateButton not found in the loaded CoreLoop scene.");
+            estateButton.onClick.Invoke();
+
+            for (int i = 0; i < 4; i++)
+            {
+                GameObject plot = FindChildByName(canvas.transform, $"Plot{i}");
+                Assert.IsNotNull(plot, $"Plot{i} not found in the loaded CoreLoop scene.");
+
+                GameObject progressBar = FindChildByName(plot.transform, "ProgressBar");
+                Assert.IsNotNull(progressBar, $"Plot{i} is missing its ProgressBar child.");
+            }
+        }
+
         private static Button FindButton(Canvas canvas, string name)
         {
             foreach (Button candidate in canvas.GetComponentsInChildren<Button>(true))
