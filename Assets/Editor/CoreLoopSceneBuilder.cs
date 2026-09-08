@@ -402,12 +402,24 @@ namespace UnderstudyKingdom.EditorTools
                 TextMeshProUGUI lockCostLabel = CreateLabel(lockedOverlayObject.transform, "LockCost", 0f, "Unlock: 0");
                 lockCostLabel.fontSize = 18f;
 
+                var progressBarObject = new GameObject("ProgressBar", typeof(Image));
+                progressBarObject.transform.SetParent(slotBackgroundObject.transform, false);
+                var progressBarRect = progressBarObject.GetComponent<RectTransform>();
+                progressBarRect.anchoredPosition = new Vector2(0f, -72f);
+                progressBarRect.sizeDelta = new Vector2(140f, 10f);
+                var progressBarImage = progressBarObject.GetComponent<Image>();
+                progressBarImage.type = Image.Type.Filled;
+                progressBarImage.fillMethod = Image.FillMethod.Horizontal;
+                progressBarImage.color = new Color(0.4f, 0.8f, 0.4f, 1f);
+                progressBarObject.SetActive(false);
+
                 estatePlotViews[i] = new EstatePanelController.PlotView
                 {
                     stageImage = stageImage,
                     tapButton = tapButton,
                     lockedOverlay = lockedOverlayObject,
-                    lockCostLabel = lockCostLabel
+                    lockCostLabel = lockCostLabel,
+                    progressBarImage = progressBarImage
                 };
             }
 
@@ -564,6 +576,28 @@ namespace UnderstudyKingdom.EditorTools
                 }
             }
 
+            // seed.png/water_droplet.png are a separate, later-generated art
+            // pass (same established pattern as Assets/Art/Crops) -- guard
+            // the directory the same way, to avoid a noisy per-file
+            // LoadIconSprite error when the folder itself doesn't exist yet.
+            Sprite estateSeedSprite = null;
+            Sprite estateWaterDropletSprite = null;
+            if (!System.IO.Directory.Exists("Assets/Art/Estate"))
+            {
+                Debug.LogWarning("CoreLoopSceneBuilder: Assets/Art/Estate does not exist yet -- seed/water-droplet animation sprites will be null until art is generated (see docs/superpowers/specs/2026-09-08-estate-crop-animation-design.md).");
+            }
+            else
+            {
+                if (System.IO.File.Exists("Assets/Art/Estate/seed.png"))
+                {
+                    estateSeedSprite = LoadIconSprite("Assets/Art/Estate/seed.png");
+                }
+                if (System.IO.File.Exists("Assets/Art/Estate/water_droplet.png"))
+                {
+                    estateWaterDropletSprite = LoadIconSprite("Assets/Art/Estate/water_droplet.png");
+                }
+            }
+
             var estateLandTabButtonObject = new GameObject("LandTabButton", typeof(Image), typeof(Button));
             estateLandTabButtonObject.transform.SetParent(estatePanelRootObject.transform, false);
             var estateLandTabButtonRect = estateLandTabButtonObject.GetComponent<RectTransform>();
@@ -600,7 +634,7 @@ namespace UnderstudyKingdom.EditorTools
                 eventsButton, customizeButton, duelModalGate,
                 estateLandTabButton, estateShopsTabButton, estateLandTabRootObject, estateShopsTabRootObject,
                 estateInventoryRows, estateShopRows,
-                null, null); // seed/water-droplet sprites wired once art is generated -- see Task 6
+                estateSeedSprite, estateWaterDropletSprite);
 
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);
