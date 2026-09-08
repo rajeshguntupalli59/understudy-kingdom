@@ -485,6 +485,39 @@ namespace UnderstudyKingdom.Tests
             }
         }
 
+        [UnityTest]
+        public IEnumerator LoadedCoreLoopScene_EstateShopsTab_ShowsAllThreeShopsLocked()
+        {
+            yield return SceneManager.LoadSceneAsync("CoreLoop");
+            yield return null;
+
+            var canvas = Object.FindFirstObjectByType<Canvas>();
+            Assert.IsNotNull(canvas, "Canvas not found in the loaded CoreLoop scene.");
+
+            Button estateButton = FindButton(canvas, "EstateButton");
+            Assert.IsNotNull(estateButton, "EstateButton not found in the loaded CoreLoop scene.");
+            estateButton.onClick.Invoke();
+
+            Button shopsTabButton = FindButton(canvas, "ShopsTabButton");
+            Assert.IsNotNull(shopsTabButton, "ShopsTabButton not found in the loaded CoreLoop scene.");
+            shopsTabButton.onClick.Invoke();
+
+            GameObject shopsTabRoot = FindChildByName(canvas.transform, "ShopsTabRoot");
+            Assert.IsNotNull(shopsTabRoot, "ShopsTabRoot not found in the loaded CoreLoop scene.");
+            Assert.IsTrue(shopsTabRoot.activeSelf, "Expected ShopsTabRoot to become active after ShopsTabButton is clicked.");
+
+            GameObject landTabRoot = FindChildByName(canvas.transform, "LandTabRoot");
+            Assert.IsNotNull(landTabRoot, "LandTabRoot not found in the loaded CoreLoop scene.");
+            Assert.IsFalse(landTabRoot.activeSelf, "Expected LandTabRoot to become inactive after switching to the Shops tab.");
+
+            string[] shopRowNames = { "ShopRow_bakery", "ShopRow_kitchen", "ShopRow_pie_house" };
+            foreach (string rowName in shopRowNames)
+            {
+                GameObject row = FindChildByName(shopsTabRoot.transform, rowName);
+                Assert.IsNotNull(row, $"{rowName} not found under ShopsTabRoot.");
+            }
+        }
+
         private static Button FindButton(Canvas canvas, string name)
         {
             foreach (Button candidate in canvas.GetComponentsInChildren<Button>(true))
