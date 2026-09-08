@@ -142,7 +142,8 @@ namespace UnderstudyKingdom.Tests
                 plotViews, seedPickerRoot, seedButtons, seedCostLabels, new Sprite[9],
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton,
                 viewHistoryButton, councilButton, eventsButton, customizeButton, gate,
-                landTabButton, shopsTabButton, landTabRoot, shopsTabRoot, inventoryRows, shopRows);
+                landTabButton, shopsTabButton, landTabRoot, shopsTabRoot, inventoryRows, shopRows,
+                null, null);
         }
 
         [TearDown]
@@ -351,6 +352,26 @@ namespace UnderstudyKingdom.Tests
             checkStagePop.Invoke(controller, new object[] { 1, 0 }); // plot 1 already at stage 0, claim stage 0 again
 
             Assert.AreEqual(-1, (int)lastPoppedField.GetValue(controller)); // default, never set
+        }
+
+        [Test]
+        public void PlantAndWaterPlot_WithNoSeedOrDropletArtGenerated_StillUpdatesStateWithoutThrowing()
+        {
+            // seedSprite/waterDropletSprite are null in this shared SetUp
+            // (matches a real project state before Assets/Art/Estate/
+            // {seed,water_droplet}.png are generated) -- the new SeedDrop/
+            // WaterDroplet coroutines must both no-op their visual and let
+            // the underlying plant/water state changes through untouched.
+            estateButton.onClick.Invoke();
+            plotViews[0].tapButton.onClick.Invoke();
+
+            Assert.DoesNotThrow(() => seedButtons[0].onClick.Invoke()); // plant wheat
+            Assert.DoesNotThrow(() => plotViews[0].tapButton.onClick.Invoke()); // water it
+
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.AreEqual("wheat", saved.Plots[0].CropId);
+            Assert.AreNotEqual(0, saved.Plots[0].WateredAtUnixSeconds);
         }
 
         [Test]

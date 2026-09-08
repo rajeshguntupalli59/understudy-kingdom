@@ -599,7 +599,8 @@ namespace UnderstudyKingdom.EditorTools
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton,
                 eventsButton, customizeButton, duelModalGate,
                 estateLandTabButton, estateShopsTabButton, estateLandTabRootObject, estateShopsTabRootObject,
-                estateInventoryRows, estateShopRows);
+                estateInventoryRows, estateShopRows,
+                null, null); // seed/water-droplet sprites wired once art is generated -- see Task 6
 
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);

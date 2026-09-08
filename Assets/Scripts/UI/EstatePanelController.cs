@@ -71,6 +71,8 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private GameObject shopsTabRoot;
         [SerializeField] private InventoryRowView[] inventoryRows;
         [SerializeField] private ShopRowView[] shopRows;
+        [SerializeField] private Sprite seedSprite;
+        [SerializeField] private Sprite waterDropletSprite;
 
         private EstateState state;
         private int pendingPlantPlotIndex = -1;
@@ -169,7 +171,9 @@ namespace UnderstudyKingdom.UI
             GameObject landTabRoot,
             GameObject shopsTabRoot,
             InventoryRowView[] inventoryRows,
-            ShopRowView[] shopRows)
+            ShopRowView[] shopRows,
+            Sprite seedSprite,
+            Sprite waterDropletSprite)
         {
             this.estateButton = estateButton;
             this.panelRoot = panelRoot;
@@ -196,6 +200,8 @@ namespace UnderstudyKingdom.UI
             this.shopsTabRoot = shopsTabRoot;
             this.inventoryRows = inventoryRows;
             this.shopRows = shopRows;
+            this.seedSprite = seedSprite;
+            this.waterDropletSprite = waterDropletSprite;
 
             Bind();
         }
@@ -308,7 +314,7 @@ namespace UnderstudyKingdom.UI
             if (plot.WateredAtUnixSeconds == 0)
             {
                 plot.WateredAtUnixSeconds = now;
-                StartCoroutine(ColorFlash(plotViews[plotIndex].stageImage, new Color(0.4f, 0.7f, 1f), 0.2f));
+                StartCoroutine(WaterDroplet(plotViews[plotIndex].stageImage.transform.parent));
                 RefreshPlots();
                 SaveService.SaveEstate(state);
                 return;
@@ -380,6 +386,7 @@ namespace UnderstudyKingdom.UI
             seedPickerRoot.SetActive(false);
             pendingPlantPlotIndex = -1;
             RefreshPlots();
+            StartCoroutine(SeedDrop(plotViews[plantedPlotIndex].stageImage.transform.parent));
             StartCoroutine(ScaleBounce(plotViews[plantedPlotIndex].stageImage.transform, 1.3f, 0.15f));
             SaveService.SaveEstate(state);
         }
@@ -551,6 +558,73 @@ namespace UnderstudyKingdom.UI
             }
 
             Destroy(flyer);
+        }
+
+        // Spawns a temporary seed sprite over the plot that scales down to
+        // nothing ("settling into the soil") before the existing sprout
+        // ScaleBounce plays -- degrades gracefully (no visual, no error)
+        // if seed art hasn't been generated yet, matching GetStageSprite's
+        // own null-tolerant precedent.
+        private IEnumerator SeedDrop(Transform slotTransform)
+        {
+            if (seedSprite == null)
+            {
+                yield break;
+            }
+
+            var seed = new GameObject("SeedDrop", typeof(Image));
+            seed.transform.SetParent(slotTransform, false);
+            var seedImage = seed.GetComponent<Image>();
+            seedImage.sprite = seedSprite;
+            seedImage.raycastTarget = false;
+            var seedRect = seed.GetComponent<RectTransform>();
+            seedRect.anchoredPosition = Vector2.zero;
+            seedRect.sizeDelta = new Vector2(60f, 60f);
+
+            const float duration = 0.25f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float scale = 1f - (t / duration);
+                seed.transform.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+
+            Destroy(seed);
+        }
+
+        // Same spawn-temp-object-then-destroy technique as HarvestFly/
+        // SeedDrop -- falls from just above the plot onto it, fading out.
+        private IEnumerator WaterDroplet(Transform slotTransform)
+        {
+            if (waterDropletSprite == null)
+            {
+                yield break;
+            }
+
+            var droplet = new GameObject("WaterDroplet", typeof(Image));
+            droplet.transform.SetParent(slotTransform, false);
+            var dropletImage = droplet.GetComponent<Image>();
+            dropletImage.sprite = waterDropletSprite;
+            dropletImage.raycastTarget = false;
+            var dropletRect = droplet.GetComponent<RectTransform>();
+            dropletRect.sizeDelta = new Vector2(40f, 40f);
+            Vector2 start = new Vector2(0f, 60f);
+            Vector2 end = Vector2.zero;
+
+            const float duration = 0.35f;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float progress = t / duration;
+                dropletRect.anchoredPosition = Vector2.Lerp(start, end, progress);
+                dropletImage.color = new Color(1f, 1f, 1f, 1f - progress);
+                yield return null;
+            }
+
+            Destroy(droplet);
         }
 
         private void SetActiveTab(bool land)
