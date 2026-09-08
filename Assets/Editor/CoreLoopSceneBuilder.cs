@@ -466,7 +466,7 @@ namespace UnderstudyKingdom.EditorTools
             estateController.Initialize(estateButton, estatePanelRootObject, estateCloseButton, estateCoinsLabel,
                 estatePlotViews, estateSeedPickerObject, estateSeedButtons, estateSeedCostLabels, estateCropStageSprites,
                 armySlider, tradeSlider, religionSlider, button, duelButton, viewHistoryButton, councilButton,
-                eventsButton, customizeButton, duelModalGate);
+                eventsButton, customizeButton, duelModalGate, null, null, null, null, null, null);
 
             var eventPanelRootObject = new GameObject("EventPanel", typeof(Image));
             eventPanelRootObject.transform.SetParent(canvasObject.transform, false);

@@ -33,6 +33,12 @@ namespace UnderstudyKingdom.Tests
         private Button customizeButton;
         private GameObject gateObject;
         private DuelModalGate gate;
+        private Button landTabButton;
+        private Button shopsTabButton;
+        private GameObject landTabRoot;
+        private GameObject shopsTabRoot;
+        private EstatePanelController.InventoryRowView[] inventoryRows;
+        private EstatePanelController.ShopRowView[] shopRows;
 
         [SetUp]
         public void SetUp()
@@ -90,12 +96,45 @@ namespace UnderstudyKingdom.Tests
             gateObject = new GameObject("DuelModalGate");
             gate = gateObject.AddComponent<DuelModalGate>();
 
+            landTabButton = CreateButton("LandTabButton");
+            shopsTabButton = CreateButton("ShopsTabButton");
+            landTabRoot = new GameObject("LandTabRoot");
+            landTabRoot.transform.SetParent(canvasObject.transform, false);
+            shopsTabRoot = new GameObject("ShopsTabRoot");
+            shopsTabRoot.transform.SetParent(canvasObject.transform, false);
+
+            inventoryRows = new EstatePanelController.InventoryRowView[GoodsCatalog.Count];
+            for (int i = 0; i < inventoryRows.Length; i++)
+            {
+                var rowRoot = new GameObject($"InventoryRow{i}");
+                rowRoot.transform.SetParent(canvasObject.transform, false);
+                inventoryRows[i] = new EstatePanelController.InventoryRowView
+                {
+                    root = rowRoot,
+                    label = CreateLabel($"InventoryLabel{i}"),
+                    sellButton = CreateButton($"SellButton{i}")
+                };
+            }
+
+            shopRows = new EstatePanelController.ShopRowView[ShopCatalog.All.Length];
+            for (int i = 0; i < shopRows.Length; i++)
+            {
+                var actionButton = CreateButton($"ShopActionButton{i}");
+                shopRows[i] = new EstatePanelController.ShopRowView
+                {
+                    statusLabel = CreateLabel($"ShopStatusLabel{i}"),
+                    actionButton = actionButton,
+                    actionButtonLabel = CreateLabel($"ShopActionLabel{i}")
+                };
+            }
+
             controllerObject = new GameObject("Controller");
             controller = controllerObject.AddComponent<EstatePanelController>();
             controller.Initialize(estateButton, panelRootObject, closeButton, coinsLabel,
                 plotViews, seedPickerRoot, seedButtons, seedCostLabels, new Sprite[9],
                 armySlider, tradeSlider, religionSlider, submitButton, challengeButton,
-                viewHistoryButton, councilButton, eventsButton, customizeButton, gate);
+                viewHistoryButton, councilButton, eventsButton, customizeButton, gate,
+                landTabButton, shopsTabButton, landTabRoot, shopsTabRoot, inventoryRows, shopRows);
         }
 
         [TearDown]
@@ -235,7 +274,10 @@ namespace UnderstudyKingdom.Tests
             estateButton.onClick.Invoke(); // loads the seeded state
             plotViews[0].tapButton.onClick.Invoke(); // harvest (mature)
 
-            Assert.AreEqual("Coins: 212", coinsLabel.text); // 200 + 12 (wheat SellValue)
+            Assert.AreEqual("Coins: 200", coinsLabel.text); // unchanged -- harvest adds to inventory now
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.AreEqual(1, saved.Inventory[GoodsCatalog.IndexOf("wheat")]);
         }
 
         [Test]
@@ -304,6 +346,126 @@ namespace UnderstudyKingdom.Tests
             var saved = SaveService.LoadEstate();
             Assert.AreEqual(100, saved.Coins);
             Assert.IsTrue(saved.Plots[4].Unlocked);
+        }
+
+        [Test]
+        public void EstateButton_OnOpen_DefaultsToLandTab()
+        {
+            estateButton.onClick.Invoke();
+
+            Assert.IsTrue(landTabRoot.activeSelf);
+            Assert.IsFalse(shopsTabRoot.activeSelf);
+        }
+
+        [Test]
+        public void TapShopsTab_ShowsShopsTabHidesLandTab()
+        {
+            estateButton.onClick.Invoke();
+
+            shopsTabButton.onClick.Invoke();
+
+            Assert.IsFalse(landTabRoot.activeSelf);
+            Assert.IsTrue(shopsTabRoot.activeSelf);
+        }
+
+        [Test]
+        public void TapLandTabAfterShops_ShowsLandTabAgain()
+        {
+            estateButton.onClick.Invoke();
+            shopsTabButton.onClick.Invoke();
+
+            landTabButton.onClick.Invoke();
+
+            Assert.IsTrue(landTabRoot.activeSelf);
+            Assert.IsFalse(shopsTabRoot.activeSelf);
+        }
+
+        [Test]
+        public void HarvestMaturePlot_AddsToInventoryInsteadOfCoins()
+        {
+            var seeded = new EstateState { Coins = 200 };
+            seeded.Plots[0].CropId = "wheat";
+            seeded.Plots[0].PlantedAtUnixSeconds = 1;
+            seeded.Plots[0].WateredAtUnixSeconds = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600;
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            plotViews[0].tapButton.onClick.Invoke(); // harvest
+
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.AreEqual(200, saved.Coins); // unchanged -- no auto-sell
+            Assert.AreEqual(1, saved.Inventory[GoodsCatalog.IndexOf("wheat")]);
+        }
+
+        [Test]
+        public void SellInventoryStack_AwardsCoinsForWholeStackAndZeroesCount()
+        {
+            var seeded = new EstateState { Coins = 100 };
+            seeded.Inventory[GoodsCatalog.IndexOf("wheat")] = 4; // 4 x 12 = 48
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            int wheatIndex = GoodsCatalog.IndexOf("wheat");
+            inventoryRows[wheatIndex].sellButton.onClick.Invoke();
+
+            Assert.AreEqual("Coins: 148", coinsLabel.text);
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.AreEqual(0, saved.Inventory[wheatIndex]);
+        }
+
+        [Test]
+        public void UnlockShop_WithEnoughCoins_DeductsUnlockCostAndUnlocks()
+        {
+            var seeded = new EstateState { Coins = 200 }; // bakery costs 150
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            shopsTabButton.onClick.Invoke();
+            shopRows[0].actionButton.onClick.Invoke(); // bakery unlock
+
+            Assert.AreEqual("Coins: 50", coinsLabel.text);
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.IsTrue(saved.Shops[0].Unlocked);
+        }
+
+        [Test]
+        public void StartProduction_WithInputAndCoins_DeductsBothAndStartsTimer()
+        {
+            var seeded = new EstateState { Coins = 200 };
+            seeded.Shops[0].Unlocked = true; // bakery, already unlocked
+            seeded.Inventory[GoodsCatalog.IndexOf("wheat")] = 2;
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            shopsTabButton.onClick.Invoke();
+            shopRows[0].actionButton.onClick.Invoke(); // start production
+
+            Assert.AreEqual("Coins: 197", coinsLabel.text); // 200 - 3 (bakery StartCost)
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.AreEqual(1, saved.Inventory[GoodsCatalog.IndexOf("wheat")]); // 2 - 1
+            Assert.AreNotEqual(0, saved.Shops[0].ProductionStartedAtUnixSeconds);
+        }
+
+        [Test]
+        public void CollectReadyShop_AddsOutputAndResetsToIdle()
+        {
+            var seeded = new EstateState { Coins = 200 };
+            seeded.Shops[0].Unlocked = true;
+            seeded.Shops[0].ProductionStartedAtUnixSeconds = System.DateTimeOffset.UtcNow.ToUnixTimeSeconds() - 3600; // long past bakery's 60s
+            SaveService.SaveEstate(seeded);
+
+            estateButton.onClick.Invoke();
+            shopsTabButton.onClick.Invoke();
+            shopRows[0].actionButton.onClick.Invoke(); // collect
+
+            closeButton.onClick.Invoke();
+            var saved = SaveService.LoadEstate();
+            Assert.AreEqual(1, saved.Inventory[GoodsCatalog.IndexOf("bread")]);
+            Assert.AreEqual(0, saved.Shops[0].ProductionStartedAtUnixSeconds);
         }
     }
 }

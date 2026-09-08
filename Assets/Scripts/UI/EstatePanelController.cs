@@ -25,6 +25,22 @@ namespace UnderstudyKingdom.UI
             public TextMeshProUGUI lockCostLabel;
         }
 
+        [Serializable]
+        public class InventoryRowView
+        {
+            public GameObject root;
+            public TextMeshProUGUI label;
+            public Button sellButton;
+        }
+
+        [Serializable]
+        public class ShopRowView
+        {
+            public TextMeshProUGUI statusLabel;
+            public Button actionButton;
+            public TextMeshProUGUI actionButtonLabel;
+        }
+
         [SerializeField] private Button estateButton;
         [SerializeField] private GameObject panelRoot;
         [SerializeField] private Button closeButton;
@@ -48,6 +64,12 @@ namespace UnderstudyKingdom.UI
         [SerializeField] private Button eventsButton;
         [SerializeField] private Button customizeButton;
         [SerializeField] private DuelModalGate gate;
+        [SerializeField] private Button landTabButton;
+        [SerializeField] private Button shopsTabButton;
+        [SerializeField] private GameObject landTabRoot;
+        [SerializeField] private GameObject shopsTabRoot;
+        [SerializeField] private InventoryRowView[] inventoryRows;
+        [SerializeField] private ShopRowView[] shopRows;
 
         private EstateState state;
         private int pendingPlantPlotIndex = -1;
@@ -81,7 +103,13 @@ namespace UnderstudyKingdom.UI
             Button councilButton,
             Button eventsButton,
             Button customizeButton,
-            DuelModalGate gate)
+            DuelModalGate gate,
+            Button landTabButton,
+            Button shopsTabButton,
+            GameObject landTabRoot,
+            GameObject shopsTabRoot,
+            InventoryRowView[] inventoryRows,
+            ShopRowView[] shopRows)
         {
             this.estateButton = estateButton;
             this.panelRoot = panelRoot;
@@ -102,6 +130,12 @@ namespace UnderstudyKingdom.UI
             this.eventsButton = eventsButton;
             this.customizeButton = customizeButton;
             this.gate = gate;
+            this.landTabButton = landTabButton;
+            this.shopsTabButton = shopsTabButton;
+            this.landTabRoot = landTabRoot;
+            this.shopsTabRoot = shopsTabRoot;
+            this.inventoryRows = inventoryRows;
+            this.shopRows = shopRows;
 
             Bind();
         }
@@ -127,6 +161,37 @@ namespace UnderstudyKingdom.UI
                 seedButtons[i].onClick.AddListener(() => OnSeedPicked(cropIndex));
             }
 
+            if (landTabButton != null)
+            {
+                landTabButton.onClick.RemoveAllListeners();
+                landTabButton.onClick.AddListener(() => SetActiveTab(true));
+            }
+            if (shopsTabButton != null)
+            {
+                shopsTabButton.onClick.RemoveAllListeners();
+                shopsTabButton.onClick.AddListener(() => SetActiveTab(false));
+            }
+
+            if (inventoryRows != null)
+            {
+                for (int i = 0; i < inventoryRows.Length; i++)
+                {
+                    int goodsIndex = i;
+                    inventoryRows[i].sellButton.onClick.RemoveAllListeners();
+                    inventoryRows[i].sellButton.onClick.AddListener(() => OnSellStack(goodsIndex));
+                }
+            }
+
+            if (shopRows != null)
+            {
+                for (int i = 0; i < shopRows.Length; i++)
+                {
+                    int shopIndex = i;
+                    shopRows[i].actionButton.onClick.RemoveAllListeners();
+                    shopRows[i].actionButton.onClick.AddListener(() => OnShopActionTapped(shopIndex));
+                }
+            }
+
             panelRoot.SetActive(false);
             seedPickerRoot.SetActive(false);
         }
@@ -137,7 +202,9 @@ namespace UnderstudyKingdom.UI
             SetCoreLoopControlsInteractable(false);
             state = SaveService.LoadEstate();
             panelRoot.SetActive(true);
+            SetActiveTab(true);
             RefreshPlots();
+            RefreshInventoryAndShops();
         }
 
         private void OnClose()
@@ -198,12 +265,13 @@ namespace UnderstudyKingdom.UI
                 return;
             }
 
-            state.Coins += crop.Value.SellValue;
+            state.Inventory[GoodsCatalog.IndexOf(plot.CropId)] += 1;
             plot.CropId = null;
             plot.PlantedAtUnixSeconds = 0;
             plot.WateredAtUnixSeconds = 0;
             StartCoroutine(HarvestFly(plotViews[plotIndex].stageImage));
             RefreshPlots();
+            RefreshInventoryAndShops();
             SaveService.SaveEstate(state);
         }
 
@@ -411,6 +479,149 @@ namespace UnderstudyKingdom.UI
             }
 
             Destroy(flyer);
+        }
+
+        private void SetActiveTab(bool land)
+        {
+            if (landTabRoot != null)
+            {
+                landTabRoot.SetActive(land);
+            }
+            if (shopsTabRoot != null)
+            {
+                shopsTabRoot.SetActive(!land);
+            }
+        }
+
+        private void OnSellStack(int goodsIndex)
+        {
+            int count = state.Inventory[goodsIndex];
+            if (count <= 0)
+            {
+                return;
+            }
+
+            string goodsId = GoodsIdForIndex(goodsIndex);
+            state.Coins += count * GoodsCatalog.SellValue(goodsId);
+            state.Inventory[goodsIndex] = 0;
+            SaveService.SaveEstate(state);
+            RefreshInventoryAndShops();
+            coinsLabel.text = $"Coins: {state.Coins}";
+        }
+
+        private void OnShopActionTapped(int shopIndex)
+        {
+            ShopDefinition def = ShopCatalog.All[shopIndex];
+            ShopState shop = state.Shops[shopIndex];
+
+            if (!shop.Unlocked)
+            {
+                if (state.Coins < def.UnlockCost)
+                {
+                    return;
+                }
+                state.Coins -= def.UnlockCost;
+                shop.Unlocked = true;
+                SaveService.SaveEstate(state);
+                RefreshInventoryAndShops();
+                coinsLabel.text = $"Coins: {state.Coins}";
+                return;
+            }
+
+            long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            int stage = EstateState.ShopProductionStage(shop, def, now);
+
+            if (stage == 0)
+            {
+                int inputIndex = GoodsCatalog.IndexOf(def.InputGoodsId);
+                if (state.Coins < def.StartCost || state.Inventory[inputIndex] < 1)
+                {
+                    return;
+                }
+                state.Coins -= def.StartCost;
+                state.Inventory[inputIndex] -= 1;
+                shop.ProductionStartedAtUnixSeconds = now;
+                SaveService.SaveEstate(state);
+                RefreshInventoryAndShops();
+                coinsLabel.text = $"Coins: {state.Coins}";
+                return;
+            }
+
+            if (stage == 2)
+            {
+                int outputIndex = GoodsCatalog.IndexOf(def.OutputGoodsId);
+                state.Inventory[outputIndex] += 1;
+                shop.ProductionStartedAtUnixSeconds = 0;
+                SaveService.SaveEstate(state);
+                RefreshInventoryAndShops();
+                return;
+            }
+
+            // stage == 1 (in progress): no-op, matches crop-growth's own
+            // "tapping a growing plot does nothing" contract.
+        }
+
+        private static string GoodsIdForIndex(int goodsIndex)
+        {
+            return goodsIndex < CropCatalog.All.Length
+                ? CropCatalog.All[goodsIndex].Id
+                : ProductCatalog.All[goodsIndex - CropCatalog.All.Length].Id;
+        }
+
+        private void RefreshInventoryAndShops()
+        {
+            if (inventoryRows != null)
+            {
+                for (int i = 0; i < inventoryRows.Length; i++)
+                {
+                    int count = state.Inventory[i];
+                    inventoryRows[i].root.SetActive(count > 0);
+                    if (count > 0)
+                    {
+                        string goodsId = GoodsIdForIndex(i);
+                        inventoryRows[i].label.text = $"{GoodsCatalog.DisplayName(goodsId)} x{count}";
+                    }
+                }
+            }
+
+            if (shopRows != null)
+            {
+                long now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                for (int i = 0; i < shopRows.Length; i++)
+                {
+                    ShopDefinition def = ShopCatalog.All[i];
+                    ShopState shop = state.Shops[i];
+
+                    if (!shop.Unlocked)
+                    {
+                        shopRows[i].statusLabel.text = $"{def.DisplayName} -- Unlock: {def.UnlockCost}";
+                        shopRows[i].actionButtonLabel.text = "Unlock";
+                        shopRows[i].actionButton.interactable = state.Coins >= def.UnlockCost;
+                        continue;
+                    }
+
+                    int stage = EstateState.ShopProductionStage(shop, def, now);
+                    if (stage == 0)
+                    {
+                        int inputIndex = GoodsCatalog.IndexOf(def.InputGoodsId);
+                        shopRows[i].statusLabel.text = $"{def.DisplayName}: {def.InputGoodsId} x1 + {def.StartCost} coins";
+                        shopRows[i].actionButtonLabel.text = "Start";
+                        shopRows[i].actionButton.interactable = state.Coins >= def.StartCost && state.Inventory[inputIndex] >= 1;
+                    }
+                    else if (stage == 1)
+                    {
+                        shopRows[i].statusLabel.text = $"{def.DisplayName}: producing {def.OutputGoodsId}...";
+                        shopRows[i].actionButtonLabel.text = "...";
+                        shopRows[i].actionButton.interactable = false;
+                    }
+                    else
+                    {
+                        shopRows[i].statusLabel.text = $"{def.DisplayName}: {def.OutputGoodsId} ready!";
+                        shopRows[i].actionButtonLabel.text = "Collect";
+                        shopRows[i].actionButton.interactable = true;
+                    }
+                }
+            }
         }
     }
 }
