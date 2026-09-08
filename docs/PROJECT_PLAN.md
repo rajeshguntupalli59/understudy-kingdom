@@ -827,13 +827,30 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     warning) -- re-reviewed clean, verified via independent hand-computed
     arithmetic rather than trusting the fix's own report, merged after a
     final, independently-run 102 EditMode / 97 PlayMode green suite.
-  - Crop sprite art (`Assets/Art/Crops/*.png`, 9 files -- 3 crops × 3
-    growth stages) is explicitly deferred, same split as every prior
-    icon/portrait/background milestone: code already references the
-    paths and degrades gracefully (empty dirt squares, no crash) until
-    art lands in a follow-up pass. Phases 2-5 of the roadmap (Animals,
-    Shops/Production, Trade + recruitable Shop Seller, Integration with
-    Council/Customize) are not started.
+  - **Follow-up same week** (commit `c1a6f7b`): 5 of the 9 crop-stage
+    sprites generated and shipped (wheat sprout/growing/mature, carrot
+    sprout/growing) before hitting Hugging Face's monthly credit cap --
+    `carrot_mature` and all 3 `pumpkin` stages remain deferred, same
+    partial-batch pattern as every prior art-generation pass. Same
+    follow-up also root-caused and fixed a real tooling bug hit while
+    rebuilding the scene for this change: `CoreLoopSceneBuilder.Build()`/
+    `Verify()` never called `EditorApplication.Exit()` on their success
+    paths (same class of bug already fixed once for
+    `AndroidBuildTool.BuildApk()` during the APK-build milestone, just
+    not caught here until it actually bit a real invocation) -- a
+    successful `-executeMethod` batchmode run left the process alive
+    holding the project lock, silently failing the *next* invocation
+    instead of running it. Fixed on both methods' success paths. Full
+    suite green after both changes: EditMode 102/102, PlayMode 97/97.
+    Also visually verified on a real Android emulator build post-merge:
+    the previously-unreachable Estate button is now visible and
+    tappable, the panel opens with the exact spec'd unlock costs
+    (100/160/260/410) and seed prices (Wheat 5/Carrot 15/Pumpkin 40),
+    and planting correctly deducts coins end-to-end.
+  - Remaining crop art (`carrot_mature.png`,
+    `pumpkin_{sprout,growing,mature}.png`) and Phases 2-5 of the roadmap
+    (Animals, Shops/Production, Trade + recruitable Shop Seller,
+    Integration with Council/Customize) are not started.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
