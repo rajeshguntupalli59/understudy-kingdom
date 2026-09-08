@@ -356,7 +356,13 @@ namespace UnderstudyKingdom.EditorTools
                 // device's canvas width) -- 200f pitch put columns 0 and 3
                 // 30 units past both edges. See final-review Fix 3.
                 float plotX = -255f + column * 170f;
-                float plotY = 180f - row * 220f;
+                // Row 0 shifted from 180f to 150f (and the seed picker below it
+                // shifted to match) to open real clearance below LandTabButton/
+                // ShopsTabButton at y=255f, sizeDelta(140,40) -- at 180f, row 0's
+                // top edge (260) ate 25 units into the tab buttons' bottom edge
+                // (235), so tapping the top of Plot1/Plot2 hit a tab button
+                // instead of that plot (final-review, Estate Phase 3).
+                float plotY = 150f - row * 220f;
 
                 var slotBackgroundObject = new GameObject($"Plot{i}", typeof(Image));
                 slotBackgroundObject.transform.SetParent(estateLandTabRootObject.transform, false);
@@ -408,6 +414,11 @@ namespace UnderstudyKingdom.EditorTools
             var estateSeedPickerObject = new GameObject("SeedPicker", typeof(Image));
             estateSeedPickerObject.transform.SetParent(estateLandTabRootObject.transform, false);
             var estateSeedPickerRect = estateSeedPickerObject.GetComponent<RectTransform>();
+            // Left at -280f (not shifted with plotY above) -- row 1's new
+            // bottom edge (-150) still clears this by 70 units, and shifting
+            // this down too would push it toward InventoryRow0-N (y=-360,
+            // already only 5 units below this at -280) with no offsetting
+            // benefit.
             estateSeedPickerRect.anchoredPosition = new Vector2(0f, -280f);
             estateSeedPickerRect.sizeDelta = new Vector2(640f, 120f);
             estateSeedPickerObject.GetComponent<Image>().color = new Color(0.05f, 0.08f, 0.05f, 0.98f);
