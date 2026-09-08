@@ -1,6 +1,6 @@
 # Project Plan — Understudy Kingdom
 
-**Version:** 1.0 | **Status:** In development (7 milestones shipped, first playable APK verified) | **Last updated:** 2026-09-07
+**Version:** 1.0 | **Status:** In development (8 milestones shipped, first playable APK verified, Estate economy Phase 1 of 5 live) | **Last updated:** 2026-09-08
 
 Assumptions: mobile client (Android + iOS), Unity/C# client, lightweight
 backend (Node.js + PostgreSQL), F2P with IAP, India-first launch market,
@@ -774,6 +774,66 @@ FR-14, FR-15 (monetization guardrails) not yet started.
     reporting machine, that fully explains it -- full suite (EditMode
     81/81, PlayMode 82/82) was green throughout; nothing here traces to
     a code defect.
+
+- **Milestone #16 — Estate Phase 1: Land, Coins & Crops** (branch
+  `feat/estate-phase1-land-crops`, merged `23029c4`). First phase of a
+  new 5-phase economy initiative layered on top of the existing
+  advisor/ruler core loop -- see
+  `docs/superpowers/specs/2026-09-07-estate-economy-roadmap-design.md`
+  for the full roadmap (Land+Crops → Animals+Breeding →
+  Shops/Production → Trade+recruitable Shop Seller → Integration) and
+  `docs/superpowers/specs/2026-09-07-estate-phase1-land-crops-design.md`
+  for this phase's detailed spec. Researched against Hay Day/Township
+  and the wider farm-sim genre's reported player complaints (storage
+  caps blocking progress, opaque expansion costs, pay-to-skip pressure)
+  and designed those out from day one rather than patching later,
+  matching the fair-play stance `docs/COMPETITOR_ANALYSIS.md` already
+  established for this project.
+  - Ships: a new `Coins` currency, an 8-plot land grid (4 unlocked at
+    start, 4 unlockable at a public, predictable geometric cost curve),
+    and a plant→water→grow(staged)→harvest loop for 3 starting crops
+    (wheat/carrot/pumpkin) -- watering is an active player decision (an
+    unwatered crop stalls indefinitely, never wilts/dies), not Hay Day's
+    passive wait-and-collect. Fully client-authoritative, persisted to a
+    new independent `estate_save.json` (the existing `ruler_save.json`
+    handling is completely untouched). New "Estate" panel in the
+    existing single `CoreLoop` scene, following the established
+    panel-from-a-button pattern.
+  - Built via `understudy-kingdom:subagent-driven-development` across 7
+    tasks, each with its own implementer + task review (3 of the 7 --
+    Tasks 1, 5, 7 -- needed one fix round each, all re-reviewed clean
+    before proceeding). Two real bugs in the plan's own example code
+    were caught and fixed during implementation, not just at final
+    review: `GrowthStage`'s integer-division truncation for odd
+    `GrowDurationSeconds` (premature stage transitions, masked by
+    today's all-even crop durations), and a scene-builder button
+    position that exactly duplicated `SubmitButton`'s rect.
+  - **Final whole-branch review caught a genuine Critical bug that all 7
+    task-level reviews missed**: the Estate button's y-position (-840)
+    sat entirely below the Canvas's fixed bottom edge (-800, from
+    `referenceResolution (800,1600)` + `matchWidthOrHeight=1` pinning
+    canvas height to 1600 units on every device) -- the button was
+    completely unreachable, shipping a full, well-tested subsystem no
+    player could ever open. Missed by every task review and the scene's
+    own regression test because that test calls `onClick.Invoke()`
+    directly, bypassing real hit-testing/canvas-bounds entirely -- the
+    exact gap a new canvas-bounds regression test (added in the same fix
+    round, covering all 7 core-loop buttons) now closes. One fix round
+    addressed this plus 4 Important findings together (per-mutation save
+    instead of save-on-close-only, matching every sibling panel's
+    convention; 8-plot grid overflowing its panel and, on narrow-aspect
+    devices, the screen edge; 9 error-level logs per scene rebuild from
+    the not-yet-generated `Assets/Art/Crops/` directory, reduced to one
+    warning) -- re-reviewed clean, verified via independent hand-computed
+    arithmetic rather than trusting the fix's own report, merged after a
+    final, independently-run 102 EditMode / 97 PlayMode green suite.
+  - Crop sprite art (`Assets/Art/Crops/*.png`, 9 files -- 3 crops × 3
+    growth stages) is explicitly deferred, same split as every prior
+    icon/portrait/background milestone: code already references the
+    paths and degrades gracefully (empty dirt squares, no crash) until
+    art lands in a follow-up pass. Phases 2-5 of the roadmap (Animals,
+    Shops/Production, Trade + recruitable Shop Seller, Integration with
+    Council/Customize) are not started.
 
 Full task-by-task history (every commit, every review verdict, every
 fix round) lives in the git-ignored `.superpowers/sdd/progress.md` ledger
