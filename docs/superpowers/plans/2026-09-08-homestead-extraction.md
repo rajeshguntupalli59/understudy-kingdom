@@ -16,6 +16,7 @@
 - `-runTests` batch-mode calls must NEVER be combined with `-quit`. `-executeMethod Build`/`Verify` calls must NOT include `-quit` (both call `EditorApplication.Exit()` on their own success/failure paths, ported forward from `understudy-kingdom`'s own hard-won lesson).
 - No comments explaining WHAT code does -- only WHY, and only when genuinely non-obvious, matching `understudy-kingdom`'s established convention. Preserve existing WHY-comments from ported code verbatim; don't add new WHAT-comments.
 - The new GitHub repo (`rajeshguntupalli59/Homestead`) is created but never pushed to during this plan, per the user's explicit "don't push unless asked" convention.
+- Every new `.cs`/`.unity` file gets its Unity-auto-generated `.meta` companion committed alongside it (this repo's established convention, confirmed by the 57 already-tracked `.meta` files from Task 1's bootstrap) -- before committing, run `git status --short` and confirm no `??` `.meta` file is left behind uncommitted, even if a task's own `git add` line doesn't happen to list one explicitly.
 
 ---
 
@@ -158,7 +159,7 @@ Expected: all tests from the 4 copied test files pass, 0 failures. Read the actu
 
 ```bash
 cd "C:\Users\rajes\Homestead"
-git add Assets/Scripts/Core/CropCatalog.cs Assets/Scripts/Core/ShopCatalog.cs Assets/Scripts/Core/ProductCatalog.cs Assets/Scripts/Core/GoodsCatalog.cs Assets/Scripts/Core/EstateState.cs Assets/Scripts/Core/EstateSaveData.cs Assets/Tests/EditMode/ProductCatalogTests.cs Assets/Tests/EditMode/ShopCatalogTests.cs Assets/Tests/EditMode/GoodsCatalogTests.cs Assets/Tests/EditMode/EstateStateTests.cs
+git add Assets/Scripts/Core/CropCatalog.cs Assets/Scripts/Core/CropCatalog.cs.meta Assets/Scripts/Core/ShopCatalog.cs Assets/Scripts/Core/ShopCatalog.cs.meta Assets/Scripts/Core/ProductCatalog.cs Assets/Scripts/Core/ProductCatalog.cs.meta Assets/Scripts/Core/GoodsCatalog.cs Assets/Scripts/Core/GoodsCatalog.cs.meta Assets/Scripts/Core/EstateState.cs Assets/Scripts/Core/EstateState.cs.meta Assets/Scripts/Core/EstateSaveData.cs Assets/Scripts/Core/EstateSaveData.cs.meta Assets/Tests/EditMode/ProductCatalogTests.cs Assets/Tests/EditMode/ProductCatalogTests.cs.meta Assets/Tests/EditMode/ShopCatalogTests.cs Assets/Tests/EditMode/ShopCatalogTests.cs.meta Assets/Tests/EditMode/GoodsCatalogTests.cs Assets/Tests/EditMode/GoodsCatalogTests.cs.meta Assets/Tests/EditMode/EstateStateTests.cs Assets/Tests/EditMode/EstateStateTests.cs.meta
 git commit -m "$(cat <<'EOF'
 feat: port pure Estate catalog/state scripts from understudy-kingdom
 
@@ -208,7 +209,7 @@ Same command as Step 3. Expected: all `SaveServiceEstateTests` pass, 0 failures.
 
 ```bash
 cd "C:\Users\rajes\Homestead"
-git add Assets/Scripts/Core/SaveService.cs Assets/Tests/EditMode/SaveServiceEstateTests.cs
+git add Assets/Scripts/Core/SaveService.cs Assets/Scripts/Core/SaveService.cs.meta Assets/Tests/EditMode/SaveServiceEstateTests.cs Assets/Tests/EditMode/SaveServiceEstateTests.cs.meta
 git commit -m "$(cat <<'EOF'
 feat: add Estate-only SaveService (no RulerState save path)
 
@@ -481,7 +482,7 @@ Expected: all remaining tests pass, 0 failures. Report the real before/after tes
 
 ```bash
 cd "C:\Users\rajes\Homestead"
-git add Assets/Scripts/UI/EstatePanelController.cs Assets/Tests/PlayMode/EstatePanelControllerTests.cs
+git add Assets/Scripts/UI/EstatePanelController.cs Assets/Scripts/UI/EstatePanelController.cs.meta Assets/Tests/PlayMode/EstatePanelControllerTests.cs Assets/Tests/PlayMode/EstatePanelControllerTests.cs.meta
 git commit -m "$(cat <<'EOF'
 feat: port EstatePanelController, dropping ruler/advisor coupling
 
@@ -977,7 +978,7 @@ Expected: both green, 0 failures, matching the counts already established at the
 
 ```bash
 cd "C:\Users\rajes\Homestead"
-git add Assets/Editor/HomesteadSceneBuilder.cs Assets/Scenes/Homestead.unity
+git add Assets/Editor/HomesteadSceneBuilder.cs Assets/Editor/HomesteadSceneBuilder.cs.meta Assets/Scenes/Homestead.unity Assets/Scenes/Homestead.unity.meta
 git commit -m "$(cat <<'EOF'
 feat: add HomesteadSceneBuilder, build full-screen Estate scene
 
@@ -1095,7 +1096,7 @@ Same command. Expected: PASS.
 
 ```bash
 cd "C:\Users\rajes\Homestead"
-git add Assets/Tests/PlayMode/HomesteadSceneTests.cs Assets/Editor/HomesteadSceneBuilder.cs Assets/Scenes/Homestead.unity
+git add Assets/Tests/PlayMode/HomesteadSceneTests.cs Assets/Tests/PlayMode/HomesteadSceneTests.cs.meta Assets/Editor/HomesteadSceneBuilder.cs Assets/Scenes/Homestead.unity
 git commit -m "$(cat <<'EOF'
 test: add scene-level regression test for Homestead
 
