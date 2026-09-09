@@ -509,9 +509,11 @@ EOF
 ```bash
 cp -r "C:\Users\rajes\understudy-kingdom\Assets\Art\Crops" "C:\Users\rajes\Homestead\Assets\Art\Crops"
 cp -r "C:\Users\rajes\understudy-kingdom\Assets\Art\Estate" "C:\Users\rajes\Homestead\Assets\Art\Estate"
+cp "C:\Users\rajes\understudy-kingdom\Assets\Art\Crops.meta" "C:\Users\rajes\Homestead\Assets\Art\Crops.meta"
+cp "C:\Users\rajes\understudy-kingdom\Assets\Art\Estate.meta" "C:\Users\rajes\Homestead\Assets\Art\Estate.meta"
 ```
 
-Copying the `.meta` files along with the PNGs preserves their existing GUIDs -- this matters less here than it did porting between commits of the *same* project (nothing in Homestead references these GUIDs yet), but it's free and avoids Unity re-generating fresh ones on first import for no reason.
+Copying the `.meta` files along with the PNGs preserves their existing GUIDs -- this matters less here than it did porting between commits of the *same* project (nothing in Homestead references these GUIDs yet), but it's free and avoids Unity re-generating fresh ones on first import for no reason. Note the two extra `cp` lines: `cp -r SourceDir DestDir` copies a folder's *contents* (including each file's own `.meta` sitting inside it) but NOT the source folder's own sibling `.meta` file (e.g. `Assets/Art/Crops.meta`, which describes the `Crops` folder itself and lives next to it, not inside it) -- that needs its own explicit copy or Unity will auto-generate a fresh one on next import, leaving it untracked until caught by `git status`.
 
 - [ ] **Step 2: Verify the files landed correctly**
 
@@ -526,7 +528,7 @@ Expected: `wheat_sprout.png`, `wheat_growing.png`, `wheat_mature.png`, `carrot_s
 
 ```bash
 cd "C:\Users\rajes\Homestead"
-git add Assets/Art/Crops Assets/Art/Estate
+git add Assets/Art/Crops Assets/Art/Estate Assets/Art/Crops.meta Assets/Art/Estate.meta
 git commit -m "$(cat <<'EOF'
 art: port Estate and Crops art assets from understudy-kingdom
 
